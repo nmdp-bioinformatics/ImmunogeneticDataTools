@@ -1,0 +1,75 @@
+package org.dash.valid;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+
+public class LinkageDisequilibriumLoader {
+
+	public static void main(String[] args) {
+		String filename = null;
+		
+		for (int i=0;i<args.length;i++) {
+			filename = args[i];
+			analyzeGLStringFile(filename);		
+		}				
+	}
+
+	/**
+	 * @param filename
+	 */
+	private static void analyzeGLStringFile(String filename) {
+		File glStringFile  = new File(filename);
+		BufferedReader reader = null;
+		
+		try {
+			InputStream in = new FileInputStream(glStringFile);
+			reader = new BufferedReader(new InputStreamReader(in));
+			String glString;
+			while ((glString = reader.readLine()) != null) {
+				GLString linkedGLString = new GLString(glString);
+				reportDetectedLinkages(linkedGLString);
+			}
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				reader.close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void reportDetectedLinkages(GLString linkedGLString) {
+		System.out.println("Your GL String: " + linkedGLString.getGLString());
+		HLALinkageDisequilibrium linkDis = new HLALinkageDisequilibrium();
+
+		List<BCDisequilibriumElement> bcLinkagesFound = linkDis.hasBCDisequilibriumLinkage(linkedGLString);
+		List<DRDQDisequilibriumElement> drdqLinkagesFound = linkDis.hasDRDQDisequilibriumLinkage(linkedGLString);
+		
+		for (BCDisequilibriumElement linkages : bcLinkagesFound) {
+			System.out.println("\n");
+			System.out.println("We found BC Linkages:\n");
+			System.out.println(linkages);
+		}
+		for (DRDQDisequilibriumElement linkages : drdqLinkagesFound) {
+			System.out.println("\n");
+			System.out.println("We found DRDQ Linkages:\n");
+			System.out.println(linkages);
+		}
+		
+		System.out.println("\n***************************************\n");
+	}
+}
