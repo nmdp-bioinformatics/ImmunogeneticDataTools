@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /*
  * Linkage disequilibrium
@@ -28,6 +29,9 @@ import java.util.List;
 
 public class HLALinkageDisequilibrium {
 	public static final String DASH = "-";
+	public static final String TAB = "\t";
+	
+    private static final Logger LOGGER = Logger.getLogger(HLALinkageDisequilibrium.class.getName());
 	
 	List<BCDisequilibriumElement> bcDisequilibriumElements = new ArrayList<BCDisequilibriumElement>();
 	List<DRDQDisequilibriumElement> drdqDisequilibriumElements = new ArrayList<DRDQDisequilibriumElement>();
@@ -42,10 +46,12 @@ public class HLALinkageDisequilibrium {
 			loadDRDQLinkageReferenceData();
 		}
 		catch (FileNotFoundException fnfe) {
-			System.out.println("Couldn't find file:  " + fnfe);
+			LOGGER.severe("Couldn't find disequilibrium element reference file");
+			fnfe.printStackTrace();
 		}
 		catch (IOException ioe) {
-			System.out.println(ioe);
+			LOGGER.severe("Couldn't load disequilibrium element reference file");
+			ioe.printStackTrace();
 		}
 	}
 
@@ -56,7 +62,7 @@ public class HLALinkageDisequilibrium {
 		String row;
 		String[] columns;
 		while ((row = reader.readLine()) != null) {
-			columns = row.split("\t");
+			columns = row.split(TAB);
 
 			bcDisequilibriumElements.add(new BCDisequilibriumElement(columns[0], columns[1], columns[2], columns[3]));
 		}
@@ -71,7 +77,7 @@ public class HLALinkageDisequilibrium {
 		String row;
 		String[] columns;
 		while ((row = reader.readLine()) != null) {
-			columns = row.split("\t");
+			columns = row.split(TAB);
 		
 			drdqDisequilibriumElements.add(new DRDQDisequilibriumElement(columns[0], columns[1], columns[2], columns[3], columns[4], columns[5]));
 		}
@@ -120,9 +126,7 @@ public class HLALinkageDisequilibrium {
 			for (String cAllele : cList) {
 				if (cAllele.equals(disElement.getHlacElement())) {
 					//hit!!!
-					
 					linkageElementsFound.add(disElement);
-					
 				}
 			}
 		}

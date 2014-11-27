@@ -2,6 +2,7 @@ package org.dash.valid;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class GLString {
 	private String glString;
@@ -13,6 +14,8 @@ public class GLString {
 	private List<List<String>> dqa1Alleles;
 	
 	public static final String ESCAPED_ASTERISK = "\\*";
+	
+    private static final Logger LOGGER = Logger.getLogger(GLString.class.getName());
 
 	public GLString(String glString) {
 		this.glString = glString;
@@ -89,13 +92,13 @@ public class GLString {
 	
 	private void organizeByLocus(String locus, List<String> alleleAmbiguities) {
 		if (alleleAmbiguities.size() == 0) {
-			System.out.println("Unexpected formatting of GLString.  No alleles found");
+			LOGGER.warning("Unexpected formatting of GLString.  No alleles found");
 			return;
 		}
 		
 		String allele = alleleAmbiguities.get(0);
 		if (allele == null) {
-			System.out.println("Unexpected formatting of GLString, allele == null");
+			LOGGER.warning("Unexpected formatting of GLString, allele == null");
 			return;
 		}
 		
