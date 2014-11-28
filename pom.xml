@@ -32,4 +32,14 @@
   		<version>4.10</version>
   	</dependency>
   </dependencies>
+  <scm>
+  	<url>https://github.com/mpresteg/ImmunogeneticDataTools</url>
+  </scm>
+  <name>ImmunogeneticDataTools</name>
+  <url>https://github.com/mpresteg/ImmunogeneticDataTools</url>
+  <description>Tools for exploring Linkage Disequilibrium, HLA, GL Strings</description>
+  <issueManagement>
+  	<url>https://github.com/mpresteg/ImmunogeneticDataTools/issues</url>
+  	<system>Git Hub</system>
+  </issueManagement>
 </project>
