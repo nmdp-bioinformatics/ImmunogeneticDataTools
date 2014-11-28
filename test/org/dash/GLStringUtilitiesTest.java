@@ -2,8 +2,8 @@ package org.dash;
 
 import java.util.List;
 
-import org.dash.valid.GLStringConstants;
-import org.dash.valid.GLStringUtilities;
+import org.dash.valid.gl.GLStringConstants;
+import org.dash.valid.gl.GLStringUtilities;
 import org.junit.Assert;
 import org.junit.Test;
 

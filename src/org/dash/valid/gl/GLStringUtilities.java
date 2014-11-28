@@ -1,4 +1,4 @@
-package org.dash.valid;
+package org.dash.valid.gl;
 
 import java.util.ArrayList;
 import java.util.List;

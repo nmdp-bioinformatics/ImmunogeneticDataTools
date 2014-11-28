@@ -17,8 +17,9 @@ The use case is to enable a clinician or researcher in the immunogenetic or hist
 
 *Future Goals:*
 
- * Publish to [Dash GitHub](https://github.com/nmdp-bioinformatics/dash)
- * Read inputs from a file, allow user entry, etc.
+ * <del>Publish to [Dash GitHub](https://github.com/nmdp-bioinformatics/dash)<del>
+ * <del>Read inputs from a file<del>
+ * Allow user entry, etc.
  * Consider implementing using any existing object representations of GL String
  * Provide a key/handle by which reporting may be linked to input(s) - URI from GL Service or other abstract key?
  

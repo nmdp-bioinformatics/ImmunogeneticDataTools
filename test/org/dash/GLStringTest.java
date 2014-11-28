@@ -4,7 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.dash.valid.GLString;
+import org.dash.valid.gl.GLString;
 import org.junit.Before;
 import org.junit.Test;
 
