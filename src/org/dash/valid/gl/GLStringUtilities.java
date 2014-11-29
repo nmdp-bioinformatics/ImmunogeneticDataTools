@@ -10,11 +10,16 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.logging.Logger;
+
+import org.dash.valid.HLALinkageDisequilibrium;
 
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
 	private static final String GL_STRING_DELIMITER_REGEX = "[\\^\\|\\+~/]";
 	public static final String ESCAPED_ASTERISK = "\\*";
+	
+    private static final Logger LOGGER = Logger.getLogger(GLStringUtilities.class.getName());
 	
 	public static List<String> parse(String value, String delimiter) {
 		List<String> elements = new ArrayList<String>();
@@ -30,7 +35,7 @@ public class GLStringUtilities {
 		StringTokenizer st = new StringTokenizer(glString, GL_STRING_DELIMITER_REGEX);
 		while (st.hasMoreTokens()) {
 			if (!st.nextToken().startsWith("HLA-")) {
-				System.out.println("GL String format is invalid");
+				LOGGER.warning("GLString is invalid: " + glString);
 				return false;
 			}
 		}
@@ -90,9 +95,11 @@ public class GLStringUtilities {
 			}
 		}
 		catch (FileNotFoundException e) {
+			LOGGER.severe("Couldn't find GL String file: " + filename);
 			e.printStackTrace();
 		}
 		catch (IOException e) {
+			LOGGER.severe("Problem opening GL String file: " + filename);
 			e.printStackTrace();
 		}
 		finally {
@@ -100,6 +107,7 @@ public class GLStringUtilities {
 				reader.close();
 			}
 			catch (IOException e) {
+				LOGGER.severe("Problem closing reader/stream.");
 				e.printStackTrace();
 			}
 		}

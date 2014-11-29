@@ -42,4 +42,26 @@
   	<url>https://github.com/mpresteg/ImmunogeneticDataTools/issues</url>
   	<system>Git Hub</system>
   </issueManagement>
+      <developers>
+      <developer>
+        <id>mpresteg</id>
+        <name>Matt Prestegaard</name>
+        <organization>Be The Match</organization>
+        <organizationUrl>http://www.bethematch.org</organizationUrl>
+        <roles>
+          <role>IT Solutions</role>
+        </roles>
+        <timezone>-6</timezone>
+      </developer>
+      <developer>
+        <id>sozanne</id>
+        <name>Steve Ozanne</name>
+        <organization>Be The Match</organization>
+        <organizationUrl>http://www.bethematch.org</organizationUrl>
+        <roles>
+          <role>IT Solutions</role>
+        </roles>
+        <timezone>-6</timezone>
+      </developer>
+    </developers>
 </project>

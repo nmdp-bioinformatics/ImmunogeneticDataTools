@@ -48,11 +48,11 @@ public class HLALinkageDisequilibrium {
 			loadDRDQLinkageReferenceData();
 		}
 		catch (FileNotFoundException fnfe) {
-			LOGGER.severe("Couldn't find disequilibrium element reference file");
+			LOGGER.severe("Couldn't find disequilibrium element reference file.");
 			fnfe.printStackTrace();
 		}
 		catch (IOException ioe) {
-			LOGGER.severe("Couldn't load disequilibrium element reference file");
+			LOGGER.severe("Couldn't load disequilibrium element reference file.");
 			ioe.printStackTrace();
 		}
 	}
