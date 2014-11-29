@@ -12,9 +12,7 @@ public class GLString {
 	private List<List<String>> drb345Alleles;
 	private List<List<String>> dqb1Alleles;
 	private List<List<String>> dqa1Alleles;
-	
-	public static final String ESCAPED_ASTERISK = "\\*";
-	
+		
     private static final Logger LOGGER = Logger.getLogger(GLString.class.getName());
 
 	public GLString(String glString) {
@@ -54,36 +52,18 @@ public class GLString {
 	
 	private void parseGLString() {		
 		List<String> genes = GLStringUtilities.parse(glString, GLStringConstants.GENE_DELIMITER);
-		for (String gene : genes) {
-			if (!gene.startsWith(GLStringConstants.HLA_DASH)) {
-				gene = GLStringConstants.HLA_DASH + gene;
-			}
-			
-			String[] splitString = gene.split(ESCAPED_ASTERISK);
+		for (String gene : genes) {			
+			String[] splitString = gene.split(GLStringUtilities.ESCAPED_ASTERISK);
 			String locus = splitString[0];
 			
 			List<String> genotypeAmbiguities = GLStringUtilities.parse(gene, GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
 			for (String genotypeAmbiguity : genotypeAmbiguities) {
-				
-				genotypeAmbiguity = GLStringUtilities.fillLocus(locus, genotypeAmbiguity);
-				
 				List<String> geneCopies = GLStringUtilities.parse(genotypeAmbiguity, GLStringConstants.GENE_COPY_DELIMITER);
 				for (String geneCopy : geneCopies) {
-					
-					geneCopy = GLStringUtilities.fillLocus(locus, geneCopy);
-					
 					List<String> genePhases = GLStringUtilities.parse(geneCopy, GLStringConstants.GENE_PHASE_DELIMITER);
 					for (String genePhase : genePhases) {
-						
-						genePhase = GLStringUtilities.fillLocus(locus, genePhase);
-						
 						List<String> alleleAmbiguities = GLStringUtilities.parse(genePhase, GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
-						List<String> qualifiedAlleleAmbiguities = new ArrayList<String>();
-						for (String alleleAmbiguity : alleleAmbiguities) {
-							alleleAmbiguity = GLStringUtilities.fillLocus(locus, alleleAmbiguity);
-							qualifiedAlleleAmbiguities.add(alleleAmbiguity);
-						}
-						organizeByLocus(locus, qualifiedAlleleAmbiguities);
+						organizeByLocus(locus, alleleAmbiguities);
 					}
 				}
 			}

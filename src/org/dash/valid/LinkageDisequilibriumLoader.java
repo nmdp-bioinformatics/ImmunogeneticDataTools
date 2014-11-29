@@ -1,15 +1,9 @@
 package org.dash.valid;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 
 import org.dash.valid.gl.GLString;
+import org.dash.valid.gl.GLStringUtilities;
 
 public class LinkageDisequilibriumLoader {
 
@@ -25,36 +19,23 @@ public class LinkageDisequilibriumLoader {
 	/**
 	 * @param filename
 	 */
-	private static void analyzeGLStringFile(String filename) {
-		File glStringFile  = new File(filename);
-		BufferedReader reader = null;
-		String glString;
+	private static void analyzeGLStringFile(String filename) {				
+		List<String> glStrings = GLStringUtilities.readGLStringFile(filename);
+				
+		detectLinkages(glStrings);
+	}
+
+	/**
+	 * @param glStrings
+	 */
+	private static void detectLinkages(List<String> glStrings) {
 		GLString linkedGLString;
 		List<DisequilibriumElement> linkagesFound;
 		
-		try {
-			InputStream in = new FileInputStream(glStringFile);
-			reader = new BufferedReader(new InputStreamReader(in));
-			
-			while ((glString = reader.readLine()) != null) {
-				linkedGLString = new GLString(glString);
-				linkagesFound = detectLinkages(linkedGLString);
-				reportDetectedLinkages(linkedGLString, linkagesFound);
-			}
-		}
-		catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		finally {
-			try {
-				reader.close();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
+		for (String glString : glStrings) {
+			linkedGLString = new GLString(glString);
+			linkagesFound = detectLinkages(linkedGLString);
+			reportDetectedLinkages(linkedGLString, linkagesFound);
 		}
 	}
 

@@ -1,10 +1,11 @@
-package org.dash;
+package org.dash.gl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.dash.valid.gl.GLString;
+import org.dash.valid.gl.GLStringUtilities;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ public class GLStringTest {
 	
 	@Before
 	public void setUp() {
-		glString = new GLString(TEST_GL_STRING);
+		glString = new GLString(GLStringUtilities.fullyQualifyGLString(TEST_GL_STRING));
 	}
 	
 	@Test
@@ -24,7 +25,7 @@ public class GLStringTest {
 	}
 	
 	@Test
-	public void testAppearsHomozygous() {
+	public void testDRB345AppearsHomozygous() {
 		assertFalse(glString.drb345AppearsHomozygous());
 		
 		GLString simpleDRB4String = new GLString(SIMPLE_DRB4_STRING);
