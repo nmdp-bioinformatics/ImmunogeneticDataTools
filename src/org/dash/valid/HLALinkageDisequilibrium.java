@@ -87,19 +87,13 @@ public class HLALinkageDisequilibrium {
 		reader.close();		
 	}	
 	
-	public List<DisequilibriumElement> hasBCDisequilibriumLinkage(GLString glString) {
+	public List<DisequilibriumElement> hasDisequilibriumLinkage(GLString glString) {
 		List<DisequilibriumElement> linkageElementsFound = new ArrayList<DisequilibriumElement>();
-				
+		
 		for (BCDisequilibriumElement disElement : bcDisequilibriumElements) {
 			linkageElementsFound = detectBCLinkages(linkageElementsFound, glString, disElement);
 		}
 		
-		return linkageElementsFound;
-	}
-	
-	public List<DisequilibriumElement> hasDRDQDisequilibriumLinkage(GLString glString) {
-		List<DisequilibriumElement> linkageElementsFound = new ArrayList<DisequilibriumElement>();
-				
 		for (DRDQDisequilibriumElement disElement : drdqDisequilibriumElements) {
 			linkageElementsFound = detectDRDQLinkages(linkageElementsFound, glString, disElement);
 		}

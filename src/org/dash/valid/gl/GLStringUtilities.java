@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-import org.dash.valid.HLALinkageDisequilibrium;
-
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
 	private static final String GL_STRING_DELIMITER_REGEX = "[\\^\\|\\+~/]";

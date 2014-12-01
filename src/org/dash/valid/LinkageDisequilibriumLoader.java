@@ -1,11 +1,13 @@
 package org.dash.valid;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLString;
 import org.dash.valid.gl.GLStringUtilities;
 
-public class LinkageDisequilibriumLoader {
+public class LinkageDisequilibriumLoader {	
+    private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumLoader.class.getName());
 
 	public static void main(String[] args) {
 		String filename = null;
@@ -21,7 +23,15 @@ public class LinkageDisequilibriumLoader {
 	 */
 	private static void analyzeGLStringFile(String filename) {				
 		List<String> glStrings = GLStringUtilities.readGLStringFile(filename);
-				
+		String glString;
+		
+		for (int i=0;i<glStrings.size();i++) {
+			glString = glStrings.get(i);
+			if (!GLStringUtilities.validateGLStringFormat(glString)) {
+				glStrings.set(i, GLStringUtilities.fullyQualifyGLString(glString));
+			}
+		}
+		
 		detectLinkages(glStrings);
 	}
 
@@ -42,8 +52,7 @@ public class LinkageDisequilibriumLoader {
 	private static List<DisequilibriumElement> detectLinkages(GLString linkedGLString) {
 		HLALinkageDisequilibrium linkDis = new HLALinkageDisequilibrium();
 
-		List<DisequilibriumElement> linkagesFound = linkDis.hasBCDisequilibriumLinkage(linkedGLString);
-		linkagesFound.addAll(linkDis.hasDRDQDisequilibriumLinkage(linkedGLString));
+		List<DisequilibriumElement> linkagesFound = linkDis.hasDisequilibriumLinkage(linkedGLString);
 				
 		return linkagesFound;
 	}

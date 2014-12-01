@@ -53,8 +53,6 @@ public class GLStringUtilitiesTest {
 	public void testFullyQualifyGLString() {		
 		String fullyQualifiedGLString = GLStringUtilities.fullyQualifyGLString(INVALID_GL_STRING);
 		
-		System.out.println(fullyQualifiedGLString);
-		System.out.println(VALID_GL_STRING);
 		assertTrue(VALID_GL_STRING.equals(fullyQualifiedGLString));
 	}
 }
