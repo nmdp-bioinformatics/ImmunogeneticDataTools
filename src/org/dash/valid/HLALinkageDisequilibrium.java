@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLString;
@@ -87,8 +89,8 @@ public class HLALinkageDisequilibrium {
 		reader.close();		
 	}	
 	
-	public List<DisequilibriumElement> hasDisequilibriumLinkage(GLString glString) {
-		List<DisequilibriumElement> linkageElementsFound = new ArrayList<DisequilibriumElement>();
+	public Set<DisequilibriumElement> hasDisequilibriumLinkage(GLString glString) {
+		Set<DisequilibriumElement> linkageElementsFound = new HashSet<DisequilibriumElement>();
 		
 		for (BCDisequilibriumElement disElement : bcDisequilibriumElements) {
 			linkageElementsFound = detectBCLinkages(linkageElementsFound, glString, disElement);
@@ -101,7 +103,7 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 
-	private List<DisequilibriumElement> detectBCLinkages(List<DisequilibriumElement> linkageElementsFound,
+	private Set<DisequilibriumElement> detectBCLinkages(Set<DisequilibriumElement> linkageElementsFound,
 								GLString glString,
 								BCDisequilibriumElement disElement) {
 		for (List<String> bList : glString.getBAlleles()) {
@@ -115,7 +117,7 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 
-	private List<DisequilibriumElement> detectCLinkages(List<DisequilibriumElement> linkageElementsFound,
+	private Set<DisequilibriumElement> detectCLinkages(Set<DisequilibriumElement> linkageElementsFound,
 								BCDisequilibriumElement disElement,
 								GLString glString) {
 		for (List<String> cList : glString.getCAlleles()) {	
@@ -130,7 +132,7 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private List<DisequilibriumElement> detectDRDQLinkages(List<DisequilibriumElement> linkageElementsFound,
+	private Set<DisequilibriumElement> detectDRDQLinkages(Set<DisequilibriumElement> linkageElementsFound,
 									GLString glString,
 									DRDQDisequilibriumElement disElement) {
 		for (List<String> drb1List : glString.getDrb1Alleles()) {
@@ -144,7 +146,7 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private List<DisequilibriumElement> detectDRB345DQLinkages(List<DisequilibriumElement> linkageElementsFound,
+	private Set<DisequilibriumElement> detectDRB345DQLinkages(Set<DisequilibriumElement> linkageElementsFound,
 										GLString glString,
 										DRDQDisequilibriumElement disElement) {
 		if (glString.drb345AppearsHomozygous() && disElement.getHladrb345Element().equals(DASH)) {
@@ -161,7 +163,7 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private List<DisequilibriumElement> detectDQLinkages(List<DisequilibriumElement> linkageElementsFound, 
+	private Set<DisequilibriumElement> detectDQLinkages(Set<DisequilibriumElement> linkageElementsFound, 
 								GLString glString,
 								DRDQDisequilibriumElement disElement) {
 		for (List<String> dqa1List : glString.getDqa1Alleles()) {
@@ -175,7 +177,7 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private List<DisequilibriumElement> detectDQB1Linkages(List<DisequilibriumElement> linkageElementsFound,
+	private Set<DisequilibriumElement> detectDQB1Linkages(Set<DisequilibriumElement> linkageElementsFound,
 									GLString glString,
 									DRDQDisequilibriumElement disElement) {
 		for (List<String> dqb1List : glString.getDqb1Alleles()) {

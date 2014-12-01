@@ -1,6 +1,7 @@
 package org.dash.valid;
 
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLString;
@@ -40,7 +41,7 @@ public class LinkageDisequilibriumLoader {
 	 */
 	private static void detectLinkages(List<String> glStrings) {
 		GLString linkedGLString;
-		List<DisequilibriumElement> linkagesFound;
+		Set<DisequilibriumElement> linkagesFound;
 		
 		for (String glString : glStrings) {
 			linkedGLString = new GLString(glString);
@@ -49,10 +50,10 @@ public class LinkageDisequilibriumLoader {
 		}
 	}
 
-	private static List<DisequilibriumElement> detectLinkages(GLString linkedGLString) {
+	private static Set<DisequilibriumElement> detectLinkages(GLString linkedGLString) {
 		HLALinkageDisequilibrium linkDis = new HLALinkageDisequilibrium();
 
-		List<DisequilibriumElement> linkagesFound = linkDis.hasDisequilibriumLinkage(linkedGLString);
+		Set<DisequilibriumElement> linkagesFound = linkDis.hasDisequilibriumLinkage(linkedGLString);
 				
 		return linkagesFound;
 	}
@@ -61,7 +62,7 @@ public class LinkageDisequilibriumLoader {
 	 * @param linkagesFound
 	 */
 	private static void reportDetectedLinkages(GLString linkedGLString, 
-			List<DisequilibriumElement> linkagesFound) {
+			Set<DisequilibriumElement> linkagesFound) {
 		System.out.println("Your GL String: " + linkedGLString.getGLString());
 
 		for (DisequilibriumElement linkages : linkagesFound) {
