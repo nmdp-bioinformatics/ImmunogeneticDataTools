@@ -1,12 +1,14 @@
 package org.dash.gl;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
+import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,5 +56,12 @@ public class GLStringUtilitiesTest {
 		String fullyQualifiedGLString = GLStringUtilities.fullyQualifyGLString(INVALID_GL_STRING);
 		
 		assertTrue(VALID_GL_STRING.equals(fullyQualifiedGLString));
+	}
+	
+	@Test
+	public void testConvertToMug() {
+		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(VALID_GL_STRING);
+		
+		assertNotNull(mug);
 	}
 }

@@ -4,8 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class GLString {
+import org.immunogenomics.gl.Allele;
+import org.immunogenomics.gl.AlleleList;
+import org.immunogenomics.gl.Genotype;
+import org.immunogenomics.gl.GenotypeList;
+import org.immunogenomics.gl.Haplotype;
+import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+
+public class LinkageDisequilibriumGenotypeList {
 	private String glString;
+	private MultilocusUnphasedGenotype mug;
 	private List<List<String>> bAlleles;
 	private List<List<String>> cAlleles;
 	private List<List<String>> drb1Alleles;
@@ -13,33 +21,28 @@ public class GLString {
 	private List<List<String>> dqb1Alleles;
 	private List<List<String>> dqa1Alleles;
 		
-    private static final Logger LOGGER = Logger.getLogger(GLString.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumGenotypeList.class.getName());
 
-	public GLString(String glString) {
+	public LinkageDisequilibriumGenotypeList(String glString) {
 		this.glString = glString;
 		init();
+		parseGLString();
 	}
 	
-	void init() {
-		List tempList = new ArrayList<String>();
-		bAlleles = new ArrayList<List<String>>(tempList);
-		
-		tempList = new ArrayList<String>();
-		cAlleles = new ArrayList<List<String>>(tempList);
-		
-		tempList = new ArrayList<String>();
-		drb1Alleles = new ArrayList<List<String>>(tempList);
-		
-		tempList = new ArrayList<String>();
-		drb345Alleles = new ArrayList<List<String>>(tempList);
-		
-		tempList = new ArrayList<String>();
-		dqb1Alleles = new ArrayList<List<String>>(tempList);
-		
-		tempList = new ArrayList<String>();
-		dqa1Alleles = new ArrayList<List<String>>(tempList);
-		
-		parseGLString();
+	public LinkageDisequilibriumGenotypeList(MultilocusUnphasedGenotype mug) {
+		this.mug = mug;
+		this.glString = mug.getGlstring();
+		init();
+		decomposeMug();
+	}
+	
+	private void init() {
+		bAlleles = new ArrayList<List<String>>();
+		cAlleles = new ArrayList<List<String>>();
+		drb1Alleles = new ArrayList<List<String>>();
+		drb345Alleles = new ArrayList<List<String>>();
+		dqb1Alleles = new ArrayList<List<String>>();
+		dqa1Alleles = new ArrayList<List<String>>();	
 	}
 	
 	public boolean drb345AppearsHomozygous() {
@@ -70,15 +73,38 @@ public class GLString {
 		}
 	}
 	
+	private void decomposeMug() {
+		List<GenotypeList> genotypeLists = mug.getGenotypeLists();
+		for (GenotypeList gl : genotypeLists) {
+			String[] splitString = gl.getGlstring().split(GLStringUtilities.ESCAPED_ASTERISK);
+			String locus = splitString[0];
+			List<Genotype> genotypes = gl.getGenotypes();
+			for (Genotype genotype : genotypes) {
+				List<Haplotype> haplotypes = genotype.getHaplotypes();
+				for (Haplotype haplotype : haplotypes) {
+					List<AlleleList> alleleLists = haplotype.getAlleleLists();
+					for (AlleleList alleleList : alleleLists) {
+						List<Allele> alleles = alleleList.getAlleles();
+						List<String> alleleStrings = new ArrayList<String>();
+						for (Allele allele : alleles) {
+							alleleStrings.add(allele.getGlstring());
+							organizeByLocus(locus, alleleStrings);
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	private void organizeByLocus(String locus, List<String> alleleAmbiguities) {
 		if (alleleAmbiguities.size() == 0) {
-			LOGGER.warning("Unexpected formatting of GLString.  No alleles found");
+			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList.  No alleles found");
 			return;
 		}
 		
 		String allele = alleleAmbiguities.get(0);
 		if (allele == null) {
-			LOGGER.warning("Unexpected formatting of GLString, allele == null");
+			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList, allele == null");
 			return;
 		}
 		
@@ -112,56 +138,28 @@ public class GLString {
 		return bAlleles;
 	}
 
-	public void setBAlleles(List<List<String>> bAlleles) {
-		this.bAlleles = bAlleles;
-	}
-
 	public List<List<String>> getCAlleles() {
 		return cAlleles;
-	}
-
-	public void setCAlleles(List<List<String>> cAlleles) {
-		this.cAlleles = cAlleles;
 	}
 
 	public List<List<String>> getDrb1Alleles() {
 		return drb1Alleles;
 	}
 
-	public void setDrb1Alleles(List<List<String>> drb1Alleles) {
-		this.drb1Alleles = drb1Alleles;
-	}
-
 	public List<List<String>> getDrb345Alleles() {
 		return drb345Alleles;
-	}
-
-	public void setDrb345Alleles(List<List<String>> drb345Alleles) {
-		this.drb345Alleles = drb345Alleles;
 	}
 
 	public List<List<String>> getDqb1Alleles() {
 		return dqb1Alleles;
 	}
 
-	public void setDqb1Alleles(List<List<String>> dqb1Alleles) {
-		this.dqb1Alleles = dqb1Alleles;
-	}
-
 	public List<List<String>> getDqa1Alleles() {
 		return dqa1Alleles;
-	}
-
-	public void setDqa1Alleles(List<List<String>> dqa1Alleles) {
-		this.dqa1Alleles = dqa1Alleles;
 	}
 	
 	public String getGLString() {
 		return glString;
-	}
-
-	public void setGLString(String glString) {
-		this.glString = glString;
 	}
 	
 	public String toString() {

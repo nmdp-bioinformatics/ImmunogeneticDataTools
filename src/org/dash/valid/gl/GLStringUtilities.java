@@ -12,6 +12,11 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.immunogenomics.gl.client.GlClient;
+import org.immunogenomics.gl.client.GlClientException;
+import org.immunogenomics.gl.client.local.LocalGlClient;
+
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
 	private static final String GL_STRING_DELIMITER_REGEX = "[\\^\\|\\+~/]";
@@ -111,5 +116,24 @@ public class GLStringUtilities {
 		}
 		
 		return glStrings;
+	}
+	
+	public static MultilocusUnphasedGenotype convertToMug(String glString) {
+		MultilocusUnphasedGenotype mug = null;
+		
+		try {
+			//TODO: should use strict but example GL Strings are missing intron variants in some cases (HLA-DQB1*02:02)
+			//GlClient glClient = LocalGlClient.createStrict();
+			
+			GlClient glClient = LocalGlClient.create();
+			mug = glClient.createMultilocusUnphasedGenotype(glString);
+			
+		}
+		catch (GlClientException e) {
+			LOGGER.severe("Couldn't convert GLString to MultiLocusUnphasedGenotype");
+			e.printStackTrace();
+		}
+		
+		return mug;
 	}
 }

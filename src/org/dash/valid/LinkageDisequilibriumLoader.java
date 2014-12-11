@@ -2,14 +2,11 @@ package org.dash.valid;
 
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
-import org.dash.valid.gl.GLString;
+import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.GLStringUtilities;
 
 public class LinkageDisequilibriumLoader {	
-    private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumLoader.class.getName());
-
 	public static void main(String[] args) {
 		String filename = null;
 		
@@ -40,17 +37,17 @@ public class LinkageDisequilibriumLoader {
 	 * @param glStrings
 	 */
 	private static void detectLinkages(List<String> glStrings) {
-		GLString linkedGLString;
+		LinkageDisequilibriumGenotypeList linkedGLString;
 		Set<DisequilibriumElement> linkagesFound;
 		
 		for (String glString : glStrings) {
-			linkedGLString = new GLString(glString);
+			linkedGLString = new LinkageDisequilibriumGenotypeList(glString);
 			linkagesFound = detectLinkages(linkedGLString);
 			reportDetectedLinkages(linkedGLString, linkagesFound);
 		}
 	}
 
-	private static Set<DisequilibriumElement> detectLinkages(GLString linkedGLString) {
+	public static Set<DisequilibriumElement> detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
 		HLALinkageDisequilibrium linkDis = new HLALinkageDisequilibrium();
 
 		Set<DisequilibriumElement> linkagesFound = linkDis.hasDisequilibriumLinkage(linkedGLString);
@@ -61,7 +58,7 @@ public class LinkageDisequilibriumLoader {
 	/**
 	 * @param linkagesFound
 	 */
-	private static void reportDetectedLinkages(GLString linkedGLString, 
+	public static void reportDetectedLinkages(LinkageDisequilibriumGenotypeList linkedGLString, 
 			Set<DisequilibriumElement> linkagesFound) {
 		System.out.println("Your GL String: " + linkedGLString.getGLString());
 
