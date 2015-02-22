@@ -35,6 +35,15 @@ public class GLStringUtilitiesTest {
 		assertTrue(HLA_A0101.equals(elements.get(0)));
 		assertTrue(HLA_A0102.equals(elements.get(1)));
 	}
+	
+	@Test
+	public void testShortenAllele() {
+		String allele = "01:01:01:01";
+		
+		String shortenedAllele = GLStringUtilities.shortenAllele(allele);
+		
+		assertTrue(shortenedAllele.equals("01:01:01"));
+	}
 
 	@Test
 	public void testFillLocus() {

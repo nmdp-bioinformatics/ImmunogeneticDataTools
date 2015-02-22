@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
@@ -21,8 +22,18 @@ public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
 	private static final String GL_STRING_DELIMITER_REGEX = "[\\^\\|\\+~/]";
 	public static final String ESCAPED_ASTERISK = "\\*";
+	public static final String COLON = ":";
 	
     private static final Logger LOGGER = Logger.getLogger(GLStringUtilities.class.getName());
+    
+    static {
+    	try {
+			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
+    	}
+    	catch (IOException ioe) {
+    		LOGGER.severe("Could not add file handler to logger");
+    	}
+    }
 	
 	public static List<String> parse(String value, String delimiter) {
 		List<String> elements = new ArrayList<String>();
@@ -36,14 +47,36 @@ public class GLStringUtilities {
 	
 	public static boolean validateGLStringFormat(String glString) {
 		StringTokenizer st = new StringTokenizer(glString, GL_STRING_DELIMITER_REGEX);
+		String token;
 		while (st.hasMoreTokens()) {
-			if (!st.nextToken().startsWith("HLA-")) {
+			token = st.nextToken();
+			LOGGER.warning(token);
+			if (!token.startsWith("HLA-")) {
 				LOGGER.warning("GLString is invalid: " + glString);
 				return false;
 			}
 		}
 		
 		return true;
+	}
+	
+	public static String shortenAllele(String allele) {
+		String[] parts = allele.split(COLON);
+		String shortenedAllele = null;
+		
+		if (parts.length >= 3) {
+			shortenedAllele =  parts[0] + COLON + parts[1] + COLON + parts[2];
+		}
+		else if (parts.length == 2) {
+			shortenedAllele = parts[0] + COLON + parts[1];
+		}
+		else {
+			shortenedAllele = parts[0];
+		}
+		
+		LOGGER.finest("ShortenedAllele = " + shortenedAllele);
+		
+		return shortenedAllele;
 	}
 	
 	public static String fullyQualifyGLString(String shorthand) {
@@ -126,8 +159,7 @@ public class GLStringUtilities {
 			//GlClient glClient = LocalGlClient.createStrict();
 			
 			GlClient glClient = LocalGlClient.create();
-			mug = glClient.createMultilocusUnphasedGenotype(glString);
-			
+			mug = glClient.createMultilocusUnphasedGenotype(glString);			
 		}
 		catch (GlClientException e) {
 			LOGGER.severe("Couldn't convert GLString to MultiLocusUnphasedGenotype");

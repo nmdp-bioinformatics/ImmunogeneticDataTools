@@ -1,7 +1,10 @@
 package org.dash.valid.gl;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.immunogenomics.gl.Allele;
@@ -22,6 +25,15 @@ public class LinkageDisequilibriumGenotypeList {
 	private List<List<String>> dqa1Alleles;
 		
     private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumGenotypeList.class.getName());
+    
+    static {
+    	try {
+			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
+    	}
+    	catch (IOException ioe) {
+    		LOGGER.severe("Could not add file handler to logger");
+    	}
+    }
 
 	public LinkageDisequilibriumGenotypeList(String glString) {
 		this.glString = glString;
