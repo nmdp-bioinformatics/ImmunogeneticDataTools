@@ -15,7 +15,7 @@ import org.junit.Test;
 public class GLStringUtilitiesTest {
 	private static final String HLA_A0101 = "HLA-A*01:01";
 	private static final String HLA_A0102 = "HLA-A*01:02";
-	private static final String A0101 = "0101";
+	private static final String A0101 = "01:01";
 	private static final String HLA_A01010101 = "HLA-A*01:01:01:01";
 	private static final String HLA_A010101 = "HLA-A*01:01:01";
 	private String INVALID_GL_STRING;
