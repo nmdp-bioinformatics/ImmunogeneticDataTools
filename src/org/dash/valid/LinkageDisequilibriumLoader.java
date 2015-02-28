@@ -53,7 +53,7 @@ public class LinkageDisequilibriumLoader {
 	/**
 	 * @param glStrings
 	 */
-	private static void detectLinkages(List<String> glStrings) {
+	public static void detectLinkages(List<String> glStrings) {
 		LinkageDisequilibriumGenotypeList linkedGLString;
 		HashMap<DisequilibriumElement, Boolean> linkagesFound;
 		

@@ -13,9 +13,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class GLStringUtilitiesTest {
-	private static final String HLA_A0101 = "HLA-A*0101";
-	private static final String HLA_A0102 = "HLA-A*0102";
+	private static final String HLA_A0101 = "HLA-A*01:01";
+	private static final String HLA_A0102 = "HLA-A*01:02";
 	private static final String A0101 = "0101";
+	private static final String HLA_A01010101 = "HLA-A*01:01:01:01";
+	private static final String HLA_A010101 = "HLA-A*01:01:01";
 	private String INVALID_GL_STRING;
 	private String VALID_GL_STRING;
 
@@ -43,6 +45,29 @@ public class GLStringUtilitiesTest {
 		String shortenedAllele = GLStringUtilities.shortenAllele(allele);
 		
 		assertTrue(shortenedAllele.equals("01:01:01"));
+	}
+	
+	@Test
+	public void testFieldLevelComparison() {
+		String allele = HLA_A01010101;
+		String referenceAllele = HLA_A010101;
+		
+		assertTrue(GLStringUtilities.fieldLevelComparison(allele, referenceAllele));
+		
+		allele = HLA_A01010101;
+		referenceAllele = HLA_A0101;
+		
+		assertTrue(GLStringUtilities.fieldLevelComparison(allele, referenceAllele));
+		
+		allele = HLA_A010101;
+		referenceAllele = HLA_A01010101;
+		
+		assertTrue(GLStringUtilities.fieldLevelComparison(allele, referenceAllele));
+		
+		allele = HLA_A01010101;
+		referenceAllele = HLA_A0102;
+		
+		assertFalse(GLStringUtilities.fieldLevelComparison(allele, referenceAllele));
 	}
 
 	@Test

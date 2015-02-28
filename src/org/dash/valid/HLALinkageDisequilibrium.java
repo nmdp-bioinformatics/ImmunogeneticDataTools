@@ -114,7 +114,7 @@ public class HLALinkageDisequilibrium {
 				if (bAllele.equals(disElement.getHlabElement())) {
 					linkageElementsFound = detectCLinkages(linkageElementsFound, disElement, glString, true);
 				}
-				else if (GLStringUtilities.shortenAllele(bAllele).equals(GLStringUtilities.shortenAllele(disElement.getHlabElement()))) {
+				else if (GLStringUtilities.fieldLevelComparison(bAllele, disElement.getHlabElement())) {
 					linkageElementsFound = detectCLinkages(linkageElementsFound, disElement, glString);
 				}
 			}
@@ -141,7 +141,7 @@ public class HLALinkageDisequilibrium {
 							disElement, true);
 				}
 				else if (cAllele.equals(disElement.getHlacElement()) || 
-						GLStringUtilities.shortenAllele(cAllele).equals(GLStringUtilities.shortenAllele(disElement.getHlacElement()))) {
+						GLStringUtilities.fieldLevelComparison(cAllele, disElement.getHlacElement())) {
 					// partial hit
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound,
 							disElement);

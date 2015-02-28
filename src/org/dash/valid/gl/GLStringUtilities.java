@@ -60,14 +60,35 @@ public class GLStringUtilities {
 		return true;
 	}
 	
+	public static boolean fieldLevelComparison(String allele, String referenceAllele) {
+		String[] alleleParts = allele.split(COLON);
+		String[] referenceAlleleParts = referenceAllele.split(COLON);
+		
+		int comparisonLength = (alleleParts.length < referenceAlleleParts.length) ? alleleParts.length : referenceAlleleParts.length;
+		
+		StringBuffer alleleBuffer = new StringBuffer();
+		StringBuffer referenceAlleleBuffer = new StringBuffer();
+		
+		for (int i=0;i<comparisonLength;i++) {
+			alleleBuffer.append(alleleParts[i]);
+			referenceAlleleBuffer.append(referenceAlleleParts[i]);
+			if (i<comparisonLength - 1) {
+				alleleBuffer.append(COLON);
+				referenceAlleleBuffer.append(COLON);
+			}
+		}
+		
+		return (alleleBuffer.toString().equals(referenceAlleleBuffer.toString()));
+	}
+	
 	public static String shortenAllele(String allele) {
 		String[] parts = allele.split(COLON);
 		String shortenedAllele = null;
 		
-		if (parts.length >= 3) {
+		if (parts.length > 3) {
 			shortenedAllele =  parts[0] + COLON + parts[1] + COLON + parts[2];
 		}
-		else if (parts.length == 2) {
+		else if (parts.length >= 2) {
 			shortenedAllele = parts[0] + COLON + parts[1];
 		}
 		else {
