@@ -19,14 +19,14 @@ The use case is to enable a clinician or researcher in the immunogenetic or hist
 
  * Provide a key/handle by which reporting may be linked to input(s) - URI from GL Service or other abstract key?
  
- *Basic Installation Process:*
+*Basic Installation Process:*
 
  * Install Git
  * Clone the repository (git clone https://github.com/mpresteg/ImmunogeneticDataTools.git)
  * Install Maven 3.2.5 or greater
  * Run ‘mvn compile package test’ from the root of the ImmunogeneticDataTools cloned (local) repository
- 
- *Running a test data set:*
- 
+
+*Running a test data set:*
+
  * mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumLoader" -Dexec.args="resources/test/stanfordExamples.txt"
  
