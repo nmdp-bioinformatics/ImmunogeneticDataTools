@@ -11,7 +11,7 @@ The use case is to enable a clinician or researcher in the immunogenetic or hist
 
 *Input:*  Genotype(s) - expressed as GL String
 
- * [GL String](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3715123/) - Genotype List String: a grammar for describing HLA and KIR genotyping results in a text string
+* [GL String](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3715123/) - Genotype List String: a grammar for describing HLA and KIR genotyping results in a text string
  
 *Output:*  Linked alleles by locus, a frequency and any additional notes
 
@@ -21,12 +21,17 @@ The use case is to enable a clinician or researcher in the immunogenetic or hist
  
 *Basic Installation Process:*
 
- * Install Git
- * Clone the repository (git clone https://github.com/mpresteg/ImmunogeneticDataTools.git)
- * Install Maven 3.2.5 or greater
- * Run ‘mvn compile package test’ from the root of the ImmunogeneticDataTools cloned (local) repository
+* Install Git
+* Clone the repository (git clone https://github.com/mpresteg/ImmunogeneticDataTools.git)
+* Install Maven 3.2.5 or greater
+* Run ‘mvn compile package test’ from the root of the ImmunogeneticDataTools cloned (local) repository
 
-*Running a test data set:*
+*Running a Test Data Set:*
 
- * mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumLoader" -Dexec.args="resources/test/stanfordExamples.txt"
+* mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumLoader" -Dexec.args="resources/test/stanfordExamples.txt"
+
+*Logs:*
+
+* linkage output may be found in linkages.log
+* errors and basic logging in immuno.log
  
