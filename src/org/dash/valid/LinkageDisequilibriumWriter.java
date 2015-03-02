@@ -13,12 +13,17 @@ import java.util.logging.SimpleFormatter;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 
 public class LinkageDisequilibriumWriter {
+	
+	private static final int EXPECTED_LINKAGES = 2;
 	    
 	/**
 	 * @param linkagesFound
 	 */
 	public static void reportDetectedLinkages(LinkageDisequilibriumGenotypeList linkedGLString, 
 			HashMap<DisequilibriumElement, Boolean> linkagesFound) {
+		int bcLinkages = 0;
+		int drdqLinkages = 0;
+		
 		StringBuffer sb = new StringBuffer("Your GL String: " + linkedGLString.getGLString());
 
 		if (linkagesFound == null || linkagesFound.size() == 0) {
@@ -34,6 +39,22 @@ public class LinkageDisequilibriumWriter {
 				sb.append("We found partial linkages:\n");
 			}
 			sb.append(linkages);
+			
+			if (linkages instanceof BCDisequilibriumElement) {
+				bcLinkages++;
+			}
+			else if (linkages instanceof DRDQDisequilibriumElement) {
+				drdqLinkages++;
+			}
+		}
+		
+		if (bcLinkages < EXPECTED_LINKAGES) {
+			sb.append("\n\n");
+			sb.append((EXPECTED_LINKAGES-bcLinkages) + " BC Linkage(s) not found\n");
+		}
+		if (drdqLinkages < EXPECTED_LINKAGES) {
+			sb.append("\n\n");
+			sb.append((EXPECTED_LINKAGES-drdqLinkages) + " DRDQ Linkage(s) not found\n");
 		}
 		sb.append("\n***************************************\n");
 		
