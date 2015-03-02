@@ -23,7 +23,8 @@ The use case is to enable a clinician or researcher in the immunogenetic or hist
 
 * Install Git
 * Clone the repository (git clone https://github.com/mpresteg/ImmunogeneticDataTools.git)
-* Install Maven 3.2.5 or greater
+* Install Java (written for 1.7)
+* Install Maven (configured for 3.2.5)
 * Run ‘mvn compile package test’ from the root of the ImmunogeneticDataTools cloned (local) repository
 
 *Running a Test Data Set:*
