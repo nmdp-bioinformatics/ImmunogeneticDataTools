@@ -61,7 +61,7 @@ public class LinkageDisequilibriumWriter {
 		class LinkageDisequilibriumFileHandler extends FileHandler implements Filter {
 			public LinkageDisequilibriumFileHandler() throws IOException,
 				SecurityException {
-			super("%h/linkages.log", true);
+			super("./linkages.log", true);
 			setFormatter(new SimpleFormatter());
 			setLevel(Level.INFO);
 		}
