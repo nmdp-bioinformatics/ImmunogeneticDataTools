@@ -86,10 +86,10 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 	
 	private void decomposeMug() {
+		String locus = null;
+		
 		List<GenotypeList> genotypeLists = mug.getGenotypeLists();
 		for (GenotypeList gl : genotypeLists) {
-			String[] splitString = gl.getGlstring().split(GLStringUtilities.ESCAPED_ASTERISK);
-			String locus = splitString[0];
 			List<Genotype> genotypes = gl.getGenotypes();
 			for (Genotype genotype : genotypes) {
 				List<Haplotype> haplotypes = genotype.getHaplotypes();
@@ -100,8 +100,9 @@ public class LinkageDisequilibriumGenotypeList {
 						List<String> alleleStrings = new ArrayList<String>();
 						for (Allele allele : alleles) {
 							alleleStrings.add(allele.getGlstring());
-							organizeByLocus(locus, alleleStrings);
+							locus = allele.getLocus().toString();
 						}
+						organizeByLocus(locus, alleleStrings);
 					}
 				}
 			}
