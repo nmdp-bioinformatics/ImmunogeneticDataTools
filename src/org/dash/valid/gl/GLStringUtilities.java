@@ -51,8 +51,9 @@ public class GLStringUtilities {
 		while (st.hasMoreTokens()) {
 			token = st.nextToken();
 			LOGGER.warning(token);
-			if (!token.startsWith("HLA-")) {
+			if (!token.startsWith(GLStringConstants.HLA_DASH)) {
 				LOGGER.warning("GLString is invalid: " + glString);
+				LOGGER.warning("Locus not qualified with " + GLStringConstants.HLA_DASH + " for segment: " + token);
 				return false;
 			}
 		}
@@ -81,6 +82,8 @@ public class GLStringUtilities {
 		return (alleleBuffer.toString().equals(referenceAlleleBuffer.toString()));
 	}
 	
+	// TODO:  Remove after confirming deprecation and replacement by fieldLevelComparison
+	@Deprecated
 	public static String shortenAllele(String allele) {
 		String[] parts = allele.split(COLON);
 		String shortenedAllele = null;
