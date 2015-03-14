@@ -39,6 +39,7 @@ public class GLStringUtilitiesTest {
 	}
 	
 	@Test
+	@Deprecated
 	public void testShortenAllele() {
 		String allele = "01:01:01:01";
 		
