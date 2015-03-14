@@ -161,7 +161,7 @@ public class HLALinkageDisequilibrium {
 				if (drb1Allele.equals(disElement.getHladrb1Element())) {
 					linkageElementsFound = detectDRB345DQLinkages(linkageElementsFound, glString, disElement, true);
 				}
-				else if (GLStringUtilities.shortenAllele(drb1Allele).equals(GLStringUtilities.shortenAllele(disElement.getHladrb1Element()))) {
+				else if (GLStringUtilities.fieldLevelComparison(drb1Allele, disElement.getHladrb1Element())) {
 					linkageElementsFound = detectDRB345DQLinkages(linkageElementsFound, glString, disElement);
 				}
 			}
@@ -189,7 +189,7 @@ public class HLALinkageDisequilibrium {
 					linkageElementsFound = detectDQLinkages(linkageElementsFound, glString, disElement, true);
 				}
 				else if (drb345Allele.equals(disElement.getHladrb345Element()) || 
-						GLStringUtilities.shortenAllele(drb345Allele).equals(GLStringUtilities.shortenAllele(disElement.getHladrb345Element()))) {
+						GLStringUtilities.fieldLevelComparison(drb345Allele, disElement.getHladrb345Element())) {
 					linkageElementsFound = detectDQLinkages(linkageElementsFound, glString, disElement);
 				}
 			}
@@ -213,7 +213,7 @@ public class HLALinkageDisequilibrium {
 					linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, disElement, true);
 				}
 				else if (dqa1Allele.equals(disElement.getHladqa1Element()) ||
-						GLStringUtilities.shortenAllele(dqa1Allele).equals(GLStringUtilities.shortenAllele(disElement.getHladqa1Element()))) {
+						GLStringUtilities.fieldLevelComparison(dqa1Allele, disElement.getHladqa1Element())) {
 					linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, disElement);
 				}
 			}
@@ -238,7 +238,7 @@ public class HLALinkageDisequilibrium {
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement, true);
 				}
 				else if (dqb1Allele.equals(disElement.getHladqb1Element()) ||
-						GLStringUtilities.shortenAllele(dqb1Allele).equals(GLStringUtilities.shortenAllele(disElement.getHladqb1Element()))) {
+						GLStringUtilities.fieldLevelComparison(dqb1Allele, disElement.getHladqb1Element())) {
 					// partial hit
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement);
 				}
