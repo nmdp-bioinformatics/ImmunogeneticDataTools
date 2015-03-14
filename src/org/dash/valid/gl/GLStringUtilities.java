@@ -50,7 +50,7 @@ public class GLStringUtilities {
 		String token;
 		while (st.hasMoreTokens()) {
 			token = st.nextToken();
-			LOGGER.warning(token);
+			LOGGER.finest(token);
 			if (!token.startsWith(GLStringConstants.HLA_DASH)) {
 				LOGGER.warning("GLString is invalid: " + glString);
 				LOGGER.warning("Locus not qualified with " + GLStringConstants.HLA_DASH + " for segment: " + token);
