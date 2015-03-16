@@ -24,7 +24,7 @@ public class LinkageDisequilibriumWriter {
 		int bcLinkages = 0;
 		int drdqLinkages = 0;
 		
-		StringBuffer sb = new StringBuffer("Your GL String: " + linkedGLString.getGLString());
+		StringBuffer sb = new StringBuffer("Id: " + linkedGLString.getId() + "\nGL String: " + linkedGLString.getGLString());
 
 		if (linkagesFound == null || linkagesFound.size() == 0) {
 			sb.append("\n\n");

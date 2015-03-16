@@ -3,7 +3,7 @@ package org.dash.valid;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -37,13 +37,11 @@ public class LinkageDisequilibriumLoader {
 	 * @param filename
 	 */
 	private static void analyzeGLStringFile(String filename) {				
-		List<String> glStrings = GLStringUtilities.readGLStringFile(filename);
-		String glString;
+		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(filename);
 		
-		for (int i=0;i<glStrings.size();i++) {
-			glString = glStrings.get(i);
-			if (!GLStringUtilities.validateGLStringFormat(glString)) {
-				glStrings.set(i, GLStringUtilities.fullyQualifyGLString(glString));
+		for (String key : glStrings.keySet()) {
+			if (!GLStringUtilities.validateGLStringFormat(glStrings.get(key))) {
+				glStrings.put(key, GLStringUtilities.fullyQualifyGLString(glStrings.get(key)));
 			}
 		}
 		
@@ -53,12 +51,12 @@ public class LinkageDisequilibriumLoader {
 	/**
 	 * @param glStrings
 	 */
-	public static void detectLinkages(List<String> glStrings) {
+	public static void detectLinkages(LinkedHashMap<String, String> glStrings) {
 		LinkageDisequilibriumGenotypeList linkedGLString;
 		HashMap<DisequilibriumElement, Boolean> linkagesFound;
 		
-		for (String glString : glStrings) {
-			linkedGLString = new LinkageDisequilibriumGenotypeList(glString);
+		for (String key : glStrings.keySet()) {
+			linkedGLString = new LinkageDisequilibriumGenotypeList(key, glStrings.get(key));
 			linkagesFound = detectLinkages(linkedGLString);
 			LinkageDisequilibriumWriter.reportDetectedLinkages(linkedGLString, linkagesFound);
 		}

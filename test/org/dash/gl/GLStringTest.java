@@ -4,7 +4,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
@@ -12,15 +13,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class GLStringTest {	
-	private static String VALID_GL_STRING;
 	private static final String SIMPLE_DRB4_STRING = "DRB4*01:01:01:01";
 	private LinkageDisequilibriumGenotypeList glString;
 	
 	@Before
 	public void setUp() {
-		List<String> validGLStrings = GLStringUtilities.readGLStringFile("resources/test/fullyQualifiedExample.txt");
-		VALID_GL_STRING = validGLStrings.get(0);
-		glString = new LinkageDisequilibriumGenotypeList(GLStringUtilities.fullyQualifyGLString(VALID_GL_STRING));
+		LinkedHashMap<String, String> validGLStrings = GLStringUtilities.readGLStringFile("resources/test/fullyQualifiedExample.txt");
+		
+		Set<String> keys = validGLStrings.keySet();
+		
+		for (String key : keys) {
+			glString = new LinkageDisequilibriumGenotypeList(key, GLStringUtilities.fullyQualifyGLString(validGLStrings.get(key)));
+		}
 	}
 	
 	@Test
@@ -32,7 +36,7 @@ public class GLStringTest {
 	public void testDRB345AppearsHomozygous() {
 		assertFalse(glString.drb345AppearsHomozygous());
 		
-		LinkageDisequilibriumGenotypeList simpleDRB4String = new LinkageDisequilibriumGenotypeList(SIMPLE_DRB4_STRING);
+		LinkageDisequilibriumGenotypeList simpleDRB4String = new LinkageDisequilibriumGenotypeList("HOMOZYGOUS-DRB4", SIMPLE_DRB4_STRING);
 		assertTrue(simpleDRB4String.drb345AppearsHomozygous());
 	}
 }

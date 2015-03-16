@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.LogManager;
@@ -21,6 +22,7 @@ import org.immunogenomics.gl.client.local.LocalGlClient;
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
 	private static final String GL_STRING_DELIMITER_REGEX = "[\\^\\|\\+~/]";
+	private static final String FILE_DELIMITER_REGEX = "[\t,]";
 	public static final String ESCAPED_ASTERISK = "\\*";
 	public static final String COLON = ":";
 	
@@ -140,18 +142,31 @@ public class GLStringUtilities {
 		return segment;
 	}
 	
-	public static List<String> readGLStringFile(String filename) {
+	public static LinkedHashMap<String, String> readGLStringFile(String filename) {
 		File glStringFile = new File(filename);
 		BufferedReader reader = null;
-		String glString;
-		List<String> glStrings = new ArrayList<String>();
+		String line;
+		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
 		
 		try {
 			InputStream in = new FileInputStream(glStringFile);
 			reader = new BufferedReader(new InputStreamReader(in));
 			
-			while ((glString = reader.readLine()) != null) {
-				glStrings.add(glString);
+			String[] parts = null;
+			int lineNumber = 0;
+			while ((line = reader.readLine()) != null) {
+				parts = line.split(FILE_DELIMITER_REGEX);
+				if (parts.length == 1) {
+					glStrings.put(filename + "-" + lineNumber, parts[0]);
+				}
+				else if (parts.length == 2) {
+					glStrings.put(parts[0], parts[1]);
+				}
+				else {
+					LOGGER.warning("Unexpected line format at line " + lineNumber + ": " + filename);
+				}
+				
+				lineNumber++;
 			}
 		}
 		catch (FileNotFoundException e) {

@@ -15,6 +15,7 @@ import org.immunogenomics.gl.Haplotype;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumGenotypeList {
+	private String id;
 	private String glString;
 	private MultilocusUnphasedGenotype mug;
 	private List<List<String>> bAlleles;
@@ -34,9 +35,10 @@ public class LinkageDisequilibriumGenotypeList {
     		LOGGER.severe("Could not add file handler to logger");
     	}
     }
-
-	public LinkageDisequilibriumGenotypeList(String glString) {
+	
+	public LinkageDisequilibriumGenotypeList(String id, String glString) {
 		this.glString = glString;
+		this.id = id;
 		init();
 		parseGLString();
 	}
@@ -44,6 +46,7 @@ public class LinkageDisequilibriumGenotypeList {
 	public LinkageDisequilibriumGenotypeList(MultilocusUnphasedGenotype mug) {
 		this.mug = mug;
 		this.glString = mug.getGlstring();
+		this.id = mug.getId();
 		init();
 		decomposeMug();
 	}
@@ -145,6 +148,14 @@ public class LinkageDisequilibriumGenotypeList {
 		default:
 			break;
 		}
+	}
+	
+	public String getId() {
+		return id;
+	}
+	
+	public void setId(String id) {
+		this.id = id;
 	}
 	
 	public List<List<String>> getBAlleles() {

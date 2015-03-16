@@ -2,7 +2,7 @@ package org.dash;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.List;
+import java.util.LinkedHashMap;
 
 import org.dash.valid.LinkageDisequilibriumLoader;
 import org.dash.valid.gl.GLStringUtilities;
@@ -17,14 +17,15 @@ public class LinkageDisequilibriumLoaderTest {
 	
 	@Test
 	public void testLinkageReportingMugs() {
-		List<String> glStrings = GLStringUtilities.readGLStringFile("resources/test/fullyQualifiedExample.txt");
-		String glString = glStrings.get(0);
+		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("resources/test/fullyQualifiedExample.txt");
 		
-		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
-		
-		assertNotNull(mug);
-		
-		LinkageDisequilibriumLoader.detectLinkages(mug);
+		for (String key : glStrings.keySet()) {
+			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glStrings.get(key));
+			
+			assertNotNull(mug);
+			
+			LinkageDisequilibriumLoader.detectLinkages(mug);
+		}
 	}
 	
 	@Test
