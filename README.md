@@ -26,7 +26,7 @@ The results of the software should be used for supporting the evidence, but not 
 
 *Future Goals:*
 
- * Provide a key/handle by which reporting may be linked to input(s) - URI from GL Service or other abstract key?
+ * Support [HML 1.0](https://bioinformatics.bethematchclinical.org/HLA-Resources/HML/) as input
  
 *Basic Installation Process:*
 
