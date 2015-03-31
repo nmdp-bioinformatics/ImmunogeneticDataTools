@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLStringUtilities;
@@ -16,9 +17,28 @@ public class LinkageDisequilibriumWriter {
 	private static final int EXPECTED_LINKAGES = 2;
 	
 	private static LinkageDisequilibriumWriter instance = null;
+	private static Logger FILE_LOGGER = Logger.getLogger(LinkageDisequilibriumWriter.class.getName());
+	private static FileHandler handler;
+
+	static {
+		try {
+			handler = new LinkageDisequilibriumFileHandler();
+			FILE_LOGGER.addHandler(handler);
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	private LinkageDisequilibriumWriter() {
 		
+	}
+	
+	public static FileHandler getHandler() {
+		return handler;
 	}
 	
 	public static LinkageDisequilibriumWriter getInstance() {
@@ -30,9 +50,11 @@ public class LinkageDisequilibriumWriter {
 	}
 	/**
 	 * @param linkagesFound
+	 * @throws IOException 
+	 * @throws SecurityException 
 	 */
-	public void reportDetectedLinkages(LinkageDisequilibriumGenotypeList linkedGLString, 
-			Map<Object, Boolean> linkagesFound) {
+	public synchronized void reportDetectedLinkages(LinkageDisequilibriumGenotypeList linkedGLString, 
+			Map<Object, Boolean> linkagesFound) throws SecurityException, IOException {
 		int bcLinkages = 0;
 		int drdqLinkages = 0;
 		
@@ -107,23 +129,7 @@ public class LinkageDisequilibriumWriter {
 		}
 		
 		sb.append("\n***************************************\n");
-		
-		Logger FILE_LOGGER = Logger.getLogger(LinkageDisequilibriumWriter.class.getName());
-		try {
-			FILE_LOGGER.addHandler(LinkageDisequilibriumFileHandler.getInstance());
 	
-			FILE_LOGGER.info(sb.toString());
-		}
-		catch (IOException ioe) {
-			ioe.printStackTrace();
-		}
-		finally {
-//			try {
-//				LinkageDisequilibriumFileHandler.getInstance().close();	
-//			}
-//			catch (IOException ioe) {
-//				ioe.printStackTrace();
-//			}
-		}
+		FILE_LOGGER.info(sb.toString());
 	}
 }

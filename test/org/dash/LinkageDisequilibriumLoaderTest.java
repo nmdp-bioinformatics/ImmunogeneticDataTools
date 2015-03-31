@@ -12,7 +12,7 @@ import org.junit.Test;
 public class LinkageDisequilibriumLoaderTest {
 	@Test
 	public void testLinkageReportingExamples() {
-		LinkageDisequilibriumChecker.main(new String[] {"resources/test/contrivedExamples.txt", "resources/test/fullyQualifiedExample.txt", "resources/test/strictExample.txt", "resources/test/shorthandExamples.txt"});
+		LinkageDisequilibriumChecker.analyzeGLStringFiles(new String[] {"resources/test/contrivedExamples.txt", "resources/test/fullyQualifiedExample.txt", "resources/test/strictExample.txt", "resources/test/shorthandExamples.txt"});
 	}
 	
 	@Test

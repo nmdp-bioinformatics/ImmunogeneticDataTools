@@ -25,12 +25,15 @@ public class LinkageDisequilibriumChecker {
     }
     
 	public static void main(String[] args) {
-		String filename = null;
+		analyzeGLStringFiles(args);
 		
-		for (int i=0;i<args.length;i++) {
-			filename = args[i];
-			analyzeGLStringFile(filename);		
-		}				
+		LinkageDisequilibriumWriter.getHandler().close();
+	}
+	
+	public static void analyzeGLStringFiles(String[] filenames) {		
+		for (int i=0;i<filenames.length;i++) {
+			analyzeGLStringFile(filenames[i]);		
+		}
 	}
 
 	/**
@@ -45,13 +48,20 @@ public class LinkageDisequilibriumChecker {
 			}
 		}
 		
-		detectLinkages(glStrings);
+		try {
+			detectLinkages(glStrings);
+		}
+		catch (IOException e) {
+			LOGGER.warning("Could not use file handler:  LinkageDisequiibrimFileHandler");
+		}
 	}
 
 	/**
 	 * @param glStrings
+	 * @throws IOException 
+	 * @throws SecurityException 
 	 */
-	private static void detectLinkages(Map<String, String> glStrings) {
+	private static void detectLinkages(Map<String, String> glStrings) throws SecurityException, IOException {
 		LinkageDisequilibriumGenotypeList linkedGLString;
 		Map<Object, Boolean> linkagesFound;
 		
@@ -67,7 +77,13 @@ public class LinkageDisequilibriumChecker {
 		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug);
 		Map<Object, Boolean> linkagesFound = detectLinkages(linkedGLString);
 		LinkageDisequilibriumWriter writer = LinkageDisequilibriumWriter.getInstance();
-		writer.reportDetectedLinkages(linkedGLString, linkagesFound);	}
+		
+		try {
+			writer.reportDetectedLinkages(linkedGLString, linkagesFound);
+		} catch (IOException e) {
+			LOGGER.warning("Could not use file handler:  LinkageDisequiibrimFileHandler");
+		}	
+	}
 
 	private static Map<Object, Boolean> detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
 		Map<Object, Boolean> linkagesFound = HLALinkageDisequilibrium.hasDisequilibriumLinkage(linkedGLString);

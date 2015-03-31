@@ -8,20 +8,10 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 class LinkageDisequilibriumFileHandler extends FileHandler implements Filter {
-	private static LinkageDisequilibriumFileHandler instance = null;
-	private LinkageDisequilibriumFileHandler() throws IOException, SecurityException {
+	public LinkageDisequilibriumFileHandler() throws IOException, SecurityException {
 		super("./linkages.log", true);
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.INFO);
-	}
-	
-	public static LinkageDisequilibriumFileHandler getInstance() throws IOException,
-		SecurityException {
-		if (instance == null) {
-			instance = new LinkageDisequilibriumFileHandler();
-		}
-		
-		return instance;
 	}
 
 	public boolean isLoggable(LogRecord record) {
