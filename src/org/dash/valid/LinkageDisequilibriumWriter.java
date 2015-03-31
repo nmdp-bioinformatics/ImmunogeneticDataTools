@@ -1,36 +1,59 @@
 package org.dash.valid;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.logging.FileHandler;
-import java.util.logging.Filter;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
+import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
+import org.dash.valid.race.DisequilibriumElementByRace;
+import org.dash.valid.race.FrequencyByRace;
 
 public class LinkageDisequilibriumWriter {
 	
 	private static final int EXPECTED_LINKAGES = 2;
-	    
+	
+	private static LinkageDisequilibriumWriter instance = null;
+	
+	private LinkageDisequilibriumWriter() {
+		
+	}
+	
+	public static LinkageDisequilibriumWriter getInstance() {
+		if (instance == null) {
+			instance = new LinkageDisequilibriumWriter();
+		}
+		
+		return instance;
+	}
 	/**
 	 * @param linkagesFound
 	 */
-	public static void reportDetectedLinkages(LinkageDisequilibriumGenotypeList linkedGLString, 
-			HashMap<DisequilibriumElement, Boolean> linkagesFound) {
+	public void reportDetectedLinkages(LinkageDisequilibriumGenotypeList linkedGLString, 
+			Map<Object, Boolean> linkagesFound) {
 		int bcLinkages = 0;
 		int drdqLinkages = 0;
 		
+		List<String> commonRaceElementsFound = new ArrayList<String>();
+				
 		StringBuffer sb = new StringBuffer("Id: " + linkedGLString.getId() + "\nGL String: " + linkedGLString.getGLString());
 
+		List<String> notCommon = GLStringUtilities.checkCommonWellDocumented(linkedGLString.getGLString());
+		
+		for (String allele : notCommon) {
+			sb.append("\nAllele: " + allele + " is not in the Common Well Documented list\n");
+		}
+		
 		if (linkagesFound == null || linkagesFound.size() == 0) {
 			sb.append("\n\n");
 			sb.append("NO LINKAGES FOUND\n");
 		}
-		for (DisequilibriumElement linkages : linkagesFound.keySet()) {
+		
+		int raceLoop = 0;
+		
+		for (Object linkages : linkagesFound.keySet()) {
 			sb.append("\n\n");
 			if (linkagesFound.get(linkages).equals(Boolean.TRUE)) {
 				sb.append("We found perfect linkages:\n");
@@ -46,48 +69,61 @@ public class LinkageDisequilibriumWriter {
 			else if (linkages instanceof DRDQDisequilibriumElement) {
 				drdqLinkages++;
 			}
+			
+			if (linkages instanceof DisequilibriumElementByRace) {	
+				List<String> raceElementsFound = new ArrayList<String>();
+
+				for (FrequencyByRace frequencyByRace : ((DisequilibriumElementByRace)linkages).getFrequenciesByRace()) {
+					raceElementsFound.add(frequencyByRace.getRace());
+				}
+				
+				if (raceLoop == 0) {
+					commonRaceElementsFound.addAll(raceElementsFound);
+				}
+				else {
+					commonRaceElementsFound.retainAll(raceElementsFound);
+				}
+			}
+			raceLoop++;
 		}
 		
 		if (bcLinkages < EXPECTED_LINKAGES) {
-			sb.append("\n\n");
-			sb.append((EXPECTED_LINKAGES-bcLinkages) + " BC Linkage(s) not found\n");
+			sb.append("\n");
+			sb.append("WARNING: " + (EXPECTED_LINKAGES-bcLinkages) + " BC Linkage(s) not found\n");
 		}
 		if (drdqLinkages < EXPECTED_LINKAGES) {
-			sb.append("\n\n");
-			sb.append((EXPECTED_LINKAGES-drdqLinkages) + " DRDQ Linkage(s) not found\n");
+			sb.append("\n");
+			sb.append("WARNING: " + (EXPECTED_LINKAGES-drdqLinkages) + " DRDQ Linkage(s) not found\n");
 		}
+		
+		if (commonRaceElementsFound.size() == 0) {
+			sb.append("\nWARNING: Common Races not found\n");
+		}
+		else {
+			//for (String commonRace : commonRaceElementsFound) {
+				sb.append("\n\n");
+				sb.append("Common race element(s) found: " + commonRaceElementsFound + "\n");
+			//}
+		}
+		
 		sb.append("\n***************************************\n");
 		
-		class LinkageDisequilibriumFileHandler extends FileHandler implements Filter {
-			public LinkageDisequilibriumFileHandler() throws IOException,
-				SecurityException {
-			super("./linkages.log", true);
-			setFormatter(new SimpleFormatter());
-			setLevel(Level.INFO);
-		}
-
-			public boolean isLoggable(LogRecord record) {
-				if (record.getLevel() == Level.INFO) {
-					return true;
-				}
-				
-				return false;
-			}
-		};
-		
-		Handler handler = null;
 		Logger FILE_LOGGER = Logger.getLogger(LinkageDisequilibriumWriter.class.getName());
 		try {
-			handler = new LinkageDisequilibriumFileHandler();
-			FILE_LOGGER.addHandler(handler);
+			FILE_LOGGER.addHandler(LinkageDisequilibriumFileHandler.getInstance());
 	
 			FILE_LOGGER.info(sb.toString());
 		}
 		catch (IOException ioe) {
-			
+			ioe.printStackTrace();
 		}
 		finally {
-			handler.close();
+//			try {
+//				LinkageDisequilibriumFileHandler.getInstance().close();	
+//			}
+//			catch (IOException ioe) {
+//				ioe.printStackTrace();
+//			}
 		}
 	}
 }

@@ -9,6 +9,9 @@ public class GLStringConstants {
 	public static final String ALLELE_AMBIGUITY_DELIMITER = "/";
 	public static final String HLA_DASH = "HLA-";
 	public static final String ASTERISK = "*";
+	public static final String TAB = "\t";
+	public static final String DASH = "-";
+	public static final String NEWLINE = "\n";
 
 	// class I linkage disequilibrium loci
 	public static final String HLA_B = "HLA-B";

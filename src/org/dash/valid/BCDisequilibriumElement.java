@@ -1,15 +1,8 @@
 package org.dash.valid;
 
-public class BCDisequilibriumElement extends DisequilibriumElement {
+public abstract class BCDisequilibriumElement {
 	private String hlabElement;
 	private String hlacElement;
-	
-	public BCDisequilibriumElement(String hlabElement, String hlacElement, String frequency, String note) {
-		this.hlabElement = hlabElement;
-		this.hlacElement = hlacElement;
-		setFrequency(frequency);
-		setNote(note);
-	}
 	
 	public String getHlabElement() {
 		return hlabElement;
@@ -24,10 +17,6 @@ public class BCDisequilibriumElement extends DisequilibriumElement {
 		this.hlacElement = cElement;
 	}
 	
-	public String toString() {
-		return ("B Locus: " + this.getHlabElement() + "\n" + 
-				"C Locus: " + this.getHlacElement() + "\n" + 
-				"NegLocFreq: " + this.getFrequency() + "\n" + 
-				"Notes: " + this.getNote());
-	}
+	@Override
+	public abstract String toString();
 }

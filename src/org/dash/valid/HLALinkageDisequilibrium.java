@@ -1,19 +1,10 @@
 package org.dash.valid;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
+import java.util.Map;
+import java.util.Set;
 
+import org.dash.valid.base.BaseDRDQDisequilibriumElement;
+import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 
@@ -34,88 +25,34 @@ import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
  */
 
 public class HLALinkageDisequilibrium {
-	public static final String DASH = "-";
-	public static final String TAB = "\t";
-	
-    private static final Logger LOGGER = Logger.getLogger(HLALinkageDisequilibrium.class.getName());
-	
-	List<BCDisequilibriumElement> bcDisequilibriumElements = new ArrayList<BCDisequilibriumElement>();
-	List<DRDQDisequilibriumElement> drdqDisequilibriumElements = new ArrayList<DRDQDisequilibriumElement>();
-	
-	public HLALinkageDisequilibrium() {
-		init();
-	}
-	
-	public void init() {
-		try {
-			loadBCLinkageReferenceData();
-			loadDRDQLinkageReferenceData();
+	private static final String DASH = "-";
+	private static final String NNNN = "DRBX*NNNN";
 			
-			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
-		}
-		catch (FileNotFoundException fnfe) {
-			LOGGER.severe("Couldn't find disequilibrium element reference file.");
-			fnfe.printStackTrace();
-		}
-		catch (IOException ioe) {
-			LOGGER.severe("Couldn't load disequilibrium element reference file.");
-			ioe.printStackTrace();
-		}
-	}
-
-	private void loadBCLinkageReferenceData() throws FileNotFoundException, IOException {
-		File bcLinkages = new File("resources/BCLinkageDisequilibrium.txt");
-		InputStream in = new FileInputStream(bcLinkages);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-		String row;
-		String[] columns;
-		while ((row = reader.readLine()) != null) {
-			columns = row.split(TAB);
-
-			bcDisequilibriumElements.add(new BCDisequilibriumElement(columns[0], columns[1], columns[2], columns[3]));
-		}
-		
-		reader.close();
-	}
-	
-	private void loadDRDQLinkageReferenceData() throws FileNotFoundException, IOException {
-		File drdqLinkages = new File("resources/DRDQLinkageDisequilibrium.txt");
-		InputStream in = new FileInputStream(drdqLinkages);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-		String row;
-		String[] columns;
-		while ((row = reader.readLine()) != null) {
-			columns = row.split(TAB);
-		
-			drdqDisequilibriumElements.add(new DRDQDisequilibriumElement(columns[0], columns[1], columns[2], columns[3], columns[4], columns[5]));
-		}
-		
-		reader.close();		
-	}	
-	
-	public HashMap<DisequilibriumElement, Boolean> hasDisequilibriumLinkage(LinkageDisequilibriumGenotypeList glString) {
-		HashMap<DisequilibriumElement, Boolean> linkageElementsFound = new LinkedHashMap<DisequilibriumElement, Boolean>();
-		
-		for (BCDisequilibriumElement disElement : bcDisequilibriumElements) {
+	public static Map<Object, Boolean> hasDisequilibriumLinkage(LinkageDisequilibriumGenotypeList glString) {
+		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
+		Map<Object, Boolean> linkageElementsFound = new LinkageElementsMap(new DisequilibriumElementComparator());
+				
+		for (BCDisequilibriumElement disElement : freqLoader.getBCDisequilibriumElements()) {
 			linkageElementsFound = detectBCLinkages(linkageElementsFound, glString, disElement);
 		}
 		
-		for (DRDQDisequilibriumElement disElement : drdqDisequilibriumElements) {
+		for (DRDQDisequilibriumElement disElement : freqLoader.getDRDQDisequilibriumElements()) {
 			linkageElementsFound = detectDRDQLinkages(linkageElementsFound, glString, disElement);
 		}
 		
 		return linkageElementsFound;
 	}
 
-	private HashMap<DisequilibriumElement, Boolean> detectBCLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectBCLinkages(Map<Object, Boolean> linkageElementsFound,
 								LinkageDisequilibriumGenotypeList glString,
 								BCDisequilibriumElement disElement) {
-		for (List<String> bList : glString.getBAlleles()) {
+		for (Set<String> bList : glString.getBAlleles()) {
 			for (String bAllele : bList) {
 				if (bAllele.equals(disElement.getHlabElement())) {
 					linkageElementsFound = detectCLinkages(linkageElementsFound, disElement, glString, true);
 				}
-				else if (GLStringUtilities.fieldLevelComparison(bAllele, disElement.getHlabElement())) {
+				else if (GLStringUtilities.fieldLevelComparison(bAllele, disElement.getHlabElement()) || 
+							GLStringUtilities.checkAntigenRecognitionSite(bAllele, disElement.getHlabElement())) {
 					linkageElementsFound = detectCLinkages(linkageElementsFound, disElement, glString);
 				}
 			}
@@ -124,17 +61,17 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private HashMap<DisequilibriumElement, Boolean> detectCLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectCLinkages(Map<Object, Boolean> linkageElementsFound,
 								BCDisequilibriumElement disElement,
 								LinkageDisequilibriumGenotypeList glString) {
 		return detectCLinkages(linkageElementsFound, disElement, glString, false);
 	}
 
-	private HashMap<DisequilibriumElement, Boolean> detectCLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectCLinkages(Map<Object, Boolean> linkageElementsFound,
 								BCDisequilibriumElement disElement,
 								LinkageDisequilibriumGenotypeList glString,
 								boolean nonCodingVariationLinkage) {		
-		for (List<String> cList : glString.getCAlleles()) {	
+		for (Set<String> cList : glString.getCAlleles()) {	
 			for (String cAllele : cList) {
 				if (nonCodingVariationLinkage && cAllele.equals(disElement.getHlacElement())) {
 					// perfect hit
@@ -142,7 +79,8 @@ public class HLALinkageDisequilibrium {
 							disElement, true);
 				}
 				else if (cAllele.equals(disElement.getHlacElement()) || 
-						GLStringUtilities.fieldLevelComparison(cAllele, disElement.getHlacElement())) {
+						GLStringUtilities.fieldLevelComparison(cAllele, disElement.getHlacElement()) ||
+						GLStringUtilities.checkAntigenRecognitionSite(cAllele, disElement.getHlacElement())) {
 					// partial hit
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound,
 							disElement);
@@ -153,15 +91,16 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private HashMap<DisequilibriumElement, Boolean> detectDRDQLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectDRDQLinkages(Map<Object, Boolean> linkageElementsFound,
 									LinkageDisequilibriumGenotypeList glString,
 									DRDQDisequilibriumElement disElement) {
-		for (List<String> drb1List : glString.getDrb1Alleles()) {
+		for (Set<String> drb1List : glString.getDrb1Alleles()) {
 			for (String drb1Allele : drb1List) {
 				if (drb1Allele.equals(disElement.getHladrb1Element())) {
 					linkageElementsFound = detectDRB345DQLinkages(linkageElementsFound, glString, disElement, true);
 				}
-				else if (GLStringUtilities.fieldLevelComparison(drb1Allele, disElement.getHladrb1Element())) {
+				else if (GLStringUtilities.fieldLevelComparison(drb1Allele, disElement.getHladrb1Element()) ||
+							GLStringUtilities.checkAntigenRecognitionSite(drb1Allele, disElement.getHladrb1Element())) {
 					linkageElementsFound = detectDRB345DQLinkages(linkageElementsFound, glString, disElement);
 				}
 			}
@@ -170,50 +109,27 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private HashMap<DisequilibriumElement, Boolean> detectDRB345DQLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectDRB345DQLinkages(Map<Object, Boolean> linkageElementsFound,
 			LinkageDisequilibriumGenotypeList glString,
 			DRDQDisequilibriumElement disElement) {
 		return detectDRB345DQLinkages(linkageElementsFound, glString, disElement, false);
 	}
 	
-	private HashMap<DisequilibriumElement, Boolean> detectDRB345DQLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectDRB345DQLinkages(Map<Object, Boolean> linkageElementsFound,
 										LinkageDisequilibriumGenotypeList glString,
 										DRDQDisequilibriumElement disElement, boolean nonCodingVariationLinkage) {
-		if (glString.drb345AppearsHomozygous() && disElement.getHladrb345Element().equals(DASH)) {
+		if (glString.drb345AppearsHomozygous() && (disElement.getHladrb345Element().equals(DASH) || disElement.getHladrb345Element().equals(NNNN))) {
 			// TODO:  consider whether true should be sent on this call
-			linkageElementsFound = detectDQLinkages(linkageElementsFound, glString, disElement);
+			linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, disElement);
 		} 
-		for (List<String> drb345List : glString.getDrb345Alleles()) {
+		for (Set<String> drb345List : glString.getDrb345Alleles()) {
 			for (String drb345Allele : drb345List) {
 				if (nonCodingVariationLinkage && drb345Allele.equals(disElement.getHladrb345Element())) {
-					linkageElementsFound = detectDQLinkages(linkageElementsFound, glString, disElement, true);
-				}
-				else if (drb345Allele.equals(disElement.getHladrb345Element()) || 
-						GLStringUtilities.fieldLevelComparison(drb345Allele, disElement.getHladrb345Element())) {
-					linkageElementsFound = detectDQLinkages(linkageElementsFound, glString, disElement);
-				}
-			}
-		}
-		
-		return linkageElementsFound;
-	}
-	
-	private HashMap<DisequilibriumElement, Boolean> detectDQLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound, 
-			LinkageDisequilibriumGenotypeList glString,
-			DRDQDisequilibriumElement disElement) {
-		return detectDQLinkages(linkageElementsFound, glString, disElement, false);
-	}
-	
-	private HashMap<DisequilibriumElement, Boolean> detectDQLinkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound, 
-								LinkageDisequilibriumGenotypeList glString,
-								DRDQDisequilibriumElement disElement, boolean nonCodingVariationLinkage) {
-		for (List<String> dqa1List : glString.getDqa1Alleles()) {
-			for (String dqa1Allele : dqa1List) {
-				if (nonCodingVariationLinkage && dqa1Allele.equals(disElement.getHladqa1Element())) {
 					linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, disElement, true);
-				}
-				else if (dqa1Allele.equals(disElement.getHladqa1Element()) ||
-						GLStringUtilities.fieldLevelComparison(dqa1Allele, disElement.getHladqa1Element())) {
+				}				
+				else if (drb345Allele.equals(disElement.getHladrb345Element()) || 
+						GLStringUtilities.fieldLevelComparison(drb345Allele, disElement.getHladrb345Element()) ||
+							GLStringUtilities.checkAntigenRecognitionSite(drb345Allele, disElement.getHladrb345Element())) {
 					linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, disElement);
 				}
 			}
@@ -222,25 +138,61 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private HashMap<DisequilibriumElement, Boolean> detectDQB1Linkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectDQA1Linkages(Map<Object, Boolean> linkageElementsFound, 
+			LinkageDisequilibriumGenotypeList glString,
+			BaseDRDQDisequilibriumElement disElement) {
+		return detectDQA1Linkages(linkageElementsFound, glString, disElement, false);
+	}
+	
+	private static Map<Object, Boolean> detectDQA1Linkages(Map<Object, Boolean> linkageElementsFound, 
+								LinkageDisequilibriumGenotypeList glString,
+								BaseDRDQDisequilibriumElement disElement, boolean nonCodingVariationLinkage) {
+		for (Set<String> dqa1List : glString.getDqa1Alleles()) {
+			for (String dqa1Allele : dqa1List) {
+				if (nonCodingVariationLinkage && dqa1Allele.equals(disElement.getHladqa1Element())) {
+					// perfect hit
+					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement, true);				}
+				else if (dqa1Allele.equals(disElement.getHladqa1Element()) ||
+							GLStringUtilities.fieldLevelComparison(dqa1Allele, disElement.getHladqa1Element()) ||
+							GLStringUtilities.checkAntigenRecognitionSite(dqa1Allele, disElement.getHladqa1Element())) {
+					// partial hit
+					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement);				}
+			}
+		}
+		
+		return linkageElementsFound;
+	}
+	
+	private static Map<Object, Boolean> detectDQB1Linkages(Map<Object, Boolean> linkageElementsFound,
 			LinkageDisequilibriumGenotypeList glString,
 			DRDQDisequilibriumElement disElement) {
 		return detectDQB1Linkages(linkageElementsFound, glString, disElement, false);
 	}
 	
-	private HashMap<DisequilibriumElement, Boolean> detectDQB1Linkages(HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
+	private static Map<Object, Boolean> detectDQB1Linkages(Map<Object, Boolean> linkageElementsFound,
 									LinkageDisequilibriumGenotypeList glString,
 									DRDQDisequilibriumElement disElement, boolean nonCodingLinkageFound) {
-		for (List<String> dqb1List : glString.getDqb1Alleles()) {
+		for (Set<String> dqb1List : glString.getDqb1Alleles()) {
 			for (String dqb1Allele : dqb1List) {
 				if (nonCodingLinkageFound && dqb1Allele.equals(disElement.getHladqb1Element())) {
-					// full hit
-					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement, true);
+					if (disElement instanceof BaseDRDQDisequilibriumElement) {
+						linkageElementsFound = detectDQA1Linkages(linkageElementsFound, glString, (BaseDRDQDisequilibriumElement) disElement, true);
+					}
+					else {
+						// full hit
+						linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement, true);
+					}
 				}
 				else if (dqb1Allele.equals(disElement.getHladqb1Element()) ||
-						GLStringUtilities.fieldLevelComparison(dqb1Allele, disElement.getHladqb1Element())) {
-					// partial hit
-					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement);
+							GLStringUtilities.fieldLevelComparison(dqb1Allele, disElement.getHladqb1Element()) ||
+							GLStringUtilities.checkAntigenRecognitionSite(dqb1Allele, disElement.getHladqb1Element())) {
+					if (disElement instanceof BaseDRDQDisequilibriumElement) {
+						linkageElementsFound = detectDQA1Linkages(linkageElementsFound, glString, (BaseDRDQDisequilibriumElement) disElement);
+					}
+					else {
+						// partial hit
+						linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, disElement);
+					}
 				}
 			}
 		}
@@ -248,20 +200,21 @@ public class HLALinkageDisequilibrium {
 		return linkageElementsFound;
 	}
 	
-	private HashMap<DisequilibriumElement, Boolean> addMatchedDisequilibriumElement(
-			HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
-			DisequilibriumElement disElement) {
+	private static Map<Object, Boolean> addMatchedDisequilibriumElement(
+			Map<Object, Boolean> linkageElementsFound,
+			Object disElement) {
 		return addMatchedDisequilibriumElement(linkageElementsFound, disElement, false);
 	}
 
 	/**
 	 * @param linkageElementsFound
 	 * @param disElement
+	 * @param nonCodingVariationLinkage
 	 */
-	private HashMap<DisequilibriumElement, Boolean> addMatchedDisequilibriumElement(
-			HashMap<DisequilibriumElement, Boolean> linkageElementsFound,
-			DisequilibriumElement disElement, boolean nonCodingVariationLinkage) {
-		if (nonCodingVariationLinkage == true) {
+	private static Map<Object, Boolean> addMatchedDisequilibriumElement(
+			Map<Object, Boolean> linkageElementsFound,
+			Object disElement, boolean nonCodingVariationLinkage) {
+		if (nonCodingVariationLinkage) {
 			linkageElementsFound.put(disElement, Boolean.TRUE);
 		}
 		else if (!linkageElementsFound.containsKey(disElement)) {

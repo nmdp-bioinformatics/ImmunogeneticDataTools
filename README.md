@@ -38,8 +38,8 @@ The results of the software should be used for supporting the evidence, but not 
 
 *Running a Test Data Set:*
 
-* Command:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumLoader" -Dexec.args="&lt;filename> &lt;filename>"
-* Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumLoader" -Dexec.args="resources/test/contrivedExamples.txt resources/test/strictExample.txt resources/test/shorthandExamples.txt resources/test/fullyQualifiedExample.txt"
+* Command:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumChecker" -Dexec.args="&lt;filename> &lt;filename>"
+* Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumChecker" -Dexec.args="resources/test/contrivedExamples.txt resources/test/strictExample.txt resources/test/shorthandExamples.txt resources/test/fullyQualifiedExample.txt"
 
 *Logs:*
 

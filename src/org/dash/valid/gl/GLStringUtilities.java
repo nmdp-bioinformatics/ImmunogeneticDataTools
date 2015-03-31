@@ -8,12 +8,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
+import org.dash.valid.ars.AntigenRecognitionSiteLoader;
+import org.dash.valid.cwd.CommonWellDocumentedLoader;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 import org.immunogenomics.gl.client.GlClient;
 import org.immunogenomics.gl.client.GlClientException;
@@ -37,8 +44,8 @@ public class GLStringUtilities {
     	}
     }
 	
-	public static List<String> parse(String value, String delimiter) {
-		List<String> elements = new ArrayList<String>();
+	public static Set<String> parse(String value, String delimiter) {
+		Set<String> elements = new HashSet<String>();
 		StringTokenizer st = new StringTokenizer(value, delimiter);
 		while (st.hasMoreTokens()) {
 			elements.add(st.nextToken());
@@ -52,15 +59,44 @@ public class GLStringUtilities {
 		String token;
 		while (st.hasMoreTokens()) {
 			token = st.nextToken();
+			String[] parts = token.split(COLON);
 			LOGGER.finest(token);
 			if (!token.startsWith(GLStringConstants.HLA_DASH)) {
 				LOGGER.warning("GLString is invalid: " + glString);
 				LOGGER.warning("Locus not qualified with " + GLStringConstants.HLA_DASH + " for segment: " + token);
 				return false;
 			}
+			if (parts.length < 2) {
+				LOGGER.warning("GLString is invalid: " + glString);
+				LOGGER.warning("Unexpected allele: " + token);
+				return false;
+			}
 		}
 		
 		return true;
+	}
+	
+	public static List<String> checkCommonWellDocumented(String glString){
+		List<String> notCommon = new ArrayList<String>();
+		
+		HashMap<String, String> cwdAlleleMap = CommonWellDocumentedLoader.getInstance().getCwdAlleles();
+		
+		StringTokenizer st = new StringTokenizer(glString, GL_STRING_DELIMITER_REGEX);
+		String token;
+		while (st.hasMoreTokens()) {
+			token = st.nextToken();
+			if (cwdAlleleMap.containsValue(token)) {
+				continue;
+			}
+			
+			for (Entry<String, String> cwdAllele : cwdAlleleMap.entrySet()) {
+				if (!GLStringUtilities.fieldLevelComparison(token, cwdAllele.getValue())) {
+					notCommon.add(token);
+				}
+			}
+		}
+		
+		return notCommon;
 	}
 	
 	public static boolean fieldLevelComparison(String allele, String referenceAllele) {
@@ -79,30 +115,77 @@ public class GLStringUtilities {
 				alleleBuffer.append(COLON);
 				referenceAlleleBuffer.append(COLON);
 			}
+			// TODO:  Is this necessary?  Or, only for ARS checks?
+//			else if (i >= 2 && Pattern.matches("[SNLQ]", "" + allele.charAt(allele.length() - 1))) {
+//				alleleBuffer.append(allele.charAt(allele.length() - 1));
+//				LOGGER.finest("Found an SNLQ during fieldLevelComparison: " + alleleBuffer.toString());
+//			}
 		}
 		
-		return (alleleBuffer.toString().equals(referenceAlleleBuffer.toString()));
+		boolean match = alleleBuffer.toString().equals(referenceAlleleBuffer.toString());
+
+		return match;
 	}
-	
-	// TODO:  Remove after confirming deprecation and replacement by fieldLevelComparison
-	@Deprecated
-	public static String shortenAllele(String allele) {
-		String[] parts = allele.split(COLON);
-		String shortenedAllele = null;
+
+	/**
+	 * @param locus
+	 * @param alleleBuffer
+	 * @param match
+	 * @return
+	 * @throws UnexpectedAlleleException 
+	 */
+	public static boolean checkAntigenRecognitionSite(String allele, String referenceAllele) {
+		String[] parts = allele.split(ESCAPED_ASTERISK);
+		String locus = parts[0];
+		AntigenRecognitionSiteLoader instance = AntigenRecognitionSiteLoader.getInstance();
+		HashMap<String, Set<String>> arsMap = new HashMap<String, Set<String>>();
 		
-		if (parts.length > 3) {
-			shortenedAllele =  parts[0] + COLON + parts[1] + COLON + parts[2];
+		switch (locus) {
+		case GLStringConstants.HLA_B:
+			arsMap = instance.getbArsMap();
+			break;
+		case GLStringConstants.HLA_C:
+			arsMap = instance.getcArsMap();
+			break;
+		case GLStringConstants.HLA_DRB1:
+			arsMap = instance.getDrb1ArsMap();
+			break;
+		case GLStringConstants.HLA_DRB3:
+			arsMap = instance.getDrb3ArsMap();
+			break;
+		case GLStringConstants.HLA_DRB4:
+			arsMap = instance.getDrb4ArsMap();
+			break;
+		case GLStringConstants.HLA_DRB5:
+			arsMap = instance.getDrb5ArsMap();
+			break;
+		case GLStringConstants.HLA_DQB1:
+			arsMap = instance.getDqb1ArsMap();
+			break;
+		default:
+			return false;
 		}
-		else if (parts.length >= 2) {
-			shortenedAllele = parts[0] + COLON + parts[1];
+		
+		parts = allele.split(COLON);
+		
+		if (parts.length > 2 && Pattern.matches("[SNLQ]", "" + allele.charAt(allele.length() - 1))) {
+			allele = parts[0] + COLON + parts[1] + allele.charAt(allele.length() - 1);
+			LOGGER.finest("Found an SNLQ while comparing ARS: " + allele);
+		}
+		else if (parts.length < 2) {
+			LOGGER.warning("Unexpected allele: " + allele);
 		}
 		else {
-			shortenedAllele = parts[0];
+			allele = parts[0] + COLON + parts[1];
 		}
 		
-		LOGGER.finest("ShortenedAllele = " + shortenedAllele);
-		
-		return shortenedAllele;
+		for (String arsCode : arsMap.keySet()) {
+			if (arsCode.equals(referenceAllele) && arsMap.get(arsCode).contains(allele)) {
+				return true;
+			}
+		}
+			
+		return false;
 	}
 	
 	public static String fullyQualifyGLString(String shorthand) {

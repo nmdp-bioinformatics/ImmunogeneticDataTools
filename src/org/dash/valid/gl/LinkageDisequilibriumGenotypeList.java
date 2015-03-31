@@ -2,8 +2,9 @@ package org.dash.valid.gl;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -18,15 +19,16 @@ public class LinkageDisequilibriumGenotypeList {
 	private String id;
 	private String glString;
 	private MultilocusUnphasedGenotype mug;
-	private List<List<String>> bAlleles;
-	private List<List<String>> cAlleles;
-	private List<List<String>> drb1Alleles;
-	private List<List<String>> drb345Alleles;
-	private List<List<String>> dqb1Alleles;
-	private List<List<String>> dqa1Alleles;
+	private Set<Set<String>> bAlleles;
+	private Set<Set<String>> cAlleles;
+	private Set<Set<String>> drb1Alleles;
+	private Set<Set<String>> drb345Alleles;
+	private Set<Set<String>> dqb1Alleles;
+	private Set<Set<String>> dqa1Alleles;
 		
     private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumGenotypeList.class.getName());
     
+    // TODO:  Revisit - necessary or in appropriate place?
     static {
     	try {
 			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
@@ -52,12 +54,12 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 	
 	private void init() {
-		bAlleles = new ArrayList<List<String>>();
-		cAlleles = new ArrayList<List<String>>();
-		drb1Alleles = new ArrayList<List<String>>();
-		drb345Alleles = new ArrayList<List<String>>();
-		dqb1Alleles = new ArrayList<List<String>>();
-		dqa1Alleles = new ArrayList<List<String>>();	
+		bAlleles = new HashSet<Set<String>>();
+		cAlleles = new HashSet<Set<String>>();
+		drb1Alleles = new HashSet<Set<String>>();
+		drb345Alleles = new HashSet<Set<String>>();
+		dqb1Alleles = new HashSet<Set<String>>();
+		dqa1Alleles = new HashSet<Set<String>>();	
 	}
 	
 	public boolean drb345AppearsHomozygous() {
@@ -69,18 +71,18 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 	
 	private void parseGLString() {		
-		List<String> genes = GLStringUtilities.parse(glString, GLStringConstants.GENE_DELIMITER);
+		Set<String> genes = GLStringUtilities.parse(glString, GLStringConstants.GENE_DELIMITER);
 		for (String gene : genes) {			
 			String[] splitString = gene.split(GLStringUtilities.ESCAPED_ASTERISK);
 			String locus = splitString[0];
 			
-			List<String> genotypeAmbiguities = GLStringUtilities.parse(gene, GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
+			Set<String> genotypeAmbiguities = GLStringUtilities.parse(gene, GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
 			for (String genotypeAmbiguity : genotypeAmbiguities) {
-				List<String> geneCopies = GLStringUtilities.parse(genotypeAmbiguity, GLStringConstants.GENE_COPY_DELIMITER);
+				Set<String> geneCopies = GLStringUtilities.parse(genotypeAmbiguity, GLStringConstants.GENE_COPY_DELIMITER);
 				for (String geneCopy : geneCopies) {
-					List<String> genePhases = GLStringUtilities.parse(geneCopy, GLStringConstants.GENE_PHASE_DELIMITER);
+					Set<String> genePhases = GLStringUtilities.parse(geneCopy, GLStringConstants.GENE_PHASE_DELIMITER);
 					for (String genePhase : genePhases) {
-						List<String> alleleAmbiguities = GLStringUtilities.parse(genePhase, GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
+						Set<String> alleleAmbiguities = GLStringUtilities.parse(genePhase, GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
 						organizeByLocus(locus, alleleAmbiguities);
 					}
 				}
@@ -100,7 +102,7 @@ public class LinkageDisequilibriumGenotypeList {
 					List<AlleleList> alleleLists = haplotype.getAlleleLists();
 					for (AlleleList alleleList : alleleLists) {
 						List<Allele> alleles = alleleList.getAlleles();
-						List<String> alleleStrings = new ArrayList<String>();
+						Set<String> alleleStrings = new HashSet<String>();
 						for (Allele allele : alleles) {
 							alleleStrings.add(allele.getGlstring());
 							locus = allele.getLocus().toString();
@@ -112,13 +114,13 @@ public class LinkageDisequilibriumGenotypeList {
 		}
 	}
 	
-	private void organizeByLocus(String locus, List<String> alleleAmbiguities) {
+	private void organizeByLocus(String locus, Set<String> alleleAmbiguities) {
 		if (alleleAmbiguities.size() == 0) {
 			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList.  No alleles found");
 			return;
 		}
 		
-		String allele = alleleAmbiguities.get(0);
+		String allele = alleleAmbiguities.iterator().next();
 		if (allele == null) {
 			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList, allele == null");
 			return;
@@ -158,27 +160,27 @@ public class LinkageDisequilibriumGenotypeList {
 		this.id = id;
 	}
 	
-	public List<List<String>> getBAlleles() {
+	public Set<Set<String>> getBAlleles() {
 		return bAlleles;
 	}
 
-	public List<List<String>> getCAlleles() {
+	public Set<Set<String>> getCAlleles() {
 		return cAlleles;
 	}
 
-	public List<List<String>> getDrb1Alleles() {
+	public Set<Set<String>> getDrb1Alleles() {
 		return drb1Alleles;
 	}
 
-	public List<List<String>> getDrb345Alleles() {
+	public Set<Set<String>> getDrb345Alleles() {
 		return drb345Alleles;
 	}
 
-	public List<List<String>> getDqb1Alleles() {
+	public Set<Set<String>> getDqb1Alleles() {
 		return dqb1Alleles;
 	}
 
-	public List<List<String>> getDqa1Alleles() {
+	public Set<Set<String>> getDqa1Alleles() {
 		return dqa1Alleles;
 	}
 	
