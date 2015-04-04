@@ -1,0 +1,3 @@
+Download the Excel file from http://www.ebi.ac.uk/ipd/imgt/hla/ambig.html.
+For each locus tab, save the potion entitled "Sequences identical over exons
+2+3".

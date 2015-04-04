@@ -20,10 +20,14 @@ public class LinkageDisequilibriumWriter {
 	private static Logger FILE_LOGGER = Logger.getLogger(LinkageDisequilibriumWriter.class.getName());
 	private static FileHandler handler;
 
+	private static HLADatabaseVersion hladb;
+
 	static {
 		try {
 			handler = new LinkageDisequilibriumFileHandler();
 			FILE_LOGGER.addHandler(handler);
+			
+			hladb = HLADatabaseVersion.lookup(System.getProperty("org.dash.hladb"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -57,6 +61,7 @@ public class LinkageDisequilibriumWriter {
 		List<String> commonRaceElementsFound = new ArrayList<String>();
 				
 		StringBuffer sb = new StringBuffer("Id: " + linkedGLString.getId() + "\nGL String: " + linkedGLString.getGLString());
+		sb.append("\nHLA DB Version: " + hladb);
 
 		List<String> notCommon = GLStringUtilities.checkCommonWellDocumented(linkedGLString.getGLString());
 		

@@ -7,31 +7,36 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import org.dash.valid.HLADatabaseVersion;
 import org.dash.valid.gl.GLStringConstants;
-import org.dash.valid.gl.GLStringUtilities;
 
 public class CommonWellDocumentedLoader {
 	private static CommonWellDocumentedLoader instance = null;
 	
-	private HashMap<String, String> cwdAlleles;
-
-	private CommonWellDocumentedLoader() {
-		init();
+	private Set<String> cwdAlleles;
+	
+	private CommonWellDocumentedLoader(HLADatabaseVersion hladb) {
+		init(hladb);
 	}
 	
 	public static CommonWellDocumentedLoader getInstance() {
+		HLADatabaseVersion hladb = null;
 		if (instance == null) {
-			instance = new CommonWellDocumentedLoader();
+			hladb = HLADatabaseVersion.lookup(System.getProperty("org.dash.hladb"));
+			instance = new CommonWellDocumentedLoader(hladb);
 		}
 		
 		return instance;
 	}
 	
-	private void init() {
+	private void init(HLADatabaseVersion hladb) {
 		try {
-			loadCommonWellDocumentedAlleles();
+			loadCommonWellDocumentedAlleles(hladb);
 		}
 		catch (FileNotFoundException e) {
 			
@@ -41,40 +46,42 @@ public class CommonWellDocumentedLoader {
 		}
 	}
 	
-	private void loadCommonWellDocumentedAlleles() throws IOException, FileNotFoundException {		
+	private void loadCommonWellDocumentedAlleles(HLADatabaseVersion hladb) throws IOException, FileNotFoundException {		
 		File cwdFile = new File("resources/CWD.txt");
 		
-		HashMap<String, String> map = new HashMap<String, String>();
+		Set<String> cwdSet = new HashSet<String>();
 		
 		InputStream in = new FileInputStream(cwdFile);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		String row;
 		String[] columns;
 		int idx = 0;
-		String[] parts;
+		
+		int hladbIdx = -1;
 		
 		while ((row = reader.readLine()) != null) {
-			if (idx < 1) {
-				continue;
-			}
-			
 			columns = row.split(GLStringConstants.TAB);
-			parts = columns[2].split(GLStringUtilities.ESCAPED_ASTERISK);
-			map.put(GLStringConstants.HLA_DASH + parts[0], columns[2]);
+			if (idx < 1) {
+				List<String> headers = Arrays.asList(columns);
+
+				hladbIdx = headers.indexOf(hladb.getCwdName());			}
+			else {
+				cwdSet.add(GLStringConstants.HLA_DASH + columns[hladbIdx]);
+			}
 			
 			idx++;
 		}
 		
-		setCwdAlleles(map);
+		setCwdAlleles(cwdSet);
 		
 		reader.close();
 	}
 	
-	public HashMap<String, String> getCwdAlleles() {
+	public Set<String> getCwdAlleles() {
 		return this.cwdAlleles;
 	}
 
-	private void setCwdAlleles(HashMap<String, String> cwdAlleles) {
+	private void setCwdAlleles(Set<String> cwdAlleles) {
 		this.cwdAlleles = cwdAlleles;
 	}
 }

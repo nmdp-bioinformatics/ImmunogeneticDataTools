@@ -41,6 +41,11 @@ The results of the software should be used for supporting the evidence, but not 
 * Command:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumChecker" -Dexec.args="&lt;filename> &lt;filename>"
 * Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumChecker" -Dexec.args="resources/test/contrivedExamples.txt resources/test/strictExample.txt resources/test/shorthandExamples.txt resources/test/fullyQualifiedExample.txt"
 
+*Properties:*
+
+* Example:  org.dash.frequencies="nmdp"
+* Example:  org.dash.hladb="3.18.0"
+
 *Logs:*
 
 * linkage output may be found in linkages.log

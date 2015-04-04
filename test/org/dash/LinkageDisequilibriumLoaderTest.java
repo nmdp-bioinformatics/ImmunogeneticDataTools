@@ -7,9 +7,16 @@ import java.util.LinkedHashMap;
 import org.dash.valid.LinkageDisequilibriumChecker;
 import org.dash.valid.gl.GLStringUtilities;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageDisequilibriumLoaderTest {
+	@Before
+	public void setUp() {
+		System.setProperty("org.dash.frequencies", "nmdp");
+		System.setProperty("org.dash.hladb", "3.18.0");
+	}
+	
 	@Test
 	public void testLinkageReportingExamples() {
 		LinkageDisequilibriumChecker.analyzeGLStringFiles(new String[] {"resources/test/contrivedExamples.txt", "resources/test/fullyQualifiedExample.txt", "resources/test/strictExample.txt", "resources/test/shorthandExamples.txt"});

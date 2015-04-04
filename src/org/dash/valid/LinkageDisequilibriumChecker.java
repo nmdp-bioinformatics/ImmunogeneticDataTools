@@ -18,6 +18,10 @@ public class LinkageDisequilibriumChecker {
     static {
     	try {
 			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
+			
+			if (System.getProperty("org.dash.frequencies") == null) {
+				System.setProperty("org.dash.frequencies", "nmdp");
+			}
     	}
     	catch (IOException ioe) {
     		LOGGER.severe("Could not add file handler to logger");

@@ -79,24 +79,38 @@ public class GLStringUtilities {
 	public static List<String> checkCommonWellDocumented(String glString){
 		List<String> notCommon = new ArrayList<String>();
 		
-		HashMap<String, String> cwdAlleleMap = CommonWellDocumentedLoader.getInstance().getCwdAlleles();
+		Set<String> cwdAlleles = CommonWellDocumentedLoader.getInstance().getCwdAlleles();
 		
 		StringTokenizer st = new StringTokenizer(glString, GL_STRING_DELIMITER_REGEX);
 		String token;
 		while (st.hasMoreTokens()) {
 			token = st.nextToken();
-			if (cwdAlleleMap.containsValue(token)) {
-				continue;
-			}
 			
-			for (Entry<String, String> cwdAllele : cwdAlleleMap.entrySet()) {
-				if (!GLStringUtilities.fieldLevelComparison(token, cwdAllele.getValue())) {
-					notCommon.add(token);
-				}
+			if (!checkCommonWellDocumented(cwdAlleles, token)) {
+				notCommon.add(token);
 			}
+
 		}
 		
 		return notCommon;
+	}
+
+	/**
+	 * @param cwdAlleles
+	 * @param token
+	 */
+	private static boolean checkCommonWellDocumented(Set<String> cwdAlleles, String allele) {		
+		if (cwdAlleles.contains(allele)) {
+			return true;
+		}
+		
+		for (String cwdAllele : cwdAlleles) {
+			if (GLStringUtilities.fieldLevelComparison(allele, cwdAllele)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	public static boolean fieldLevelComparison(String allele, String referenceAllele) {

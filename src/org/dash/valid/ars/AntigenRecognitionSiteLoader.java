@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import org.dash.valid.HLADatabaseVersion;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 
@@ -36,22 +37,23 @@ public class AntigenRecognitionSiteLoader {
 
     private static final Logger LOGGER = Logger.getLogger(AntigenRecognitionSiteLoader.class.getName());
 	
-	private AntigenRecognitionSiteLoader() {
-		
+	private AntigenRecognitionSiteLoader(HLADatabaseVersion hladb) {
+		init(hladb);
 	}
-    
+	
 	public static AntigenRecognitionSiteLoader getInstance() {
+		HLADatabaseVersion hladb = null;
 		if (instance == null) {
-			instance = new AntigenRecognitionSiteLoader();
-			instance.init();
+			hladb = HLADatabaseVersion.lookup(System.getProperty("org.dash.hladb"));
+			instance = new AntigenRecognitionSiteLoader(hladb);
 		}
-		
+
 		return instance;
 	}
 	
-	private void init() {
+	private void init(HLADatabaseVersion hladb) {
 		for (String locus : loci) {
-			HashMap<String, Set<String>> arsMap = loadARSData(locus);
+			HashMap<String, Set<String>> arsMap = loadARSData(hladb, locus);
 			switch (locus) {
 			case GLStringConstants.HLA_B:
 				setbArsMap(arsMap);
@@ -78,15 +80,14 @@ public class AntigenRecognitionSiteLoader {
 		}
 	}
 	
-	private static HashMap<String, Set<String>> loadARSData(String locus) {
+	private static HashMap<String, Set<String>> loadARSData(HLADatabaseVersion hladb, String locus) {
 		BufferedReader reader = null;
 		HashMap<String, Set<String>> arsMap = new HashMap<String, Set<String>>();
 		
 		String[] parts = locus.split(GLStringConstants.DASH);
-		String filename = "resources/3.18.0/" + parts[1] + ".txt";
+		String filename = "resources/" + hladb.getArsName() + "/" + parts[1] + ".txt";
 		
 		try {
-			
 			File arsFile = new File(filename);
 			
 			InputStream in = new FileInputStream(arsFile);

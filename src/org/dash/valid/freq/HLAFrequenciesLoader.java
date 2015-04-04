@@ -50,7 +50,7 @@ public class HLAFrequenciesLoader {
     
 	public static HLAFrequenciesLoader getInstance() {
 		if (instance == null) {
-			String value = System.getProperty("frequencies");
+			String value = System.getProperty("org.dash.frequencies");
 			if (value != null && value.equals("nmdp")) {
 				instance = new HLAFrequenciesLoader();
 				init(true);
