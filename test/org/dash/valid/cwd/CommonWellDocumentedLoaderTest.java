@@ -1,19 +1,16 @@
 package org.dash.valid.cwd;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
 import org.junit.Test;
 
-public class CommonWellDocumentedLoaderTest {	
-	@Before
-	public void setUp() {
-		System.setProperty("org.dash.hladb", "3.18.0");
-	}
-	
+public class CommonWellDocumentedLoaderTest {		
 	@Test
 	public void test() {
-		assertNotNull(CommonWellDocumentedLoader.getInstance().getCwdAlleles());
+		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
+		assertNotNull(cwdLoader);
+		assertTrue(cwdLoader.getCwdAlleles() != null && cwdLoader.getCwdAlleles().size() > 0);
 	}
 
 }

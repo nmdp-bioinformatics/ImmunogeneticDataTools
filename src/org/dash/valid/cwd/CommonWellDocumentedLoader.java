@@ -27,7 +27,7 @@ public class CommonWellDocumentedLoader {
 	public static CommonWellDocumentedLoader getInstance() {
 		HLADatabaseVersion hladb = null;
 		if (instance == null) {
-			hladb = HLADatabaseVersion.lookup(System.getProperty("org.dash.hladb"));
+			hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
 			instance = new CommonWellDocumentedLoader(hladb);
 		}
 		
@@ -47,7 +47,7 @@ public class CommonWellDocumentedLoader {
 	}
 	
 	private void loadCommonWellDocumentedAlleles(HLADatabaseVersion hladb) throws IOException, FileNotFoundException {		
-		File cwdFile = new File("resources/CWD.txt");
+		File cwdFile = new File("resources/reference/CWD.txt");
 		
 		Set<String> cwdSet = new HashSet<String>();
 		

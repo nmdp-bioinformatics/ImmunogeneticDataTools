@@ -85,7 +85,7 @@ public class AntigenRecognitionSiteLoader {
 		HashMap<String, Set<String>> arsMap = new HashMap<String, Set<String>>();
 		
 		String[] parts = locus.split(GLStringConstants.DASH);
-		String filename = "resources/" + hladb.getArsName() + "/" + parts[1] + ".txt";
+		String filename = "resources/reference/" + hladb.getArsName() + "/" + parts[1] + ".txt";
 		
 		try {
 			File arsFile = new File(filename);

@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -27,8 +26,8 @@ import org.dash.valid.race.DRDQDisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
 
 public class HLAFrequenciesLoader {
-	private static final List<BCDisequilibriumElement> bcDisequilibriumElements = new ArrayList<BCDisequilibriumElement>();
-	private static final List<DRDQDisequilibriumElement> drdqDisequilibriumElements = new ArrayList<DRDQDisequilibriumElement>();
+	private final List<BCDisequilibriumElement> bcDisequilibriumElements = new ArrayList<BCDisequilibriumElement>();
+	private final List<DRDQDisequilibriumElement> drdqDisequilibriumElements = new ArrayList<DRDQDisequilibriumElement>();
 	
 	private static final String UNDERSCORE = "_";
 	
@@ -48,23 +47,28 @@ public class HLAFrequenciesLoader {
 	
     private static final Logger LOGGER = Logger.getLogger(HLAFrequenciesLoader.class.getName());
     
+    private HLAFrequenciesLoader() {
+    	
+    }
+    
 	public static HLAFrequenciesLoader getInstance() {
 		if (instance == null) {
-			String value = System.getProperty("org.dash.frequencies");
-			if (value != null && value.equals("nmdp")) {
-				instance = new HLAFrequenciesLoader();
-				init(true);
-			}
-			else {
-				instance = new HLAFrequenciesLoader();
-				init(false);
-			}
+			instance = new HLAFrequenciesLoader();
+			Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
+			instance.init(Frequencies.NMDP.equals(freq));
 		}
 		
 		return instance;
 	}
 	
-	private static void init(boolean useNMDPFrequencies) {
+	public void reloadFrequencies() {
+		Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
+		bcDisequilibriumElements.removeAll(bcDisequilibriumElements);
+		drdqDisequilibriumElements.removeAll(drdqDisequilibriumElements);
+		init(Frequencies.NMDP.equals(freq));
+	}
+	
+	private void init(boolean useNMDPFrequencies) {
 		try {
 			if (useNMDPFrequencies) {
 				loadNMDPBCLinkageReferenceData();
@@ -73,9 +77,7 @@ public class HLAFrequenciesLoader {
 			else {
 				loadBCLinkageReferenceData();
 				loadDRDQLinkageReferenceData();
-			}
-			
-			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
+			}			
 		}
 		catch (FileNotFoundException fnfe) {
 			LOGGER.severe("Couldn't find disequilibrium element reference file.");
@@ -95,8 +97,8 @@ public class HLAFrequenciesLoader {
 		return drdqDisequilibriumElements;
 	}
 
-	private static void loadNMDPBCLinkageReferenceData() throws FileNotFoundException, IOException {
-		File myFile = new File("resources/C~B.xlsx");
+	private void loadNMDPBCLinkageReferenceData() throws FileNotFoundException, IOException {
+		File myFile = new File("resources/frequencies/nmdp/C~B.xlsx");
         FileInputStream fis = new FileInputStream(myFile);
         
         // Finds the workbook instance for XLSX file
@@ -127,8 +129,8 @@ public class HLAFrequenciesLoader {
         myWorkBook.close();
 	}
 	
-	private static void loadNMDPDRDQLinkageReferenceData() throws FileNotFoundException, IOException {
-		File myFile = new File("resources/DRB3-4-5~DRB1~DQB1.xlsx");
+	private void loadNMDPDRDQLinkageReferenceData() throws FileNotFoundException, IOException {
+		File myFile = new File("resources/frequencies/nmdp/DRB3-4-5~DRB1~DQB1.xlsx");
         FileInputStream fis = new FileInputStream(myFile);
         
         // Finds the workbook instance for XLSX file
@@ -159,7 +161,7 @@ public class HLAFrequenciesLoader {
         myWorkBook.close();
 	}
 	
-	private static List<String> readBCHeaderElementsByRace(Row row) {		
+	private List<String> readBCHeaderElementsByRace(Row row) {		
 		List<String> raceHeaders = new ArrayList<String>();
 		
 		Iterator<Cell> cellIterator = row.cellIterator();
@@ -174,7 +176,7 @@ public class HLAFrequenciesLoader {
 		return raceHeaders;
 	}
 	
-	private static List<String> readDRDQHeaderElementsByRace(Row row) {		
+	private List<String> readDRDQHeaderElementsByRace(Row row) {		
 		List<String> raceHeaders = new ArrayList<String>();
 		
 		Iterator<Cell> cellIterator = row.cellIterator();
@@ -192,7 +194,7 @@ public class HLAFrequenciesLoader {
 	/**
 	 * @param row
 	 */
-	private static void readBCDiseqilibriumElementsByRace(Row row, List<String> raceHeaders) {
+	private void readBCDiseqilibriumElementsByRace(Row row, List<String> raceHeaders) {
 		// For each row, iterate through each columns
 		Iterator<Cell> cellIterator = row.cellIterator();
 		
@@ -222,7 +224,7 @@ public class HLAFrequenciesLoader {
 	/**
 	 * @param row
 	 */
-	private static void readDRDQDiseqilibriumElementsByRace(Row row, List<String> raceHeaders) {
+	private void readDRDQDiseqilibriumElementsByRace(Row row, List<String> raceHeaders) {
 		// For each row, iterate through each columns
 		Iterator<Cell> cellIterator = row.cellIterator();
 		
@@ -258,7 +260,7 @@ public class HLAFrequenciesLoader {
 	 * @param cell
 	 * @param idx
 	 */
-	private static List<FrequencyByRace> loadFrequencyAndRank(Row row, Cell cell, 
+	private List<FrequencyByRace> loadFrequencyAndRank(Row row, Cell cell, 
 			List<FrequencyByRace> frequenciesByRace, List<String> raceHeaders) {
 		Double freq = cell.getNumericCellValue();
 		
@@ -270,8 +272,8 @@ public class HLAFrequenciesLoader {
 		return frequenciesByRace;
 	}
 
-	private static void loadBCLinkageReferenceData() throws FileNotFoundException, IOException {
-		File bcLinkages = new File("resources/BCLinkageDisequilibrium.txt");
+	private void loadBCLinkageReferenceData() throws FileNotFoundException, IOException {
+		File bcLinkages = new File("resources/frequencies/wikiversity/BCLinkageDisequilibrium.txt");
 		InputStream in = new FileInputStream(bcLinkages);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		String row;
@@ -285,11 +287,11 @@ public class HLAFrequenciesLoader {
 		reader.close();
 	}
 	
-	private static void loadDRDQLinkageReferenceData() throws FileNotFoundException, IOException {
+	private void loadDRDQLinkageReferenceData() throws FileNotFoundException, IOException {
 		String row;
 		String[] columns;
 		
-		File drdqLinkages = new File("resources/DRDQLinkageDisequilibrium.txt");
+		File drdqLinkages = new File("resources/frequencies/wikiversity/DRDQLinkageDisequilibrium.txt");
 		InputStream in = new FileInputStream(drdqLinkages);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		

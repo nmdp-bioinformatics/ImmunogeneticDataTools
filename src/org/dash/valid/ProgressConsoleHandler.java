@@ -1,15 +1,15 @@
 package org.dash.valid;
 
 import java.io.IOException;
-import java.util.logging.FileHandler;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Filter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
-class LinkageDisequilibriumFileHandler extends FileHandler implements Filter {
-	public LinkageDisequilibriumFileHandler() throws IOException, SecurityException {
-		super("./linkages.log", true);
+public class ProgressConsoleHandler extends ConsoleHandler implements Filter {
+	public ProgressConsoleHandler() throws IOException, SecurityException {
+		super();
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.INFO);
 	}

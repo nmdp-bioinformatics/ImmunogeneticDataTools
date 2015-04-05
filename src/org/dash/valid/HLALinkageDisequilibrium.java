@@ -1,5 +1,6 @@
 package org.dash.valid;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,10 +28,19 @@ import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 public class HLALinkageDisequilibrium {
 	private static final String DASH = "-";
 	private static final String NNNN = "DRBX*NNNN";
+	private static HLADatabaseVersion hladb;
+		
+	static {
+		hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
+	}
 			
-	public static Map<Object, Boolean> hasDisequilibriumLinkage(LinkageDisequilibriumGenotypeList glString) {
+	public static DetectedLinkageFindings hasDisequilibriumLinkage(LinkageDisequilibriumGenotypeList glString) {
+		DetectedLinkageFindings findings = new DetectedLinkageFindings();
+		
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		Map<Object, Boolean> linkageElementsFound = new LinkageElementsMap(new DisequilibriumElementComparator());
+		
+		List<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 				
 		for (BCDisequilibriumElement disElement : freqLoader.getBCDisequilibriumElements()) {
 			linkageElementsFound = detectBCLinkages(linkageElementsFound, glString, disElement);
@@ -40,7 +50,12 @@ public class HLALinkageDisequilibrium {
 			linkageElementsFound = detectDRDQLinkages(linkageElementsFound, glString, disElement);
 		}
 		
-		return linkageElementsFound;
+		findings.setGenotypeList(glString);
+		findings.addLinkages(linkageElementsFound);
+		findings.setNonCWDAlleles(notCommon);
+		findings.setHladb(hladb);
+		
+		return findings;
 	}
 
 	private static Map<Object, Boolean> detectBCLinkages(Map<Object, Boolean> linkageElementsFound,

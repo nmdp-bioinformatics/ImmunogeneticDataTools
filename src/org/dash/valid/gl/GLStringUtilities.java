@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.LogManager;
@@ -31,18 +30,10 @@ public class GLStringUtilities {
 	private static final String GL_STRING_DELIMITER_REGEX = "[\\^\\|\\+~/]";
 	private static final String FILE_DELIMITER_REGEX = "[\t,]";
 	public static final String ESCAPED_ASTERISK = "\\*";
+	public static final String VARIANTS_REGEX = "[SNLQ]";
 	public static final String COLON = ":";
 	
     private static final Logger LOGGER = Logger.getLogger(GLStringUtilities.class.getName());
-    
-    static {
-    	try {
-			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
-    	}
-    	catch (IOException ioe) {
-    		LOGGER.severe("Could not add file handler to logger");
-    	}
-    }
 	
 	public static Set<String> parse(String value, String delimiter) {
 		Set<String> elements = new HashSet<String>();
@@ -129,11 +120,6 @@ public class GLStringUtilities {
 				alleleBuffer.append(COLON);
 				referenceAlleleBuffer.append(COLON);
 			}
-			// TODO:  Is this necessary?  Or, only for ARS checks?
-//			else if (i >= 2 && Pattern.matches("[SNLQ]", "" + allele.charAt(allele.length() - 1))) {
-//				alleleBuffer.append(allele.charAt(allele.length() - 1));
-//				LOGGER.finest("Found an SNLQ during fieldLevelComparison: " + alleleBuffer.toString());
-//			}
 		}
 		
 		boolean match = alleleBuffer.toString().equals(referenceAlleleBuffer.toString());
@@ -182,7 +168,7 @@ public class GLStringUtilities {
 		
 		parts = allele.split(COLON);
 		
-		if (parts.length > 2 && Pattern.matches("[SNLQ]", "" + allele.charAt(allele.length() - 1))) {
+		if (parts.length > 2 && Pattern.matches(VARIANTS_REGEX, "" + allele.charAt(allele.length() - 1))) {
 			allele = parts[0] + COLON + parts[1] + allele.charAt(allele.length() - 1);
 			LOGGER.finest("Found an SNLQ while comparing ARS: " + allele);
 		}
