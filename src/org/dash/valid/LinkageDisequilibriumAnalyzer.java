@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
+import org.dash.valid.handler.ProgressConsoleHandler;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumAnalyzer {		
@@ -21,7 +22,6 @@ public class LinkageDisequilibriumAnalyzer {
 			LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
 			LOGGER.addHandler(new ProgressConsoleHandler());
 		} catch (SecurityException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }

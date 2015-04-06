@@ -1,4 +1,4 @@
-package org.dash.valid;
+package org.dash.valid.handler;
 
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;

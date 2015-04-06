@@ -39,12 +39,18 @@ The results of the software should be used for supporting the evidence, but not 
 *Running a Test Data Set:*
 
 * Command:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="&lt;filename> &lt;filename>"
-* Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="resources/test/contrivedExamples.txt resources/test/strictExample.txt resources/test/shorthandExamples.txt resources/test/fullyQualifiedExample.txt"
+* Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="resources/test/contrivedExamples.txt resources/test/strictExample.txt resources/test/shorthandExamples.txt resources/test/fullyQualifiedExample.txt" -Dorg.dash.frequencies="nmdp" -Dorg.dash.hladb="3.18.0" -Djava.util.logging.config.file="resources/logging.properties"
 
 *Properties:*
 
-* Example:  org.dash.frequencies="nmdp"
-* Example:  org.dash.hladb="3.18.0"
+* Name:  org.dash.frequencies
+* Value(s):  wiki, nmdp
+
+* Name:  org.dash.hladb
+* Value(s):  3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0
+
+* Name:  java.util.logging.config.file
+* Value(s):  resources/logging.properties
 
 *Logs:*
 

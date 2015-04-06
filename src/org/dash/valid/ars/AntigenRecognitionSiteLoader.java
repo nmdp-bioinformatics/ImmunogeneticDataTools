@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.dash.valid.HLADatabaseVersion;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 

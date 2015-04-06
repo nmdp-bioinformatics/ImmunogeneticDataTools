@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.dash.valid.HLADatabaseVersion;
+import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.gl.GLStringConstants;
 
 public class CommonWellDocumentedLoader {

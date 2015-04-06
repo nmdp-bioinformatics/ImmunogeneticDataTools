@@ -1,4 +1,4 @@
-package org.dash.valid;
+package org.dash.valid.handler;
 
 import java.io.IOException;
 import java.util.logging.FileHandler;
@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
-class LinkageDisequilibriumFileHandler extends FileHandler implements Filter {
+public class LinkageDisequilibriumFileHandler extends FileHandler implements Filter {
 	public LinkageDisequilibriumFileHandler() throws IOException, SecurityException {
 		super("./linkages.log", true);
 		setFormatter(new SimpleFormatter());

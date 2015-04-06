@@ -1,4 +1,4 @@
-package org.dash.valid;
+package org.dash.valid.ars;
 
 import java.util.logging.Logger;
 

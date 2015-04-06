@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;

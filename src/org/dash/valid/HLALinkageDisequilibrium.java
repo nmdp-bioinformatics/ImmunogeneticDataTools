@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.base.BaseDRDQDisequilibriumElement;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringUtilities;
