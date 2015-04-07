@@ -46,13 +46,9 @@ public class BaseDRDQDisequilibriumElement extends DRDQDisequilibriumElement imp
 	}
 
 	@Override
-	public String toString()  {
-		return ("DRB1 Locus: " + this.getHladrb1Element() + "\n" + 
-				"DRB345 Locus: " + this.getHladrb345Element() + "\n" + 
-				"DQA1 Locus: " + this.getHladqa1Element() + "\n" + 
-				"DQB1 Locus: " + this.getHladqb1Element() + "\n" + 
-				"NegLocFreq: " + this.getFrequency() + "\n" + 
-				"Notes: " + this.getNote());
+	public String getFrequencyInfo()  {
+		return ("NegLocFreq: " + this.getFrequency() + "\n" + 
+				"Notes: " + this.getNote() + "\n");
 	}
 
 }

@@ -4,13 +4,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.dash.valid.DisequilibriumElementComparator;
-import org.dash.valid.LinkageElementsMap;
+import org.dash.valid.LinkageElementsSet;
 import org.dash.valid.race.BCDisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
+import org.dash.valid.report.DetectedBCDisequilibriumElement;
+import org.dash.valid.report.DetectedDisequilibriumElement;
 import org.junit.Test;
 
 public class LinkageElementsMapTest {
@@ -32,20 +33,18 @@ public class LinkageElementsMapTest {
 		
 		BCDisequilibriumElementByRace element2 = new BCDisequilibriumElementByRace("HLA-C*04:01", "HLA-B*52:01", frequenciesByRace);
 		
-		Map<Object, Boolean> map = new LinkageElementsMap(new DisequilibriumElementComparator());
+		Set<DetectedDisequilibriumElement> set = new LinkageElementsSet(new DisequilibriumElementComparator());
 		
-		map.put(element1,  Boolean.TRUE);
-		map.put(element2, Boolean.TRUE);
-		
-		Set<Object> set = map.keySet();
-		
+		set.add(new DetectedBCDisequilibriumElement(element1));
+		set.add(new DetectedBCDisequilibriumElement(element2));
+				
 		int idx = 0;
-		for (Object obj : set) {
+		for (DetectedDisequilibriumElement obj : set) {
 			if (idx == 0) {
-				assertTrue(obj.equals(element2));
+				assertTrue(obj.getDisequilibriumElement().equals(element2));
 			}
 			else {
-				assertTrue(obj.equals(element1));
+				assertTrue(obj.getDisequilibriumElement().equals(element1));
 			}
 			
 			idx++;

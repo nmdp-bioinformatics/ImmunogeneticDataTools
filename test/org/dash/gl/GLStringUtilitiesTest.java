@@ -66,13 +66,13 @@ public class GLStringUtilitiesTest {
 	
 	@Test
 	public void testFieldLevelComparison() {		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A010101));
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A010101) >= 0);
 		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0101));
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0101) >= 0);
 		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A010101, HLA_A01010101));
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A010101, HLA_A01010101) >= 0);
 		
-		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102));	
+		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102) >= 0);	
 	}
 
 	@Test
@@ -106,8 +106,8 @@ public class GLStringUtilitiesTest {
 	
 	@Test
 	public void testCommonWellDocumented() {
-		List<String> notCommon = GLStringUtilities.checkCommonWellDocumented(BOGUS_ALLELE + GLStringConstants.ALLELE_AMBIGUITY_DELIMITER + HLA_A0101);
+		List<String> notCommon = GLStringUtilities.checkCommonWellDocumented(BOGUS_ALLELE + GLStringConstants.ALLELE_AMBIGUITY_DELIMITER + HLA_A01010101);
 		assertTrue(notCommon.contains(BOGUS_ALLELE));
-		assertFalse(notCommon.contains(HLA_A0101));
+		assertFalse(notCommon.contains(HLA_A01010101));
 	}
 }

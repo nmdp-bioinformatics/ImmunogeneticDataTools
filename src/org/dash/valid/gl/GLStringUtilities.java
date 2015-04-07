@@ -95,7 +95,9 @@ public class GLStringUtilities {
 		}
 		
 		for (String cwdAllele : cwdAlleles) {
-			if (GLStringUtilities.fieldLevelComparison(allele, cwdAllele)) {
+			// TODO:  validate behavior
+			//if (GLStringUtilities.fieldLevelComparison(allele, cwdAllele) >= 0) {
+			if (allele.equals(cwdAllele)) {
 				return true;
 			}
 		}
@@ -103,7 +105,7 @@ public class GLStringUtilities {
 		return false;
 	}
 	
-	public static boolean fieldLevelComparison(String allele, String referenceAllele) {
+	public static int fieldLevelComparison(String allele, String referenceAllele) {
 		String[] alleleParts = allele.split(COLON);
 		String[] referenceAlleleParts = referenceAllele.split(COLON);
 		
@@ -123,7 +125,11 @@ public class GLStringUtilities {
 		
 		boolean match = alleleBuffer.toString().equals(referenceAlleleBuffer.toString());
 
-		return match;
+		if (match) {
+			return comparisonLength;
+		}
+
+		return -1;
 	}
 
 	/**

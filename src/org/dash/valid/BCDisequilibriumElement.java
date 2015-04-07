@@ -17,6 +17,5 @@ public abstract class BCDisequilibriumElement {
 		this.hlacElement = cElement;
 	}
 	
-	@Override
-	public abstract String toString();
+	public abstract String getFrequencyInfo();
 }

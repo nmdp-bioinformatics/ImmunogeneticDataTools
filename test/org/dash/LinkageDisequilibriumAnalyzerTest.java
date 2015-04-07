@@ -4,9 +4,9 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.LinkedHashMap;
 
-import org.dash.valid.DetectedLinkageFindings;
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.gl.GLStringUtilities;
+import org.dash.valid.report.DetectedLinkageFindings;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
 

@@ -1,8 +1,9 @@
-package org.dash.valid;
+package org.dash.valid.report;
 
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+
 import org.dash.valid.handler.LinkageDisequilibriumFileHandler;
 
 public class LinkageDisequilibriumWriter {	
@@ -42,30 +43,20 @@ public class LinkageDisequilibriumWriter {
 	 */
 	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) throws SecurityException, IOException {				
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + "\nGL String: " + findings.getGenotypeList().getGLString());
-		sb.append("\nHLA DB Version: " + findings.getHladb());
+		sb.append("\n\nHLA DB Version: " + findings.getHladb() + "\n");
 		
 		for (String allele : findings.getNonCWDAlleles()) {
-			sb.append("\nAllele: " + allele + " is not in the Common Well Documented list\n");
+			sb.append("Allele: " + allele + " is not in the Common Well Documented list\n");
 		}
 		
 		if (!findings.hasLinkages()) {
-			sb.append("\n\n");
-			sb.append("NO LINKAGES FOUND\n");
+			sb.append("\nNO LINKAGES FOUND\n");
 		}
 				
-		for (Object linkage : findings.getLinkages().keySet()) {
-			sb.append("\n\n");
-			Boolean value = findings.getLinkages().get(linkage);
-			if (value == null) {
-				System.out.println("The boolean is null!!!");
-			}
-			if (findings.getLinkages().get(linkage).equals(Boolean.TRUE)) {
-				sb.append("We found perfect linkages:\n");
-			}
-			else {
-				sb.append("We found partial linkages:\n");
-			}
-			sb.append(linkage);
+		for (DetectedDisequilibriumElement linkage : findings.getLinkages()) {
+			sb.append("\n");
+			sb.append("We found linkages:\n");
+			sb.append(linkage.toString());
 		}
 		
 		if (findings.getBcLinkageCount() < DetectedLinkageFindings.EXPECTED_LINKAGES) {
@@ -75,14 +66,6 @@ public class LinkageDisequilibriumWriter {
 		if (findings.getDrdqLinkageCount() < DetectedLinkageFindings.EXPECTED_LINKAGES) {
 			sb.append("\n");
 			sb.append("WARNING: " + (DetectedLinkageFindings.EXPECTED_LINKAGES-findings.getDrdqLinkageCount()) + " DRDQ Linkage(s) not found\n");
-		}
-		
-		if (findings.hasCommonRaceElements()) {
-			sb.append("\n\n");
-			sb.append("Common race element(s) found: " + findings.getCommonRaceElements() + "\n");
-		}
-		else {
-			sb.append("\nWARNING: Common Races not found\n");
 		}
 		
 		sb.append("\n***************************************\n");

@@ -9,6 +9,7 @@ import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.base.BaseBCDisequilibriumElement;
 import org.dash.valid.race.BCDisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
+import org.dash.valid.report.DetectedBCDisequilibriumElement;
 import org.junit.Test;
 
 public class DisequilibriumElementComparatorTest {
@@ -31,7 +32,7 @@ public class DisequilibriumElementComparatorTest {
 		BCDisequilibriumElementByRace element2 = new BCDisequilibriumElementByRace("HLA-C*04:01", "HLA-B*52:01", frequenciesByRace);
 		
 		DisequilibriumElementComparator comparator = new DisequilibriumElementComparator();
-		assertTrue(comparator.compare(element1, element2) > 0);
+		assertTrue(comparator.compare(new DetectedBCDisequilibriumElement(element1), new DetectedBCDisequilibriumElement(element2)) > 0);
 	}
 
 	@Test
@@ -41,6 +42,6 @@ public class DisequilibriumElementComparatorTest {
 		BaseBCDisequilibriumElement element2 = new BaseBCDisequilibriumElement("HLA-B*07:01", "HLA-C*01:01", "Another frequency", "Another note");
 				
 		DisequilibriumElementComparator comparator = new DisequilibriumElementComparator();
-		assertTrue(comparator.compare(element1, element2) > 0);
+		assertTrue(comparator.compare(new DetectedBCDisequilibriumElement(element1), new DetectedBCDisequilibriumElement(element2)) > 0);
 	}
 }

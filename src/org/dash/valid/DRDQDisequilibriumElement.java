@@ -26,6 +26,5 @@ public abstract class DRDQDisequilibriumElement {
 		this.hladqb1Element = hladqb1Element;
 	}
 	
-	@Override
-	public abstract String toString();
+	public abstract String getFrequencyInfo();
 }

@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.handler.ProgressConsoleHandler;
+import org.dash.valid.report.DetectedLinkageFindings;
+import org.dash.valid.report.LinkageDisequilibriumWriter;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumAnalyzer {		

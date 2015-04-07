@@ -32,13 +32,10 @@ public class BaseBCDisequilibriumElement extends BCDisequilibriumElement impleme
 	public void setNote(String note) {
 		this.note = note;
 	}
-
+	
 	@Override
-	public String toString()  {
-		return ("B Locus: " + this.getHlabElement() + "\n" + 
-				"C Locus: " + this.getHlacElement() + "\n" + 
-				"NegLocFreq: " + this.getFrequency() + "\n" + 
-				"Notes: " + this.getNote());
+	public String getFrequencyInfo() {
+		return ("NegLocFreq: " + this.getFrequency() + "\n" + 
+				"Notes: " + this.getNote() + "\n");
 	}
-
 }

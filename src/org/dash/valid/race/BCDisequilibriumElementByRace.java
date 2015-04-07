@@ -27,9 +27,8 @@ public class BCDisequilibriumElementByRace extends BCDisequilibriumElement imple
 	}
 	
 	@Override
-	public String toString() {
-		StringBuffer sb = new StringBuffer("B Locus: " + this.getHlabElement() + "\n" + 
-											"C Locus: " + this.getHlacElement() + "\n");
+	public String getFrequencyInfo() {
+		StringBuffer sb = new StringBuffer();
 		
 		for (FrequencyByRace freqsByRace : this.frequenciesByRace) {
 			sb.append(freqsByRace + "\n");

@@ -27,10 +27,8 @@ public class DRDQDisequilibriumElementByRace extends DRDQDisequilibriumElement i
 	}
 	
 	@Override
-	public String toString() {
-		StringBuffer sb = new StringBuffer("DRB345 Locus: " + this.getHladrb345Element() + "\n" + 
-											"DRB1 Locus: " + this.getHladrb1Element() + "\n" +
-											"DQB1 Locus: " + this.getHladqb1Element() + "\n");
+	public String getFrequencyInfo() {
+		StringBuffer sb = new StringBuffer();
 		
 		for (FrequencyByRace freqsByRace : this.frequenciesByRace) {
 			sb.append(freqsByRace + "\n");
