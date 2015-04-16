@@ -1,6 +1,5 @@
 package org.dash.valid;
 
-import java.util.List;
 import java.util.Set;
 
 import org.dash.valid.ars.HLADatabaseVersion;
@@ -46,7 +45,7 @@ public class HLALinkageDisequilibrium {
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		Set<DetectedDisequilibriumElement> linkageElementsFound = new LinkageElementsSet(new DisequilibriumElementComparator());
 		
-		List<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
+		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 				
 		for (BCDisequilibriumElement disElement : freqLoader.getBCDisequilibriumElements()) {
 			linkageElementsFound = detectBCLinkages(linkageElementsFound, glString, disElement);
@@ -136,7 +135,6 @@ public class HLALinkageDisequilibrium {
 										LinkageDisequilibriumGenotypeList glString,
 										DetectedDRDQDisequilibriumElement foundElement) {
 		if (glString.drb345AppearsHomozygous() && (foundElement.getDisequilibriumElement().getHladrb345Element().equals(DASH) || foundElement.getDisequilibriumElement().getHladrb345Element().equals(NNNN))) {
-			// TODO:  determine what value to set for match degree
 			linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, foundElement);
 		} 
 		for (Set<String> drb345List : glString.getDrb345Alleles()) {
@@ -217,8 +215,7 @@ public class HLALinkageDisequilibrium {
 	private static Set<DetectedDisequilibriumElement> addMatchedDisequilibriumElement(
 			Set<DetectedDisequilibriumElement> linkageElementsFound,
 			DetectedDisequilibriumElement foundElement) {
-		linkageElementsFound.add(foundElement);
-		// TODO:  Revisit to determine if checking for key first is useful - seems like old duplicate logic - compare which has greater match/hit rate
+			linkageElementsFound.add(foundElement);
 		
 		return linkageElementsFound;
 	}

@@ -16,7 +16,7 @@ public class DetectedLinkageFindings {
 
 	private LinkageDisequilibriumGenotypeList genotypeList;
 	private Set<DetectedDisequilibriumElement> linkages = new LinkageElementsSet(new DisequilibriumElementComparator());
-	private List<String> nonCWDAlleles;
+	private Set<String> nonCWDAlleles;
 	private HLADatabaseVersion hladb;
 	private int bcLinkageCount;
 	private int drdqLinkageCount;
@@ -40,10 +40,10 @@ public class DetectedLinkageFindings {
 	public void setHladb(HLADatabaseVersion hladb) {
 		this.hladb = hladb;
 	}
-	public List<String> getNonCWDAlleles() {
+	public Set<String> getNonCWDAlleles() {
 		return nonCWDAlleles;
 	}
-	public void setNonCWDAlleles(List<String> nonCWDAlleles) {
+	public void setNonCWDAlleles(Set<String> nonCWDAlleles) {
 		this.nonCWDAlleles = nonCWDAlleles;
 	}
 	public LinkageDisequilibriumGenotypeList getGenotypeList() {

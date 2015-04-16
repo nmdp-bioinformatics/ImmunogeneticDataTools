@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Set;
 
 import org.dash.valid.gl.GLStringConstants;
@@ -106,7 +105,7 @@ public class GLStringUtilitiesTest {
 	
 	@Test
 	public void testCommonWellDocumented() {
-		List<String> notCommon = GLStringUtilities.checkCommonWellDocumented(BOGUS_ALLELE + GLStringConstants.ALLELE_AMBIGUITY_DELIMITER + HLA_A01010101);
+		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(BOGUS_ALLELE + GLStringConstants.ALLELE_AMBIGUITY_DELIMITER + HLA_A01010101);
 		assertTrue(notCommon.contains(BOGUS_ALLELE));
 		assertFalse(notCommon.contains(HLA_A01010101));
 	}

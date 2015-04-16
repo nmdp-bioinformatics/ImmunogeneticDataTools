@@ -7,11 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -66,8 +64,8 @@ public class GLStringUtilities {
 		return true;
 	}
 	
-	public static List<String> checkCommonWellDocumented(String glString){
-		List<String> notCommon = new ArrayList<String>();
+	public static Set<String> checkCommonWellDocumented(String glString){
+		Set<String> notCommon = new HashSet<String>();
 		
 		Set<String> cwdAlleles = CommonWellDocumentedLoader.getInstance().getCwdAlleles();
 		
@@ -95,8 +93,6 @@ public class GLStringUtilities {
 		}
 		
 		for (String cwdAllele : cwdAlleles) {
-			// TODO:  validate behavior
-			//if (GLStringUtilities.fieldLevelComparison(allele, cwdAllele) >= 0) {
 			if (allele.equals(cwdAllele)) {
 				return true;
 			}
