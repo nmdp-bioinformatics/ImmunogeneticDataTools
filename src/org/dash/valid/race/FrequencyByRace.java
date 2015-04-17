@@ -29,8 +29,11 @@ public class FrequencyByRace {
 	public void setRace(String race) {
 		this.race = race;
 	}
+	public String getRaceType() {
+		return BroadRace.contains(race) ? "Broad" : "Detailed";
+	}
 	
 	public String toString() {
-		return "Race: " + getRace() + ", Freq: + " + getFrequency() + ", Rank: + " + getRank();
+		return getRaceType() + " Race: " + getRace() + ", Freq: + " + getFrequency() + ", Rank: + " + getRank();
 	}
 }

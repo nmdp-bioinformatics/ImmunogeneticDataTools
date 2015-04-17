@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -24,6 +25,7 @@ import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.race.BCDisequilibriumElementByRace;
 import org.dash.valid.race.DRDQDisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
+import org.dash.valid.race.FrequencyByRaceComparator;
 
 public class HLAFrequenciesLoader {
 	private final List<BCDisequilibriumElement> bcDisequilibriumElements = new ArrayList<BCDisequilibriumElement>();
@@ -268,6 +270,8 @@ public class HLAFrequenciesLoader {
 			FrequencyByRace frequencyByRace = new FrequencyByRace(freq, ((Double) row.getCell(cell.getColumnIndex() + 1).getNumericCellValue()).toString(), raceHeaders.get(cell.getColumnIndex()));
 			frequenciesByRace.add(frequencyByRace);
 		}
+		
+		Collections.sort(frequenciesByRace, new FrequencyByRaceComparator());
 		
 		return frequenciesByRace;
 	}
