@@ -43,7 +43,7 @@ public class AntigenRecognitionSiteLoader {
 	public static AntigenRecognitionSiteLoader getInstance() {
 		HLADatabaseVersion hladb = null;
 		if (instance == null) {
-			hladb = HLADatabaseVersion.lookup(System.getProperty("org.dash.hladb"));
+			hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
 			instance = new AntigenRecognitionSiteLoader(hladb);
 		}
 

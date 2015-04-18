@@ -1,18 +1,16 @@
 package org.dash.gl;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.LinkedHashMap;
 import java.util.Set;
+
+import junit.framework.TestCase;
 
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
 
-public class GLStringUtilitiesTest {
+public class GLStringUtilitiesTest extends TestCase {
 	private static final String BOGUS_ALLELE = "HLA-A*QI:UD";
 	private static final String HLA_A0101 = "HLA-A*01:01";
 	private static final String HLA_A0102 = "HLA-A*01:02";
@@ -56,22 +54,22 @@ public class GLStringUtilitiesTest {
 	
 	@Test
 	public void testCheckAntigenRecognitionSite() {
-		assertTrue(GLStringUtilities.checkAntigenRecognitionSite(HLA_C07020101, HLA_C0702g));
+		assertNotNull(GLStringUtilities.checkAntigenRecognitionSite(HLA_C07020101, HLA_C0702g));
 		
-		assertTrue(GLStringUtilities.checkAntigenRecognitionSite(HLA_C04010101, HLA_C0401g));
+		assertNotNull(GLStringUtilities.checkAntigenRecognitionSite(HLA_C04010101, HLA_C0401g));
 		
-		assertTrue(GLStringUtilities.checkAntigenRecognitionSite(HLA_B15010102N, HLA_B1501g));
+		assertNotNull(GLStringUtilities.checkAntigenRecognitionSite(HLA_B15010102N, HLA_B1501g));
 	}
 	
 	@Test
 	public void testFieldLevelComparison() {		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A010101) >= 0);
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A010101) != null);
 		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0101) >= 0);
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0101) != null);
 		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A010101, HLA_A01010101) >= 0);
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A010101, HLA_A01010101) != null);
 		
-		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102) >= 0);	
+		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102) != null);	
 	}
 
 	@Test

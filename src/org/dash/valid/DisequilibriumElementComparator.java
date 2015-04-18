@@ -9,9 +9,10 @@ public class DisequilibriumElementComparator implements Comparator<DetectedDiseq
 
 	@Override
 	public int compare(DetectedDisequilibriumElement element1, DetectedDisequilibriumElement element2) {
+		int ret;
 		if (element1.getDisequilibriumElement() instanceof DisequilibriumElementByRace && element2.getDisequilibriumElement() instanceof DisequilibriumElementByRace) {
 			// those with more linkages should sort first
-			int ret = ((DisequilibriumElementByRace)element2.getDisequilibriumElement()).getFrequenciesByRace().size() - 
+			ret = ((DisequilibriumElementByRace)element2.getDisequilibriumElement()).getFrequenciesByRace().size() - 
 					((DisequilibriumElementByRace)element1.getDisequilibriumElement()).getFrequenciesByRace().size();
 			if (ret != 0) {
 				return ret;
@@ -19,5 +20,7 @@ public class DisequilibriumElementComparator implements Comparator<DetectedDiseq
 		}
 		
 		// else sort alphabetically
-		return element1.toString().compareTo(element2.toString());	}
+		ret = element1.toString().compareTo(element2.toString());	
+		return ret;
+	}
 }

@@ -1,9 +1,9 @@
 package org.dash;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import junit.framework.TestCase;
 
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.base.BaseBCDisequilibriumElement;
@@ -12,7 +12,7 @@ import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.report.DetectedBCDisequilibriumElement;
 import org.junit.Test;
 
-public class DisequilibriumElementComparatorTest {
+public class DisequilibriumElementComparatorTest extends TestCase {
 
 	@Test
 	public void testComparisonByRace() {

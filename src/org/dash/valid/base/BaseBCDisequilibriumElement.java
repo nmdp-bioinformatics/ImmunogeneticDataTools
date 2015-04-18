@@ -1,6 +1,7 @@
 package org.dash.valid.base;
 
 import org.dash.valid.BCDisequilibriumElement;
+import org.dash.valid.gl.GLStringConstants;
 
 public class BaseBCDisequilibriumElement extends BCDisequilibriumElement implements BaseDisequilibriumElement {
 	private String frequency;
@@ -35,7 +36,7 @@ public class BaseBCDisequilibriumElement extends BCDisequilibriumElement impleme
 	
 	@Override
 	public String getFrequencyInfo() {
-		return ("NegLocFreq: " + this.getFrequency() + "\n" + 
-				"Notes: " + this.getNote() + "\n");
+		return ("NegLocFreq: " + this.getFrequency() + GLStringConstants.NEWLINE + 
+				"Notes: " + this.getNote() + GLStringConstants.NEWLINE);
 	}
 }

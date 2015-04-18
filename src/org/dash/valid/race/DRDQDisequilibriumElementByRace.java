@@ -3,6 +3,7 @@ package org.dash.valid.race;
 import java.util.List;
 
 import org.dash.valid.DRDQDisequilibriumElement;
+import org.dash.valid.gl.GLStringConstants;
 
 public class DRDQDisequilibriumElementByRace extends DRDQDisequilibriumElement implements DisequilibriumElementByRace {
 	private List<FrequencyByRace> frequenciesByRace;
@@ -31,7 +32,7 @@ public class DRDQDisequilibriumElementByRace extends DRDQDisequilibriumElement i
 		StringBuffer sb = new StringBuffer();
 		
 		for (FrequencyByRace freqsByRace : this.frequenciesByRace) {
-			sb.append(freqsByRace + "\n");
+			sb.append(freqsByRace + GLStringConstants.NEWLINE);
 		}
 		
 		return sb.toString();

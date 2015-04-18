@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
+import org.dash.valid.report.LinkageHitDegree;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 import org.immunogenomics.gl.client.GlClient;
 import org.immunogenomics.gl.client.GlClientException;
@@ -29,6 +30,7 @@ public class GLStringUtilities {
 	public static final String ESCAPED_ASTERISK = "\\*";
 	public static final String VARIANTS_REGEX = "[SNLQ]";
 	public static final String COLON = ":";
+	private static final int P_GROUP_LEVEL = 2;
 	
     private static final Logger LOGGER = Logger.getLogger(GLStringUtilities.class.getName());
 	
@@ -54,7 +56,7 @@ public class GLStringUtilities {
 				LOGGER.warning("Locus not qualified with " + GLStringConstants.HLA_DASH + " for segment: " + token);
 				return false;
 			}
-			if (parts.length < 2) {
+			if (parts.length < P_GROUP_LEVEL) {
 				LOGGER.warning("GLString is invalid: " + glString);
 				LOGGER.warning("Unexpected allele: " + token);
 				return false;
@@ -101,7 +103,7 @@ public class GLStringUtilities {
 		return false;
 	}
 	
-	public static int fieldLevelComparison(String allele, String referenceAllele) {
+	public static LinkageHitDegree fieldLevelComparison(String allele, String referenceAllele) {
 		String[] alleleParts = allele.split(COLON);
 		String[] referenceAlleleParts = referenceAllele.split(COLON);
 		
@@ -122,10 +124,10 @@ public class GLStringUtilities {
 		boolean match = alleleBuffer.toString().equals(referenceAlleleBuffer.toString());
 
 		if (match) {
-			return comparisonLength;
+			return new LinkageHitDegree(comparisonLength, alleleParts.length, alleleBuffer.toString());
 		}
 
-		return -1;
+		return null;
 	}
 
 	/**
@@ -135,7 +137,7 @@ public class GLStringUtilities {
 	 * @return
 	 * @throws UnexpectedAlleleException 
 	 */
-	public static boolean checkAntigenRecognitionSite(String allele, String referenceAllele) {
+	public static LinkageHitDegree checkAntigenRecognitionSite(String allele, String referenceAllele) {
 		String[] parts = allele.split(ESCAPED_ASTERISK);
 		String locus = parts[0];
 		AntigenRecognitionSiteLoader instance = AntigenRecognitionSiteLoader.getInstance();
@@ -164,16 +166,16 @@ public class GLStringUtilities {
 			arsMap = instance.getDqb1ArsMap();
 			break;
 		default:
-			return false;
+			return null;
 		}
 		
 		parts = allele.split(COLON);
 		
-		if (parts.length > 2 && Pattern.matches(VARIANTS_REGEX, "" + allele.charAt(allele.length() - 1))) {
+		if (parts.length > P_GROUP_LEVEL && Pattern.matches(VARIANTS_REGEX, "" + allele.charAt(allele.length() - 1))) {
 			allele = parts[0] + COLON + parts[1] + allele.charAt(allele.length() - 1);
 			LOGGER.finest("Found an SNLQ while comparing ARS: " + allele);
 		}
-		else if (parts.length < 2) {
+		else if (parts.length < P_GROUP_LEVEL) {
 			LOGGER.warning("Unexpected allele: " + allele);
 		}
 		else {
@@ -182,11 +184,11 @@ public class GLStringUtilities {
 		
 		for (String arsCode : arsMap.keySet()) {
 			if (arsCode.equals(referenceAllele) && arsMap.get(arsCode).contains(allele)) {
-				return true;
+				return new LinkageHitDegree(P_GROUP_LEVEL, parts.length, parts[0] + GLStringUtilities.COLON + parts[1]);
 			}
 		}
 			
-		return false;
+		return null;
 	}
 	
 	public static String fullyQualifyGLString(String shorthand) {

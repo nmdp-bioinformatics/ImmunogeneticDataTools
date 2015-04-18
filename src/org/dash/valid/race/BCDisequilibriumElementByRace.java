@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dash.valid.BCDisequilibriumElement;
+import org.dash.valid.gl.GLStringConstants;
 
 public class BCDisequilibriumElementByRace extends BCDisequilibriumElement implements DisequilibriumElementByRace {
 	private List<FrequencyByRace> frequenciesByRace = new ArrayList<FrequencyByRace>();
@@ -31,7 +32,7 @@ public class BCDisequilibriumElementByRace extends BCDisequilibriumElement imple
 		StringBuffer sb = new StringBuffer();
 		
 		for (FrequencyByRace freqsByRace : this.frequenciesByRace) {
-			sb.append(freqsByRace + "\n");
+			sb.append(freqsByRace + GLStringConstants.NEWLINE);
 		}
 		
 		return sb.toString();

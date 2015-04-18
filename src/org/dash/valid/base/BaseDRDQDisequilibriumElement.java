@@ -1,6 +1,7 @@
 package org.dash.valid.base;
 
 import org.dash.valid.DRDQDisequilibriumElement;
+import org.dash.valid.gl.GLStringConstants;
 
 
 public class BaseDRDQDisequilibriumElement extends DRDQDisequilibriumElement implements BaseDisequilibriumElement {
@@ -47,8 +48,8 @@ public class BaseDRDQDisequilibriumElement extends DRDQDisequilibriumElement imp
 
 	@Override
 	public String getFrequencyInfo()  {
-		return ("NegLocFreq: " + this.getFrequency() + "\n" + 
-				"Notes: " + this.getNote() + "\n");
+		return ("NegLocFreq: " + this.getFrequency() + GLStringConstants.NEWLINE + 
+				"Notes: " + this.getNote() + GLStringConstants.NEWLINE);
 	}
 
 }

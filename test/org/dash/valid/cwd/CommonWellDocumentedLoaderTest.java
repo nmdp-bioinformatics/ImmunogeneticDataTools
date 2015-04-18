@@ -1,15 +1,14 @@
 package org.dash.valid.cwd;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.junit.Test;
 
-public class CommonWellDocumentedLoaderTest {	
+public class CommonWellDocumentedLoaderTest extends TestCase {	
 	private static final String DQA10111 = "HLA-DQA1*01:11";
 	private static final String HLA08433 = "HLA08433";
 	@Test

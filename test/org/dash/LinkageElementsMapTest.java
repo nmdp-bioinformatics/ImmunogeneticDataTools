@@ -1,10 +1,10 @@
 package org.dash;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import junit.framework.TestCase;
 
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.LinkageElementsSet;
@@ -14,7 +14,7 @@ import org.dash.valid.report.DetectedBCDisequilibriumElement;
 import org.dash.valid.report.DetectedDisequilibriumElement;
 import org.junit.Test;
 
-public class LinkageElementsMapTest {
+public class LinkageElementsMapTest extends TestCase {
 
 	@Test
 	public void test() {

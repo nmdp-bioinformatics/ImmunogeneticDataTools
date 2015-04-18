@@ -33,7 +33,6 @@ public class HLALinkageDisequilibrium {
 	private static final String DASH = "-";
 	private static final String NNNN = "DRBX*NNNN";
 	private static HLADatabaseVersion hladb;
-	private static final int P_GROUP_LEVEL = 2;
 		
 	static {
 		hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
@@ -66,18 +65,20 @@ public class HLALinkageDisequilibrium {
 	private static Set<DetectedDisequilibriumElement> detectBCLinkages(Set<DetectedDisequilibriumElement> linkageElementsFound,
 								LinkageDisequilibriumGenotypeList glString,
 								BCDisequilibriumElement disElement) {
+		LinkageHitDegree hitDegree;
+		
 		for (Set<String> bList : glString.getBAlleles()) {
 			for (String bAllele : bList) {
-				int hitBlock = GLStringUtilities.fieldLevelComparison(bAllele, disElement.getHlabElement());
-				if (hitBlock >= 0) {
+				hitDegree = GLStringUtilities.fieldLevelComparison(bAllele, disElement.getHlabElement());
+				if (hitDegree != null) {
 					DetectedBCDisequilibriumElement foundElement = new DetectedBCDisequilibriumElement(disElement);
-					foundElement.setbHitDegree(new LinkageHitDegree(hitBlock, bAllele));
+					foundElement.setbHitDegree(hitDegree);
 					
 					linkageElementsFound = detectCLinkages(linkageElementsFound, foundElement, glString);
 				}
-				else if (GLStringUtilities.checkAntigenRecognitionSite(bAllele, disElement.getHlabElement())) {
+				else if ((hitDegree = GLStringUtilities.checkAntigenRecognitionSite(bAllele, disElement.getHlabElement())) != null) {
 					DetectedBCDisequilibriumElement foundElement = new DetectedBCDisequilibriumElement(disElement);
-					foundElement.setbHitDegree(new LinkageHitDegree(P_GROUP_LEVEL, bAllele));
+					foundElement.setbHitDegree(hitDegree);
 					
 					linkageElementsFound = detectCLinkages(linkageElementsFound, foundElement, glString);
 				}
@@ -90,16 +91,17 @@ public class HLALinkageDisequilibrium {
 	private static Set<DetectedDisequilibriumElement> detectCLinkages(Set<DetectedDisequilibriumElement> linkageElementsFound,
 								DetectedBCDisequilibriumElement foundElement,
 								LinkageDisequilibriumGenotypeList glString) {	
+		LinkageHitDegree hitDegree;
 		for (Set<String> cList : glString.getCAlleles()) {	
 			for (String cAllele : cList) {
-				int hitBlock = GLStringUtilities.fieldLevelComparison(cAllele, foundElement.getDisequilibriumElement().getHlacElement());
+				hitDegree = GLStringUtilities.fieldLevelComparison(cAllele, foundElement.getDisequilibriumElement().getHlacElement());
 				
-				if (hitBlock >= 0) {
-					foundElement.setcHitDegree(new LinkageHitDegree(hitBlock, cAllele));
+				if (hitDegree != null) {
+					foundElement.setcHitDegree(hitDegree);
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, foundElement);
 				}
-				else if (GLStringUtilities.checkAntigenRecognitionSite(cAllele, foundElement.getDisequilibriumElement().getHlacElement())) {
-					foundElement.setcHitDegree(new LinkageHitDegree(P_GROUP_LEVEL, cAllele));
+				else if ((hitDegree = GLStringUtilities.checkAntigenRecognitionSite(cAllele, foundElement.getDisequilibriumElement().getHlacElement())) != null) {
+					foundElement.setcHitDegree(hitDegree);
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, foundElement);
 				}
 			}
@@ -111,18 +113,19 @@ public class HLALinkageDisequilibrium {
 	private static Set<DetectedDisequilibriumElement> detectDRDQLinkages(Set<DetectedDisequilibriumElement> linkageElementsFound,
 									LinkageDisequilibriumGenotypeList glString,
 									DRDQDisequilibriumElement disElement) {
+		LinkageHitDegree hitDegree;
 		for (Set<String> drb1List : glString.getDrb1Alleles()) {
 			for (String drb1Allele : drb1List) {
-				int hitBlock = GLStringUtilities.fieldLevelComparison(drb1Allele, disElement.getHladrb1Element());
+				hitDegree = GLStringUtilities.fieldLevelComparison(drb1Allele, disElement.getHladrb1Element());
 				
-				if (hitBlock >= 0) {
+				if (hitDegree != null) {
 					DetectedDRDQDisequilibriumElement foundElement = new DetectedDRDQDisequilibriumElement(disElement);
-					foundElement.setDrb1HitDegree(new LinkageHitDegree(hitBlock, drb1Allele));
+					foundElement.setDrb1HitDegree(hitDegree);
 					linkageElementsFound = detectDRB345DQLinkages(linkageElementsFound, glString, foundElement);
 				}
-				else if (GLStringUtilities.checkAntigenRecognitionSite(drb1Allele, disElement.getHladrb1Element())) {
+				else if ((hitDegree = GLStringUtilities.checkAntigenRecognitionSite(drb1Allele, disElement.getHladrb1Element())) != null) {
 					DetectedDRDQDisequilibriumElement foundElement = new DetectedDRDQDisequilibriumElement(disElement);
-					foundElement.setDrb1HitDegree(new LinkageHitDegree(P_GROUP_LEVEL, drb1Allele));
+					foundElement.setDrb1HitDegree(hitDegree);
 					linkageElementsFound = detectDRB345DQLinkages(linkageElementsFound, glString, foundElement);
 				}
 			}
@@ -137,16 +140,19 @@ public class HLALinkageDisequilibrium {
 		if (glString.drb345AppearsHomozygous() && (foundElement.getDisequilibriumElement().getHladrb345Element().equals(DASH) || foundElement.getDisequilibriumElement().getHladrb345Element().equals(NNNN))) {
 			linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, foundElement);
 		} 
+		
+		LinkageHitDegree hitDegree;
+		
 		for (Set<String> drb345List : glString.getDrb345Alleles()) {
 			for (String drb345Allele : drb345List) {
-				int hitBlock = GLStringUtilities.fieldLevelComparison(drb345Allele, foundElement.getDisequilibriumElement().getHladrb345Element());
+				hitDegree = GLStringUtilities.fieldLevelComparison(drb345Allele, foundElement.getDisequilibriumElement().getHladrb345Element());
 				
-				if (hitBlock >= 0) {
-					foundElement.setDrb345HitDegree(new LinkageHitDegree(hitBlock, drb345Allele));
+				if (hitDegree != null) {
+					foundElement.setDrb345HitDegree(hitDegree);
 					linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, foundElement);
 				}
-				else if (GLStringUtilities.checkAntigenRecognitionSite(drb345Allele, foundElement.getDisequilibriumElement().getHladrb345Element())) {
-					foundElement.setDrb345HitDegree(new LinkageHitDegree(P_GROUP_LEVEL, drb345Allele));
+				else if ((hitDegree = GLStringUtilities.checkAntigenRecognitionSite(drb345Allele, foundElement.getDisequilibriumElement().getHladrb345Element())) != null) {
+					foundElement.setDrb345HitDegree(hitDegree);
 					linkageElementsFound = detectDQB1Linkages(linkageElementsFound, glString, foundElement);
 				}
 			}
@@ -158,16 +164,18 @@ public class HLALinkageDisequilibrium {
 	private static Set<DetectedDisequilibriumElement> detectDQA1Linkages(Set<DetectedDisequilibriumElement> linkageElementsFound, 
 								LinkageDisequilibriumGenotypeList glString,
 								DetectedDRDQDisequilibriumElement foundElement) {
+		LinkageHitDegree hitDegree;
+		
 		for (Set<String> dqa1List : glString.getDqa1Alleles()) {
 			for (String dqa1Allele : dqa1List) {
-				int hitBlock = GLStringUtilities.fieldLevelComparison(dqa1Allele, ((BaseDRDQDisequilibriumElement)foundElement.getDisequilibriumElement()).getHladqa1Element());
+				hitDegree = GLStringUtilities.fieldLevelComparison(dqa1Allele, ((BaseDRDQDisequilibriumElement)foundElement.getDisequilibriumElement()).getHladqa1Element());
 				
-				if (hitBlock >= 0) {
-					foundElement.setDqa1HitDegree(new LinkageHitDegree(hitBlock, dqa1Allele));
+				if (hitDegree != null) {
+					foundElement.setDqa1HitDegree(hitDegree);
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, foundElement);
 				}
-				else if (GLStringUtilities.checkAntigenRecognitionSite(dqa1Allele, ((BaseDRDQDisequilibriumElement)foundElement.getDisequilibriumElement()).getHladqa1Element())) {
-					foundElement.setDqa1HitDegree(new LinkageHitDegree(P_GROUP_LEVEL, dqa1Allele));
+				else if ((hitDegree = GLStringUtilities.checkAntigenRecognitionSite(dqa1Allele, ((BaseDRDQDisequilibriumElement)foundElement.getDisequilibriumElement()).getHladqa1Element())) != null) {
+					foundElement.setDqa1HitDegree(hitDegree);
 					linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, foundElement);
 				}
 			}
@@ -179,12 +187,14 @@ public class HLALinkageDisequilibrium {
 	private static Set<DetectedDisequilibriumElement> detectDQB1Linkages(Set<DetectedDisequilibriumElement> linkageElementsFound,
 									LinkageDisequilibriumGenotypeList glString,
 									DetectedDRDQDisequilibriumElement foundElement) {
+		LinkageHitDegree hitDegree;
+		
 		for (Set<String> dqb1List : glString.getDqb1Alleles()) {
 			for (String dqb1Allele : dqb1List) {
-				int hitBlock = GLStringUtilities.fieldLevelComparison(dqb1Allele, foundElement.getDisequilibriumElement().getHladqb1Element());
+				hitDegree = GLStringUtilities.fieldLevelComparison(dqb1Allele, foundElement.getDisequilibriumElement().getHladqb1Element());
 				
-				if (hitBlock >= 0) {
-					foundElement.setDqb1HitDegree(new LinkageHitDegree(hitBlock, dqb1Allele));
+				if (hitDegree != null) {
+					foundElement.setDqb1HitDegree(hitDegree);
 					if (foundElement.getDisequilibriumElement() instanceof BaseDRDQDisequilibriumElement) {
 						linkageElementsFound = detectDQA1Linkages(linkageElementsFound, glString, foundElement);
 					}
@@ -192,8 +202,8 @@ public class HLALinkageDisequilibrium {
 						linkageElementsFound = addMatchedDisequilibriumElement(linkageElementsFound, foundElement);
 					}
 				}
-				else if (GLStringUtilities.checkAntigenRecognitionSite(dqb1Allele, foundElement.getDisequilibriumElement().getHladqb1Element())) {
-					foundElement.setDqb1HitDegree(new LinkageHitDegree(P_GROUP_LEVEL, dqb1Allele));
+				else if ((hitDegree = GLStringUtilities.checkAntigenRecognitionSite(dqb1Allele, foundElement.getDisequilibriumElement().getHladqb1Element())) != null) {
+					foundElement.setDqb1HitDegree(hitDegree);
 					if (foundElement.getDisequilibriumElement() instanceof BaseDRDQDisequilibriumElement) {
 						linkageElementsFound = detectDQA1Linkages(linkageElementsFound, glString, foundElement);
 					}

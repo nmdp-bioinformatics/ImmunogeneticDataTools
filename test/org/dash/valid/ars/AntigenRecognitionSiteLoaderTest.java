@@ -1,11 +1,10 @@
 package org.dash.valid.ars;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import junit.framework.TestCase;
 
 import org.junit.Test;
 
-public class AntigenRecognitionSiteLoaderTest {
+public class AntigenRecognitionSiteLoaderTest extends TestCase {
 	@Test
 	public void test() {
 		AntigenRecognitionSiteLoader arsLoader = AntigenRecognitionSiteLoader.getInstance();

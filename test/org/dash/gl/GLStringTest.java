@@ -1,18 +1,16 @@
 package org.dash.gl;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.LinkedHashMap;
 import java.util.Set;
+
+import junit.framework.TestCase;
 
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.junit.Before;
 import org.junit.Test;
 
-public class GLStringTest {	
+public class GLStringTest extends TestCase {	
 	private static final String SIMPLE_DRB4_STRING = "DRB4*01:01:01:01";
 	private LinkageDisequilibriumGenotypeList glString;
 	

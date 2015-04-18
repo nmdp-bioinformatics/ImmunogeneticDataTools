@@ -1,13 +1,12 @@
 package org.dash.gl;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import junit.framework.TestCase;
 
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.junit.Test;
 
-public class HLALinkageDisequilibriumTest {
+public class HLALinkageDisequilibriumTest extends TestCase {
 	@Test
 	public void testLoadNMDPLinkageReferenceData() {
 		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP.getShortName());

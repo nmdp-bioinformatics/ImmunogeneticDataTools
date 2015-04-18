@@ -176,7 +176,8 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 	
 	public String toString() {
-		String alleleSummary = glString + "\n" + bAlleles + "\n" + cAlleles + "\n" + drb1Alleles + "\n" + drb345Alleles + "\n" + dqb1Alleles + "\n" + dqa1Alleles;
+		String alleleSummary = glString + GLStringConstants.NEWLINE + bAlleles + GLStringConstants.NEWLINE + cAlleles + GLStringConstants.NEWLINE + 
+				drb1Alleles + GLStringConstants.NEWLINE + drb345Alleles + GLStringConstants.NEWLINE + dqb1Alleles + GLStringConstants.NEWLINE + dqa1Alleles;
 		return alleleSummary;
 	}
 }

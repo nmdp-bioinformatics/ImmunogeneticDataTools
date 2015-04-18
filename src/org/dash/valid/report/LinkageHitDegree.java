@@ -1,9 +1,9 @@
 package org.dash.valid.report;
 
-import org.dash.valid.gl.GLStringUtilities;
 
 public class LinkageHitDegree {	
 	private int hitBlock;
+	private int alleleBlocks;
 	private String allele;
 	
 	public int getHitBlock() {
@@ -15,11 +15,12 @@ public class LinkageHitDegree {
 	}
 
 	public int getAlleleBlocks() {
-		return allele.split(GLStringUtilities.COLON).length;
+		return alleleBlocks;
 	}
 	
-	public LinkageHitDegree(int hitBlock, String allele) {
+	public LinkageHitDegree(int hitBlock, int alleleBlocks, String allele) {
 		this.hitBlock = hitBlock;
+		this.alleleBlocks = alleleBlocks;
 		this.allele = allele;
 	}
 	

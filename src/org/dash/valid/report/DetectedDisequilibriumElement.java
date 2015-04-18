@@ -1,5 +1,6 @@
 package org.dash.valid.report;
 
+
 public abstract class DetectedDisequilibriumElement {
 	private Object disequilibriumElement;
 

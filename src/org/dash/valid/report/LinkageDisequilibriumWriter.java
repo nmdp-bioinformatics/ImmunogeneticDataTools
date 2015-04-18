@@ -6,13 +6,13 @@ import java.util.logging.Logger;
 
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
 import org.dash.valid.freq.Frequencies;
+import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.handler.LinkageDisequilibriumFileHandler;
 
 public class LinkageDisequilibriumWriter {	
 	private static LinkageDisequilibriumWriter instance = null;
 	private static Logger FILE_LOGGER = Logger.getLogger(LinkageDisequilibriumWriter.class.getName());
 	private static FileHandler handler;
-	private static final String NEWLINE = "\n";
 
 	static {
 		try {
@@ -45,8 +45,8 @@ public class LinkageDisequilibriumWriter {
 	 * @throws SecurityException 
 	 */
 	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) throws SecurityException, IOException {				
-		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + NEWLINE + "GL String: " + findings.getGenotypeList().getGLString());
-		sb.append(NEWLINE + NEWLINE + "HLA DB Version: " + findings.getHladb() + NEWLINE);
+		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGenotypeList().getGLString());
+		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
 		CommonWellDocumentedLoader loader = CommonWellDocumentedLoader.getInstance();
 		String accession;
@@ -58,30 +58,30 @@ public class LinkageDisequilibriumWriter {
 				sb.append(" (Found under accession: " + accession + " in these HLA DBs: " + 
 					loader.getHlaDbsByAccession(accession) + ")");
 			}
-			sb.append(NEWLINE);
+			sb.append(GLStringConstants.NEWLINE);
 		}
 		
-		sb.append("\nFrequencies:  " + Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)) + NEWLINE);
+		sb.append(GLStringConstants.NEWLINE + "Frequencies:  " + Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)) + GLStringConstants.NEWLINE);
 		if (!findings.hasLinkages()) {
-			sb.append(NEWLINE + "NO LINKAGES FOUND" + NEWLINE);
+			sb.append(GLStringConstants.NEWLINE + "NO LINKAGES FOUND" + GLStringConstants.NEWLINE);
 		}
 				
 		for (DetectedDisequilibriumElement linkage : findings.getLinkages()) {
-			sb.append(NEWLINE);
-			sb.append("We found linkages:" + NEWLINE);
+			sb.append(GLStringConstants.NEWLINE);
+			sb.append("We found linkages:" + GLStringConstants.NEWLINE);
 			sb.append(linkage.toString());
 		}
 		
 		if (findings.getBcLinkageCount() < DetectedLinkageFindings.EXPECTED_LINKAGES) {
-			sb.append(NEWLINE);
-			sb.append("WARNING: " + (DetectedLinkageFindings.EXPECTED_LINKAGES-findings.getBcLinkageCount()) + " BC Linkage(s) not found" + NEWLINE);
+			sb.append(GLStringConstants.NEWLINE);
+			sb.append("WARNING: " + (DetectedLinkageFindings.EXPECTED_LINKAGES-findings.getBcLinkageCount()) + " BC Linkage(s) not found" + GLStringConstants.NEWLINE);
 		}
 		if (findings.getDrdqLinkageCount() < DetectedLinkageFindings.EXPECTED_LINKAGES) {
-			sb.append(NEWLINE);
-			sb.append("WARNING: " + (DetectedLinkageFindings.EXPECTED_LINKAGES-findings.getDrdqLinkageCount()) + " DRDQ Linkage(s) not found" + NEWLINE);
+			sb.append(GLStringConstants.NEWLINE);
+			sb.append("WARNING: " + (DetectedLinkageFindings.EXPECTED_LINKAGES-findings.getDrdqLinkageCount()) + " DRDQ Linkage(s) not found" + GLStringConstants.NEWLINE);
 		}
 		
-		sb.append(NEWLINE + "***************************************" + NEWLINE);
+		sb.append(GLStringConstants.NEWLINE + "***************************************" + GLStringConstants.NEWLINE);
 	
 		FILE_LOGGER.info(sb.toString());
 	}

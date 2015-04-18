@@ -2,6 +2,7 @@ package org.dash.valid.report;
 
 import org.dash.valid.DRDQDisequilibriumElement;
 import org.dash.valid.base.BaseDRDQDisequilibriumElement;
+import org.dash.valid.gl.GLStringConstants;
 
 public class DetectedDRDQDisequilibriumElement extends DetectedDisequilibriumElement{
 	private LinkageHitDegree drb1HitDegree;
@@ -53,12 +54,12 @@ public class DetectedDRDQDisequilibriumElement extends DetectedDisequilibriumEle
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer(
-				"DRB1 Locus: " + getDisequilibriumElement().getHladrb1Element() + " (" + getDrb1HitDegree() + ")\n" +
-				"DRB345 Locus: " + getDisequilibriumElement().getHladrb345Element() + " (" + getDrb345HitDegree() + ")\n" + 
-				"DQB1 Locus: " + getDisequilibriumElement().getHladqb1Element() + " (" + getDqb1HitDegree() + ")\n");
+				"DRB1 Locus: " + getDisequilibriumElement().getHladrb1Element() + " (" + getDrb1HitDegree() + ")" + GLStringConstants.NEWLINE + 
+				"DRB345 Locus: " + getDisequilibriumElement().getHladrb345Element() + " (" + getDrb345HitDegree() + ")" + GLStringConstants.NEWLINE +  
+				"DQB1 Locus: " + getDisequilibriumElement().getHladqb1Element() + " (" + getDqb1HitDegree() + ")" + GLStringConstants.NEWLINE);
 		
 		if (getDisequilibriumElement() instanceof BaseDRDQDisequilibriumElement) {
-				sb.append("DQA1 Locus: " + ((BaseDRDQDisequilibriumElement)getDisequilibriumElement()).getHladqa1Element() + " (" + getDqa1HitDegree() + ")\n");
+				sb.append("DQA1 Locus: " + ((BaseDRDQDisequilibriumElement)getDisequilibriumElement()).getHladqa1Element() + " (" + getDqa1HitDegree() + ")" + GLStringConstants.NEWLINE);
 		}
 				
 		sb.append(getDisequilibriumElement().getFrequencyInfo());

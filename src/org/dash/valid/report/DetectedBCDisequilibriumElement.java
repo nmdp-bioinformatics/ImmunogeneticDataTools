@@ -1,6 +1,7 @@
 package org.dash.valid.report;
 
 import org.dash.valid.BCDisequilibriumElement;
+import org.dash.valid.gl.GLStringConstants;
 
 public class DetectedBCDisequilibriumElement extends DetectedDisequilibriumElement {
 	private LinkageHitDegree bHitDegree;
@@ -33,8 +34,8 @@ public class DetectedBCDisequilibriumElement extends DetectedDisequilibriumEleme
 
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer("B Locus: " + getDisequilibriumElement().getHlabElement() + " (" + getbHitDegree() + ")\n" +
-				"C Locus: " + getDisequilibriumElement().getHlacElement() + " (" + getcHitDegree() + ")\n" + 
+		StringBuffer sb = new StringBuffer("B Locus: " + getDisequilibriumElement().getHlabElement() + " (" + getbHitDegree() + ")" + GLStringConstants.NEWLINE +
+				"C Locus: " + getDisequilibriumElement().getHlacElement() + " (" + getcHitDegree() + ")" + GLStringConstants.NEWLINE +  
 				getDisequilibriumElement().getFrequencyInfo());
 		
 		return sb.toString();
