@@ -31,7 +31,7 @@ import org.dash.valid.report.LinkageHitDegree;
 
 public class HLALinkageDisequilibrium {
 	private static final String DASH = "-";
-	private static final String NNNN = "DRBX*NNNN";
+	private static final String NNNN = "HLA-DRBX*NNNN";
 	private static HLADatabaseVersion hladb;
 		
 	static {
