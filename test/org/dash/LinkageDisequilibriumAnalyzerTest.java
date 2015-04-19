@@ -6,10 +6,8 @@ import java.util.LinkedHashMap;
 import junit.framework.TestCase;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
-import org.dash.valid.freq.Frequencies;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.report.DetectedLinkageFindings;
-import org.dash.valid.report.LinkageDisequilibriumWriter;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
 
