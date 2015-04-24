@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.handler.ProgressConsoleHandler;
+import org.dash.valid.report.CommonWellDocumentedWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
@@ -31,7 +33,13 @@ public class LinkageDisequilibriumAnalyzer {
 	public static void main(String[] args) {
 		analyzeGLStringFiles(args);
 		
-		LinkageDisequilibriumWriter.getHandler().close();
+		for (Handler handler : LogManager.getLogManager().getLogger(LinkageDisequilibriumWriter.class.getName()).getHandlers()) {
+			handler.close();
+		}
+		
+		for (Handler handler : LogManager.getLogManager().getLogger(CommonWellDocumentedWriter.class.getName()).getHandlers()) {
+			handler.close();
+		}
 	}
 	
 	private static void analyzeGLStringFiles(String[] filenames) {		
@@ -53,6 +61,8 @@ public class LinkageDisequilibriumAnalyzer {
 			for (DetectedLinkageFindings findings : findingsList) {
 				LinkageDisequilibriumWriter writer = LinkageDisequilibriumWriter.getInstance();
 				writer.reportDetectedLinkages(findings);
+				CommonWellDocumentedWriter cwdWriter = CommonWellDocumentedWriter.getInstance();
+				cwdWriter.reportCommonWellDocumented(findings);
 			}
 		}
 		catch (IOException e) {

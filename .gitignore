@@ -4,3 +4,5 @@
 /.settings/
 /immuno.log
 /linkages.log
+/linkageWarnings.log
+/nonCwdWarnings.log

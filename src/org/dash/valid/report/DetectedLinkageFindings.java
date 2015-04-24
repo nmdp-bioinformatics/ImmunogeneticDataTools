@@ -104,4 +104,8 @@ public class DetectedLinkageFindings {
 		return this.linkages != null && this.linkages.size() > 0;
 	}
 	
+	public boolean hasAnomalies() {
+		return !hasLinkages() || getBcLinkageCount() < EXPECTED_LINKAGES || getDrdqLinkageCount() < EXPECTED_LINKAGES;
+	}
+	
 }
