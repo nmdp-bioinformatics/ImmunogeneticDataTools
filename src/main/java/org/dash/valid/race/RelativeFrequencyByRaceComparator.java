@@ -14,10 +14,10 @@ public class RelativeFrequencyByRaceComparator implements Comparator<RelativeFre
 			return 1;
 		}
 		
-		if (o2.getRelativeFrequency() != null && o1.getRelativeFrequency() != null) {
+		if (o2.getRace().equals(o1.getRace()) && o2.getRelativeFrequency() != null && o1.getRelativeFrequency() != null) {
 			return o2.getRelativeFrequency().compareTo(o1.getRelativeFrequency());
 		}
 		
-		return o2.toString().compareTo(o1.toString());
+		return o1.toString().compareTo(o2.toString());
 	}
 }

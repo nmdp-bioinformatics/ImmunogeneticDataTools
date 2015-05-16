@@ -1,4 +1,4 @@
-May 13, 2015 10:36:44 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
+May 16, 2015 3:59:05 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
 WARNING: Id: S39
 GL String: HLA-A*26:01:01+HLA-A*29:02:01:01/HLA-A*29:02:01:02^HLA-B*14:02:01+HLA-B*38:27^HLA-C*08:02:01/HLA-C*08:34+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*01:04^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*15:01^HLA-DQA1*02:01+HLA-DQA1*03:01:01^HLA-DQB1*02:02+HLA-DQB1*03:02:01^HLA-DRB1*04:02:01+HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02^HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N+HLA-DRB4*01:03:01:01/HLA-DRB4*01:03:01:02N/HLA-DRB4*01:03:01:03
 
@@ -12,7 +12,30 @@ First DRDQ Haplotype pair:
 HLA-DRB1*07:01^HLA-DRB4*01:01g^HLA-DQB1*02:01g
 HLA-DRB1*04:02^HLA-DRB4*01:01g^HLA-DQB1*03:02g
 Broad Race: AFA, Freq: + 8.63699485020188E-5, Relative Freq (%): + 100.00
+Broad Race: API, Freq: + 2.127395125804577E-4, Relative Freq (%): + 100.00
+Broad Race: CAU, Freq: + 0.0012153342171036508, Relative Freq (%): + 100.00
+Broad Race: HIS, Freq: + 0.0012424941054651729, Relative Freq (%): + 100.00
+Broad Race: NAM, Freq: + 3.4263588950880563E-4, Relative Freq (%): + 100.00
 Detailed Race: AAFA, Freq: + 7.439937971921655E-5, Relative Freq (%): + 100.00
+Detailed Race: AFB, Freq: + 1.1354329625722553E-4, Relative Freq (%): + 100.00
+Detailed Race: AINDI, Freq: + 7.922401777583667E-4, Relative Freq (%): + 100.00
+Detailed Race: ALANAM, Freq: + 1.085352616309028E-4, Relative Freq (%): + 100.00
+Detailed Race: AMIND, Freq: + 2.8996502719622487E-4, Relative Freq (%): + 100.00
+Detailed Race: CARB, Freq: + 1.3988716237045342E-4, Relative Freq (%): + 100.00
+Detailed Race: CARHIS, Freq: + 0.0016299674246446308, Relative Freq (%): + 100.00
+Detailed Race: CARIBI, Freq: + 0.0012751789619072607, Relative Freq (%): + 100.00
+Detailed Race: EURCAU, Freq: + 0.0011059917152156826, Relative Freq (%): + 100.00
+Detailed Race: FILII, Freq: + 2.759501621688743E-5, Relative Freq (%): + 100.00
+Detailed Race: HAWI, Freq: + 9.374091123930632E-5, Relative Freq (%): + 100.00
+Detailed Race: JAPI, Freq: + 4.103229799269074E-6, Relative Freq (%): + 100.00
+Detailed Race: KORI, Freq: + 6.173228702282094E-6, Relative Freq (%): + 100.00
+Detailed Race: MENAFC, Freq: + 0.0022490075952687327, Relative Freq (%): + 100.00
+Detailed Race: MSWHIS, Freq: + 0.0010653174550727187, Relative Freq (%): + 100.00
+Detailed Race: NCHI, Freq: + 2.4709442730896283E-5, Relative Freq (%): + 100.00
+Detailed Race: SCAHIS, Freq: + 0.0014309480875963555, Relative Freq (%): + 100.00
+Detailed Race: SCAMB, Freq: + 2.898673847544569E-4, Relative Freq (%): + 100.00
+Detailed Race: SCSEAI, Freq: + 6.253042839837522E-4, Relative Freq (%): + 100.00
+Detailed Race: VIET, Freq: + 2.2930065380106833E-6, Relative Freq (%): + 100.00
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*04:02^HLA-DRB4*01:01g^HLA-DQB1*02:01g
@@ -22,7 +45,7 @@ Detailed Race: EURCAU, Freq: + 3.4374649550782934E-12, Relative Freq (%): + 0.00
 
 ***************************************
 
-May 13, 2015 10:36:44 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
+May 16, 2015 3:59:05 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
 WARNING: Id: S95
 GL String: HLA-A*01:01:01:01/HLA-A*01:01:01:02N+HLA-A*02:05:01^HLA-B*13:02:01/HLA-B*13:02:11+HLA-B*38:27^HLA-C*06:02:01:01/HLA-C*06:02:01:02+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*02:01:01^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*10:01^HLA-DQA1*01:03:01:01/HLA-DQA1*01:03:01:02+HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02/HLA-DQA1*05:05:01:03/HLA-DQA1*05:09/HLA-DQA1*05:11^HLA-DQB1*03:01:01:01/HLA-DQB1*03:01:01:02/HLA-DQB1*03:01:01:03+HLA-DQB1*06:03:01^HLA-DRB1*11:04:01+HLA-DRB1*13:01:01^HLA-DRB3*01:01:02:01/HLA-DRB3*01:01:02:02+HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02
 
@@ -35,50 +58,61 @@ WARNING - No BC haplotype pairs detected.
 First DRDQ Haplotype pair:
 HLA-DRB1*13:01^HLA-DRB3*01:01^HLA-DQB1*06:03g
 HLA-DRB1*11:04^HLA-DRB3*02:02g^HLA-DQB1*03:01g
-Broad Race: NAM, Freq: + 4.0114257000938843E-4, Relative Freq (%): + 100.00
 Broad Race: AFA, Freq: + 7.657655869901279E-5, Relative Freq (%): + 100.00
 Broad Race: API, Freq: + 2.1258644006891549E-4, Relative Freq (%): + 99.96
-Broad Race: HIS, Freq: + 8.066479732861417E-4, Relative Freq (%): + 99.95
 Broad Race: CAU, Freq: + 0.0012660792070843428, Relative Freq (%): + 99.94
+Broad Race: HIS, Freq: + 8.066479732861417E-4, Relative Freq (%): + 99.95
+Broad Race: NAM, Freq: + 4.0114257000938843E-4, Relative Freq (%): + 100.00
+Detailed Race: AAFA, Freq: + 7.744073033392512E-5, Relative Freq (%): + 100.00
 Detailed Race: AFB, Freq: + 8.123984285795526E-5, Relative Freq (%): + 100.00
 Detailed Race: AINDI, Freq: + 9.036031467265696E-4, Relative Freq (%): + 100.00
-Detailed Race: SCAHIS, Freq: + 7.950637620756341E-4, Relative Freq (%): + 100.00
-Detailed Race: AAFA, Freq: + 7.744073033392512E-5, Relative Freq (%): + 100.00
-Detailed Race: FILII, Freq: + 1.0460079197417989E-5, Relative Freq (%): + 100.00
-Detailed Race: MENAFC, Freq: + 0.00334453357077096, Relative Freq (%): + 99.99
+Detailed Race: AISC, Freq: + 3.684839032809746E-4, Relative Freq (%): + 100.00
+Detailed Race: ALANAM, Freq: + 1.2394968443751742E-4, Relative Freq (%): + 100.00
+Detailed Race: AMIND, Freq: + 3.7761255851813754E-4, Relative Freq (%): + 100.00
+Detailed Race: CARB, Freq: + 7.46157854554323E-5, Relative Freq (%): + 100.00
+Detailed Race: CARHIS, Freq: + 0.001033610985858681, Relative Freq (%): + 100.00
+Detailed Race: CARIBI, Freq: + 8.581225871348272E-4, Relative Freq (%): + 100.00
 Detailed Race: EURCAU, Freq: + 9.0765728611046E-4, Relative Freq (%): + 99.96
-Detailed Race: SCSEAI, Freq: + 8.055197925117053E-4, Relative Freq (%): + 99.96
-Detailed Race: MSWHIS, Freq: + 6.872253857407822E-4, Relative Freq (%): + 99.91
+Detailed Race: FILII, Freq: + 1.0460079197417989E-5, Relative Freq (%): + 100.00
 Detailed Race: HAWI, Freq: + 1.2742164832507994E-4, Relative Freq (%): + 97.07
+Detailed Race: JAPI, Freq: + 7.25987241776149E-6, Relative Freq (%): + 100.00
+Detailed Race: KORI, Freq: + 1.0481273272276015E-5, Relative Freq (%): + 100.00
+Detailed Race: MENAFC, Freq: + 0.00334453357077096, Relative Freq (%): + 99.99
+Detailed Race: MSWHIS, Freq: + 6.872253857407822E-4, Relative Freq (%): + 99.91
+Detailed Race: NCHI, Freq: + 1.3518319583220886E-5, Relative Freq (%): + 100.00
+Detailed Race: SCAHIS, Freq: + 7.950637620756341E-4, Relative Freq (%): + 100.00
+Detailed Race: SCAMB, Freq: + 2.9441076559111654E-4, Relative Freq (%): + 100.00
+Detailed Race: SCSEAI, Freq: + 8.055197925117053E-4, Relative Freq (%): + 99.96
+Detailed Race: VIET, Freq: + 4.146808159246673E-6, Relative Freq (%): + 100.00
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*11:04^HLA-DRB3*01:01^HLA-DQB1*03:01g
 HLA-DRB1*13:01^HLA-DRB3*02:02g^HLA-DQB1*06:03g
+Broad Race: AFA, Freq: + 2.659429130251437E-10, Relative Freq (%): + 0.00
+Broad Race: API, Freq: + 9.564057827051462E-8, Relative Freq (%): + 0.04
 Broad Race: CAU, Freq: + 7.432884616178219E-7, Relative Freq (%): + 0.06
 Broad Race: HIS, Freq: + 3.6639784315536327E-7, Relative Freq (%): + 0.05
-Broad Race: API, Freq: + 9.564057827051462E-8, Relative Freq (%): + 0.04
-Broad Race: AFA, Freq: + 2.659429130251437E-10, Relative Freq (%): + 0.00
-Detailed Race: HAWI, Freq: + 3.8506963056980855E-6, Relative Freq (%): + 2.93
-Detailed Race: MSWHIS, Freq: + 5.983293786540929E-7, Relative Freq (%): + 0.09
-Detailed Race: SCSEAI, Freq: + 3.2118594461548636E-7, Relative Freq (%): + 0.04
-Detailed Race: EURCAU, Freq: + 3.323503557368291E-7, Relative Freq (%): + 0.04
-Detailed Race: MENAFC, Freq: + 3.191263277691595E-7, Relative Freq (%): + 0.01
 Detailed Race: AAFA, Freq: + 3.0786312546547616E-10, Relative Freq (%): + 0.00
 Detailed Race: AINDI, Freq: + 2.512582105632962E-9, Relative Freq (%): + 0.00
+Detailed Race: EURCAU, Freq: + 3.323503557368291E-7, Relative Freq (%): + 0.04
+Detailed Race: HAWI, Freq: + 3.8506963056980855E-6, Relative Freq (%): + 2.93
+Detailed Race: MENAFC, Freq: + 3.191263277691595E-7, Relative Freq (%): + 0.01
+Detailed Race: MSWHIS, Freq: + 5.983293786540929E-7, Relative Freq (%): + 0.09
 Detailed Race: SCAHIS, Freq: + 2.4837776968041693E-10, Relative Freq (%): + 0.00
+Detailed Race: SCSEAI, Freq: + 3.2118594461548636E-7, Relative Freq (%): + 0.04
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*11:04^HLA-DRB3*02:02g^HLA-DQB1*06:03g
 HLA-DRB1*13:01^HLA-DRB3*01:01^HLA-DQB1*03:01g
-Broad Race: CAU, Freq: + 1.0111128018332953E-8, Relative Freq (%): + 0.00
-Broad Race: HIS, Freq: + 8.405392982358755E-10, Relative Freq (%): + 0.00
 Broad Race: AFA, Freq: + 4.0721779354905514E-11, Relative Freq (%): + 0.00
 Broad Race: API, Freq: + 1.5465607600094723E-12, Relative Freq (%): + 0.00
-Detailed Race: FILII, Freq: + 2.3328859892595007E-10, Relative Freq (%): + 0.00
-Detailed Race: SCAHIS, Freq: + 3.061987221254883E-9, Relative Freq (%): + 0.00
-Detailed Race: EURCAU, Freq: + 3.1578816383420187E-9, Relative Freq (%): + 0.00
+Broad Race: CAU, Freq: + 1.0111128018332953E-8, Relative Freq (%): + 0.00
+Broad Race: HIS, Freq: + 8.405392982358755E-10, Relative Freq (%): + 0.00
 Detailed Race: AAFA, Freq: + 5.600812873289803E-11, Relative Freq (%): + 0.00
+Detailed Race: EURCAU, Freq: + 3.1578816383420187E-9, Relative Freq (%): + 0.00
+Detailed Race: FILII, Freq: + 2.3328859892595007E-10, Relative Freq (%): + 0.00
 Detailed Race: MENAFC, Freq: + 1.3938529599404734E-9, Relative Freq (%): + 0.00
+Detailed Race: SCAHIS, Freq: + 3.061987221254883E-9, Relative Freq (%): + 0.00
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*13:01^HLA-DRB3*02:02g^HLA-DQB1*03:01g
@@ -86,13 +120,13 @@ HLA-DRB1*11:04^HLA-DRB3*01:01^HLA-DQB1*06:03g
 Broad Race: AFA, Freq: + 2.9003010704349127E-13, Relative Freq (%): + 0.00
 Broad Race: CAU, Freq: + 3.258525560857945E-12, Relative Freq (%): + 0.00
 Detailed Race: AAFA, Freq: + 2.9493693004987E-13, Relative Freq (%): + 0.00
+Detailed Race: AINDI, Freq: + 1.581298319919698E-13, Relative Freq (%): + 0.00
 Detailed Race: EURCAU, Freq: + 1.921191328736939E-12, Relative Freq (%): + 0.00
 Detailed Race: SCAHIS, Freq: + 2.578941558215108E-13, Relative Freq (%): + 0.00
-Detailed Race: AINDI, Freq: + 1.581298319919698E-13, Relative Freq (%): + 0.00
 
 ***************************************
 
-May 13, 2015 10:36:44 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
+May 16, 2015 3:59:05 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
 WARNING: Id: S97
 GL String: HLA-A*30:04:01+HLA-A*32:01:01^HLA-C*03:04:01:01/HLA-C*03:04:01:02/HLA-C*03:154+HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02^HLA-DQA1*01:01:01/HLA-DQA1*01:01:02/HLA-DQA1*01:04:01:01/HLA-DQA1*01:04:01:02/HLA-DQA1*01:05+HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02/HLA-DQA1*05:05:01:03/HLA-DQA1*05:09/HLA-DQA1*05:11^HLA-DQB1*03:01:01:01/HLA-DQB1*03:01:01:02/HLA-DQB1*03:01:01:03+HLA-DQB1*05:01:01:01/HLA-DQB1*05:01:01:02^HLA-DRB1*01:01:01+HLA-DRB1*11:01:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02
 
@@ -108,19 +142,38 @@ HLA-DRB1*11:01g^HLA-DRB3*02:02g^HLA-DQB1*03:01g
 Broad Race: AFA, Freq: + 9.197108550859475E-4, Relative Freq (%): + 100.00
 Broad Race: API, Freq: + 0.001411184202351473, Relative Freq (%): + 100.00
 Broad Race: CAU, Freq: + 0.005322889298128225, Relative Freq (%): + 99.99
+Broad Race: HIS, Freq: + 0.0016790943236688163, Relative Freq (%): + 100.00
+Broad Race: NAM, Freq: + 0.002878051034594368, Relative Freq (%): + 100.00
 Detailed Race: AAFA, Freq: + 9.476270198925736E-4, Relative Freq (%): + 100.00
-Detailed Race: MENAFC, Freq: + 0.0037868362230748247, Relative Freq (%): + 100.00
+Detailed Race: AFB, Freq: + 4.3113854024835513E-4, Relative Freq (%): + 100.00
 Detailed Race: AINDI, Freq: + 0.0019121675396208313, Relative Freq (%): + 100.00
+Detailed Race: AISC, Freq: + 0.002963828496930232, Relative Freq (%): + 100.00
+Detailed Race: ALANAM, Freq: + 9.10116017962367E-4, Relative Freq (%): + 100.00
+Detailed Race: AMIND, Freq: + 0.00294325279643003, Relative Freq (%): + 100.00
+Detailed Race: CARB, Freq: + 6.933849838584698E-4, Relative Freq (%): + 100.00
+Detailed Race: CARHIS, Freq: + 0.0020753337419735962, Relative Freq (%): + 100.00
+Detailed Race: CARIBI, Freq: + 0.0013779328866883255, Relative Freq (%): + 100.00
+Detailed Race: EURCAU, Freq: + 0.004750279568813428, Relative Freq (%): + 100.00
+Detailed Race: FILII, Freq: + 3.819958293492738E-4, Relative Freq (%): + 100.00
+Detailed Race: HAWI, Freq: + 0.0016130344481246318, Relative Freq (%): + 100.00
+Detailed Race: JAPI, Freq: + 0.0014318561298732953, Relative Freq (%): + 100.00
+Detailed Race: KORI, Freq: + 0.0026942936035091007, Relative Freq (%): + 100.00
+Detailed Race: MENAFC, Freq: + 0.0037868362230748247, Relative Freq (%): + 100.00
+Detailed Race: MSWHIS, Freq: + 0.0014684095092303009, Relative Freq (%): + 100.00
 Detailed Race: NCHI, Freq: + 5.76458430441042E-4, Relative Freq (%): + 99.99
+Detailed Race: SCAHIS, Freq: + 0.0018113132737859366, Relative Freq (%): + 100.00
+Detailed Race: SCAMB, Freq: + 0.0017637850814752102, Relative Freq (%): + 100.00
+Detailed Race: SCSEAI, Freq: + 0.0013272735372796508, Relative Freq (%): + 100.00
+Detailed Race: VIET, Freq: + 4.3917873534479736E-5, Relative Freq (%): + 100.00
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*11:01g^HLA-DRBX*NNNN^HLA-DQB1*03:01g
 HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*05:01
-Broad Race: CAU, Freq: + 6.611418460078833E-7, Relative Freq (%): + 0.01
 Broad Race: API, Freq: + 5.0569153995571166E-8, Relative Freq (%): + 0.00
-Detailed Race: NCHI, Freq: + 4.658193141956377E-8, Relative Freq (%): + 0.01
+Broad Race: CAU, Freq: + 6.611418460078833E-7, Relative Freq (%): + 0.01
 Detailed Race: AINDI, Freq: + 8.645548910264564E-8, Relative Freq (%): + 0.00
 Detailed Race: MENAFC, Freq: + 1.5537973858336073E-7, Relative Freq (%): + 0.00
+Detailed Race: NCHI, Freq: + 4.658193141956377E-8, Relative Freq (%): + 0.01
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*03:01g
@@ -130,7 +183,7 @@ Detailed Race: EURCAU, Freq: + 2.4275436290293624E-12, Relative Freq (%): + 0.00
 
 ***************************************
 
-May 13, 2015 10:36:44 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
+May 16, 2015 3:59:05 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
 WARNING: Id: S99
 GL String: HLA-A*01:01:01:01/HLA-A*01:01:01:02N+HLA-A*30:04:01^HLA-C*03:04:01:01/HLA-C*03:04:01:02/HLA-C*03:154+HLA-C*12:02:02^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05^HLA-DPB1*02:01:02+HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02^HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02/HLA-DQA1*05:05:01:03/HLA-DQA1*05:09/HLA-DQA1*05:11+HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02/HLA-DQA1*05:05:01:03/HLA-DQA1*05:09/HLA-DQA1*05:11^HLA-DQB1*03:01:01:01/HLA-DQB1*03:01:01:02/HLA-DQB1*03:01:01:03+HLA-DQB1*03:01:01:01/HLA-DQB1*03:01:01:02/HLA-DQB1*03:01:01:03^HLA-DRB1*11:01:01+HLA-DRB1*13:03:01^HLA-DRB3*01:01:02:01/HLA-DRB3*01:01:02:02+HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02
 
@@ -143,49 +196,57 @@ WARNING - No BC haplotype pairs detected.
 First DRDQ Haplotype pair:
 HLA-DRB1*13:03^HLA-DRB3*01:01^HLA-DQB1*03:01g
 HLA-DRB1*11:01g^HLA-DRB3*02:02g^HLA-DQB1*03:01g
-Broad Race: HIS, Freq: + 4.534782565673045E-4, Relative Freq (%): + 100.00
-Broad Race: CAU, Freq: + 7.514738111059423E-4, Relative Freq (%): + 100.00
 Broad Race: AFA, Freq: + 5.892127271689582E-4, Relative Freq (%): + 100.00
 Broad Race: API, Freq: + 3.839216497608194E-5, Relative Freq (%): + 100.00
+Broad Race: CAU, Freq: + 7.514738111059423E-4, Relative Freq (%): + 100.00
+Broad Race: HIS, Freq: + 4.534782565673045E-4, Relative Freq (%): + 100.00
 Broad Race: NAM, Freq: + 3.697892304160971E-4, Relative Freq (%): + 99.98
+Detailed Race: AAFA, Freq: + 5.837512648388752E-4, Relative Freq (%): + 100.00
+Detailed Race: AFB, Freq: + 4.5988206623865594E-4, Relative Freq (%): + 100.00
+Detailed Race: AINDI, Freq: + 7.641859313474394E-5, Relative Freq (%): + 100.00
 Detailed Race: AISC, Freq: + 3.476404465323316E-4, Relative Freq (%): + 100.00
+Detailed Race: ALANAM, Freq: + 1.2175062010282477E-4, Relative Freq (%): + 100.00
+Detailed Race: AMIND, Freq: + 3.5551525870007936E-4, Relative Freq (%): + 99.97
 Detailed Race: CARB, Freq: + 5.417414320861419E-4, Relative Freq (%): + 100.00
+Detailed Race: CARHIS, Freq: + 8.173145041170502E-4, Relative Freq (%): + 100.00
+Detailed Race: CARIBI, Freq: + 6.686882107554198E-4, Relative Freq (%): + 100.00
 Detailed Race: EURCAU, Freq: + 6.018595874338247E-4, Relative Freq (%): + 100.00
-Detailed Race: SCAHIS, Freq: + 4.787934558477276E-4, Relative Freq (%): + 100.00
+Detailed Race: FILII, Freq: + 3.8999599739795475E-5, Relative Freq (%): + 100.00
+Detailed Race: HAWI, Freq: + 1.6234391307197275E-5, Relative Freq (%): + 100.00
+Detailed Race: JAPI, Freq: + 7.708309051846838E-7, Relative Freq (%): + 100.00
 Detailed Race: KORI, Freq: + 1.4113959772352511E-7, Relative Freq (%): + 100.00
 Detailed Race: MENAFC, Freq: + 0.0017054596377322876, Relative Freq (%): + 100.00
-Detailed Race: AINDI, Freq: + 7.641859313474394E-5, Relative Freq (%): + 100.00
+Detailed Race: MSWHIS, Freq: + 3.2280118099234665E-4, Relative Freq (%): + 100.00
 Detailed Race: NCHI, Freq: + 6.396495675921065E-6, Relative Freq (%): + 100.00
-Detailed Race: AFB, Freq: + 4.5988206623865594E-4, Relative Freq (%): + 100.00
-Detailed Race: CARIBI, Freq: + 6.686882107554198E-4, Relative Freq (%): + 100.00
-Detailed Race: AAFA, Freq: + 5.837512648388752E-4, Relative Freq (%): + 100.00
-Detailed Race: CARHIS, Freq: + 8.173145041170502E-4, Relative Freq (%): + 100.00
-Detailed Race: AMIND, Freq: + 3.5551525870007936E-4, Relative Freq (%): + 99.97
+Detailed Race: SCAHIS, Freq: + 4.787934558477276E-4, Relative Freq (%): + 100.00
+Detailed Race: SCAMB, Freq: + 5.820830975945624E-4, Relative Freq (%): + 100.00
+Detailed Race: SCSEAI, Freq: + 1.0475746133997507E-4, Relative Freq (%): + 100.00
+Detailed Race: VIET, Freq: + 1.8436919292279804E-7, Relative Freq (%): + 100.00
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*11:01g^HLA-DRB3*01:01^HLA-DQB1*03:01g
 HLA-DRB1*13:03^HLA-DRB3*02:02g^HLA-DQB1*03:01g
-Broad Race: NAM, Freq: + 7.13864988227473E-8, Relative Freq (%): + 0.02
-Broad Race: API, Freq: + 1.4934586066350383E-9, Relative Freq (%): + 0.00
 Broad Race: AFA, Freq: + 6.731444397368424E-9, Relative Freq (%): + 0.00
+Broad Race: API, Freq: + 1.4934586066350383E-9, Relative Freq (%): + 0.00
 Broad Race: CAU, Freq: + 7.724366128885601E-9, Relative Freq (%): + 0.00
 Broad Race: HIS, Freq: + 2.7620692877147635E-9, Relative Freq (%): + 0.00
-Detailed Race: AMIND, Freq: + 8.950526056757398E-8, Relative Freq (%): + 0.03
-Detailed Race: CARHIS, Freq: + 1.089783948554921E-8, Relative Freq (%): + 0.00
+Broad Race: NAM, Freq: + 7.13864988227473E-8, Relative Freq (%): + 0.02
 Detailed Race: AAFA, Freq: + 6.5909501287456975E-9, Relative Freq (%): + 0.00
-Detailed Race: CARIBI, Freq: + 4.991405297151724E-9, Relative Freq (%): + 0.00
 Detailed Race: AFB, Freq: + 2.683649825819832E-9, Relative Freq (%): + 0.00
-Detailed Race: NCHI, Freq: + 3.205696527409451E-11, Relative Freq (%): + 0.00
 Detailed Race: AINDI, Freq: + 1.4654378469096377E-10, Relative Freq (%): + 0.00
-Detailed Race: MENAFC, Freq: + 3.18399198842764E-9, Relative Freq (%): + 0.00
-Detailed Race: KORI, Freq: + 2.510518680022795E-13, Relative Freq (%): + 0.00
-Detailed Race: SCAHIS, Freq: + 3.4824097044037665E-10, Relative Freq (%): + 0.00
-Detailed Race: EURCAU, Freq: + 4.286844540420673E-10, Relative Freq (%): + 0.00
+Detailed Race: AMIND, Freq: + 8.950526056757398E-8, Relative Freq (%): + 0.03
 Detailed Race: CARB, Freq: + 2.5604937639420436E-10, Relative Freq (%): + 0.00
+Detailed Race: CARHIS, Freq: + 1.089783948554921E-8, Relative Freq (%): + 0.00
+Detailed Race: CARIBI, Freq: + 4.991405297151724E-9, Relative Freq (%): + 0.00
+Detailed Race: EURCAU, Freq: + 4.286844540420673E-10, Relative Freq (%): + 0.00
+Detailed Race: KORI, Freq: + 2.510518680022795E-13, Relative Freq (%): + 0.00
+Detailed Race: MENAFC, Freq: + 3.18399198842764E-9, Relative Freq (%): + 0.00
+Detailed Race: NCHI, Freq: + 3.205696527409451E-11, Relative Freq (%): + 0.00
+Detailed Race: SCAHIS, Freq: + 3.4824097044037665E-10, Relative Freq (%): + 0.00
 
 ***************************************
 
-May 13, 2015 10:36:44 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
+May 16, 2015 3:59:05 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
 WARNING: Id: S134
 GL String: HLA-A*02:01:01:01/HLA-A*02:01:01:02L/HLA-A*02:01:01:03+HLA-A*26:01:01^HLA-B*14:02:01+HLA-B*38:27^HLA-C*08:02:01/HLA-C*08:34+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*01:04^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*15:01^HLA-DQA1*02:01+HLA-DQA1*03:01:01^HLA-DQB1*02:02+HLA-DQB1*03:02:01^HLA-DRB1*04:02:01+HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02^HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N+HLA-DRB4*01:03:01:01/HLA-DRB4*01:03:01:02N/HLA-DRB4*01:03:01:03
 
@@ -199,431 +260,36 @@ First DRDQ Haplotype pair:
 HLA-DRB1*07:01^HLA-DRB4*01:01g^HLA-DQB1*02:01g
 HLA-DRB1*04:02^HLA-DRB4*01:01g^HLA-DQB1*03:02g
 Broad Race: AFA, Freq: + 8.63699485020188E-5, Relative Freq (%): + 100.00
+Broad Race: API, Freq: + 2.127395125804577E-4, Relative Freq (%): + 100.00
+Broad Race: CAU, Freq: + 0.0012153342171036508, Relative Freq (%): + 100.00
+Broad Race: HIS, Freq: + 0.0012424941054651729, Relative Freq (%): + 100.00
+Broad Race: NAM, Freq: + 3.4263588950880563E-4, Relative Freq (%): + 100.00
 Detailed Race: AAFA, Freq: + 7.439937971921655E-5, Relative Freq (%): + 100.00
+Detailed Race: AFB, Freq: + 1.1354329625722553E-4, Relative Freq (%): + 100.00
+Detailed Race: AINDI, Freq: + 7.922401777583667E-4, Relative Freq (%): + 100.00
+Detailed Race: ALANAM, Freq: + 1.085352616309028E-4, Relative Freq (%): + 100.00
+Detailed Race: AMIND, Freq: + 2.8996502719622487E-4, Relative Freq (%): + 100.00
+Detailed Race: CARB, Freq: + 1.3988716237045342E-4, Relative Freq (%): + 100.00
+Detailed Race: CARHIS, Freq: + 0.0016299674246446308, Relative Freq (%): + 100.00
+Detailed Race: CARIBI, Freq: + 0.0012751789619072607, Relative Freq (%): + 100.00
+Detailed Race: EURCAU, Freq: + 0.0011059917152156826, Relative Freq (%): + 100.00
+Detailed Race: FILII, Freq: + 2.759501621688743E-5, Relative Freq (%): + 100.00
+Detailed Race: HAWI, Freq: + 9.374091123930632E-5, Relative Freq (%): + 100.00
+Detailed Race: JAPI, Freq: + 4.103229799269074E-6, Relative Freq (%): + 100.00
+Detailed Race: KORI, Freq: + 6.173228702282094E-6, Relative Freq (%): + 100.00
+Detailed Race: MENAFC, Freq: + 0.0022490075952687327, Relative Freq (%): + 100.00
+Detailed Race: MSWHIS, Freq: + 0.0010653174550727187, Relative Freq (%): + 100.00
+Detailed Race: NCHI, Freq: + 2.4709442730896283E-5, Relative Freq (%): + 100.00
+Detailed Race: SCAHIS, Freq: + 0.0014309480875963555, Relative Freq (%): + 100.00
+Detailed Race: SCAMB, Freq: + 2.898673847544569E-4, Relative Freq (%): + 100.00
+Detailed Race: SCSEAI, Freq: + 6.253042839837522E-4, Relative Freq (%): + 100.00
+Detailed Race: VIET, Freq: + 2.2930065380106833E-6, Relative Freq (%): + 100.00
 
 Possible DRDQ Haplotype Pair:
 HLA-DRB1*04:02^HLA-DRB4*01:01g^HLA-DQB1*02:01g
 HLA-DRB1*07:01^HLA-DRB4*01:01g^HLA-DQB1*03:02g
 Broad Race: CAU, Freq: + 1.2457946960968955E-11, Relative Freq (%): + 0.00
 Detailed Race: EURCAU, Freq: + 3.4374649550782934E-12, Relative Freq (%): + 0.00
-
-***************************************
-
-May 14, 2015 9:04:09 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-0
-GL String: HLA-A*01:01+HLA-A*01:02^HLA-B*07:01^HLA-DRB1*01:01:01+HLA-DRB1*03:01:01:01^HLA-DRB3*01:01:02:01^HLA-DQA1*05:01:01^HLA-DQB1*02:01:01
-
-HLA DB Version: HLADB3180
-
-Frequencies:  NMDP
-
-WARNING - No BC haplotype pairs detected.
-
-First DRDQ Haplotype pair:
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: HIS, Freq: + 4.733782094965272E-8, Relative Freq (%): + 100.00
-Broad Race: CAU, Freq: + 5.4234559465950486E-8, Relative Freq (%): + 99.99
-Detailed Race: SCAHIS, Freq: + 1.0753295221288619E-7, Relative Freq (%): + 100.00
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: CAU, Freq: + 6.201281959370174E-12, Relative Freq (%): + 0.01
-Broad Race: HIS, Freq: + 7.362192809292109E-13, Relative Freq (%): + 0.00
-
-***************************************
-
-May 14, 2015 9:04:09 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-1
-GL String: HLA-B*07:02:01/HLA-B*07:02:04/HLA-B*07:05:01^HLA-C*07:02:01:01
-
-HLA DB Version: HLADB3180
-
-Frequencies:  NMDP
-
-First BC Haplotype pair:
-HLA-B*07:02g^HLA-C*07:02g
-HLA-B*07:02g^HLA-C*07:02g
-Broad Race: CAU, Freq: + 0.015128358056511505, Relative Freq (%): + 99.96
-Broad Race: NAM, Freq: + 0.00927044381442425, Relative Freq (%): + 99.53
-Broad Race: HIS, Freq: + 0.0031943050982018613, Relative Freq (%): + 98.70
-Broad Race: AFA, Freq: + 0.0035807719980655603, Relative Freq (%): + 91.30
-Broad Race: API, Freq: + 8.546547511911994E-4, Relative Freq (%): + 71.59
-Detailed Race: KORI, Freq: + 0.0011764097752671326, Relative Freq (%): + 100.00
-Detailed Race: EURCAU, Freq: + 0.016784495680421226, Relative Freq (%): + 99.96
-Detailed Race: AMIND, Freq: + 0.010013596204016272, Relative Freq (%): + 99.80
-Detailed Race: MENAFC, Freq: + 0.0031040863953072074, Relative Freq (%): + 99.79
-Detailed Race: JAPI, Freq: + 0.0034458046441470875, Relative Freq (%): + 99.56
-Detailed Race: ALANAM, Freq: + 0.006103515624999688, Relative Freq (%): + 99.44
-Detailed Race: SCAMB, Freq: + 0.0036991029006187923, Relative Freq (%): + 99.15
-Detailed Race: CARHIS, Freq: + 0.0030464910562382898, Relative Freq (%): + 99.07
-Detailed Race: AISC, Freq: + 0.009149923479742032, Relative Freq (%): + 98.96
-Detailed Race: SCAHIS, Freq: + 0.00324283259970072, Relative Freq (%): + 98.77
-Detailed Race: MSWHIS, Freq: + 0.003169462578456567, Relative Freq (%): + 98.75
-Detailed Race: CARIBI, Freq: + 0.0022927687939046765, Relative Freq (%): + 98.01
-Detailed Race: AFB, Freq: + 0.003505914297181741, Relative Freq (%): + 91.93
-Detailed Race: AAFA, Freq: + 0.0036506367960601575, Relative Freq (%): + 91.33
-Detailed Race: CARB, Freq: + 0.002996324686046385, Relative Freq (%): + 90.87
-Detailed Race: NCHI, Freq: + 6.0772366101074613E-5, Relative Freq (%): + 87.56
-Detailed Race: HAWI, Freq: + 8.158208598026867E-4, Relative Freq (%): + 86.92
-Detailed Race: AINDI, Freq: + 0.0019224916001672452, Relative Freq (%): + 70.89
-Detailed Race: SCSEAI, Freq: + 0.0010951378009446857, Relative Freq (%): + 66.70
-Detailed Race: VIET, Freq: + 2.8811829951495057E-4, Relative Freq (%): + 57.10
-Detailed Race: FILII, Freq: + 9.67230264245524E-5, Relative Freq (%): + 11.10
-
-WARNING - No DRDQ haplotype pairs detected.
-
-Possible BC Haplotype Pair:
-HLA-B*07:05g^HLA-C*07:02g
-HLA-B*07:02g^HLA-C*07:02g
-Broad Race: API, Freq: + 2.600049575845149E-4, Relative Freq (%): + 21.78
-Broad Race: AFA, Freq: + 3.137592274106758E-4, Relative Freq (%): + 8.00
-Broad Race: HIS, Freq: + 4.1548719461042536E-5, Relative Freq (%): + 1.28
-Broad Race: NAM, Freq: + 4.321164517935116E-5, Relative Freq (%): + 0.46
-Broad Race: CAU, Freq: + 6.05023232560082E-6, Relative Freq (%): + 0.04
-Detailed Race: VIET, Freq: + 1.442436184495333E-4, Relative Freq (%): + 28.59
-Detailed Race: FILII, Freq: + 2.2962021428173305E-4, Relative Freq (%): + 26.35
-Detailed Race: SCSEAI, Freq: + 4.004430729889663E-4, Relative Freq (%): + 24.39
-Detailed Race: AINDI, Freq: + 6.01411172730902E-4, Relative Freq (%): + 22.18
-Detailed Race: HAWI, Freq: + 1.0835143716993608E-4, Relative Freq (%): + 11.54
-Detailed Race: NCHI, Freq: + 7.666206242902443E-6, Relative Freq (%): + 11.05
-Detailed Race: CARB, Freq: + 2.756835040552911E-4, Relative Freq (%): + 8.36
-Detailed Race: AAFA, Freq: + 3.186994380780561E-4, Relative Freq (%): + 7.97
-Detailed Race: AFB, Freq: + 2.8480021105283546E-4, Relative Freq (%): + 7.47
-Detailed Race: CARIBI, Freq: + 4.5699899536602816E-5, Relative Freq (%): + 1.95
-Detailed Race: MSWHIS, Freq: + 3.9593660815880536E-5, Relative Freq (%): + 1.23
-Detailed Race: SCAHIS, Freq: + 3.98716150673693E-5, Relative Freq (%): + 1.21
-Detailed Race: AISC, Freq: + 9.4832009816594E-5, Relative Freq (%): + 1.03
-Detailed Race: CARHIS, Freq: + 2.8365159122721517E-5, Relative Freq (%): + 0.92
-Detailed Race: SCAMB, Freq: + 3.1338036808717116E-5, Relative Freq (%): + 0.84
-Detailed Race: ALANAM, Freq: + 3.400009405828819E-5, Relative Freq (%): + 0.55
-Detailed Race: JAPI, Freq: + 1.5105535262685661E-5, Relative Freq (%): + 0.44
-Detailed Race: MENAFC, Freq: + 6.606728431478828E-6, Relative Freq (%): + 0.21
-Detailed Race: AMIND, Freq: + 1.9742317196487255E-5, Relative Freq (%): + 0.20
-Detailed Race: EURCAU, Freq: + 5.89471692102759E-6, Relative Freq (%): + 0.04
-
-Possible BC Haplotype Pair:
-HLA-B*07:05g^HLA-C*07:02g
-HLA-B*07:05g^HLA-C*07:02g
-Broad Race: API, Freq: + 7.909928292600303E-5, Relative Freq (%): + 6.63
-Broad Race: AFA, Freq: + 2.749263366629514E-5, Relative Freq (%): + 0.70
-Broad Race: HIS, Freq: + 5.404293064629868E-7, Relative Freq (%): + 0.02
-Broad Race: NAM, Freq: + 2.0141929733728818E-7, Relative Freq (%): + 0.00
-Broad Race: CAU, Freq: + 2.419648653013574E-9, Relative Freq (%): + 0.00
-Detailed Race: FILII, Freq: + 5.451177941368164E-4, Relative Freq (%): + 62.55
-Detailed Race: VIET, Freq: + 7.221416167748448E-5, Relative Freq (%): + 14.31
-Detailed Race: SCSEAI, Freq: + 1.4642418019588199E-4, Relative Freq (%): + 8.92
-Detailed Race: AINDI, Freq: + 1.8813887075194165E-4, Relative Freq (%): + 6.94
-Detailed Race: HAWI, Freq: + 1.4390455693459512E-5, Relative Freq (%): + 1.53
-Detailed Race: NCHI, Freq: + 9.670631889002125E-7, Relative Freq (%): + 1.39
-Detailed Race: CARB, Freq: + 2.536487275966298E-5, Relative Freq (%): + 0.77
-Detailed Race: AAFA, Freq: + 2.7822360181348206E-5, Relative Freq (%): + 0.70
-Detailed Race: AFB, Freq: + 2.3135522816670532E-5, Relative Freq (%): + 0.61
-Detailed Race: CARIBI, Freq: + 9.108990070031544E-7, Relative Freq (%): + 0.04
-Detailed Race: MSWHIS, Freq: + 4.946131837803228E-7, Relative Freq (%): + 0.02
-Detailed Race: SCAHIS, Freq: + 4.90233658138008E-7, Relative Freq (%): + 0.01
-Detailed Race: AISC, Freq: + 9.828617808406118E-7, Relative Freq (%): + 0.01
-Detailed Race: CARHIS, Freq: + 2.64101301203485E-7, Relative Freq (%): + 0.01
-Detailed Race: SCAMB, Freq: + 2.654893841585823E-7, Relative Freq (%): + 0.01
-Detailed Race: ALANAM, Freq: + 1.8940008791613491E-7, Relative Freq (%): + 0.00
-Detailed Race: JAPI, Freq: + 6.621884266126724E-8, Relative Freq (%): + 0.00
-Detailed Race: MENAFC, Freq: + 1.4061741526685446E-8, Relative Freq (%): + 0.00
-Detailed Race: AMIND, Freq: + 3.8922988339632776E-8, Relative Freq (%): + 0.00
-Detailed Race: EURCAU, Freq: + 2.070225298433093E-9, Relative Freq (%): + 0.00
-
-***************************************
-
-May 14, 2015 9:04:09 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-2
-GL String: HLA-A*01:01+HLA-A*01:02^HLA-B*07:01^HLA-DRB1*01:01:01+HLA-DRB1*03:01:01:01^HLA-DRB3*01:01:02:01^HLA-DQA1*05:01:01/HLA-DQA1*01:02:01:01^HLA-DQB1*02:01:01/HLA-DQB1*05:04
-
-HLA DB Version: HLADB3180
-
-Frequencies:  NMDP
-
-WARNING - No BC haplotype pairs detected.
-
-First DRDQ Haplotype pair:
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*05:04
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*02:01g
-Broad Race: API, Freq: + 8.665332412642055E-9, Relative Freq (%): + 100.00
-Broad Race: AFA, Freq: + 1.0388330692506024E-6, Relative Freq (%): + 99.99
-Broad Race: CAU, Freq: + 4.708617385644287E-5, Relative Freq (%): + 99.87
-Broad Race: HIS, Freq: + 1.800574423044319E-6, Relative Freq (%): + 97.44
-Detailed Race: AAFA, Freq: + 9.690518901062102E-7, Relative Freq (%): + 100.00
-Detailed Race: MSWHIS, Freq: + 6.121461919476323E-7, Relative Freq (%): + 100.00
-Detailed Race: MENAFC, Freq: + 2.936661788444483E-5, Relative Freq (%): + 100.00
-Detailed Race: EURCAU, Freq: + 3.1864393728525435E-5, Relative Freq (%): + 100.00
-Detailed Race: SCAHIS, Freq: + 5.070727949875499E-6, Relative Freq (%): + 97.92
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: HIS, Freq: + 4.733782094965272E-8, Relative Freq (%): + 2.56
-Broad Race: CAU, Freq: + 5.4234559465950486E-8, Relative Freq (%): + 0.12
-Detailed Race: SCAHIS, Freq: + 1.0753295221288619E-7, Relative Freq (%): + 2.08
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*05:04
-Broad Race: CAU, Freq: + 5.383922047989468E-9, Relative Freq (%): + 0.01
-Broad Race: AFA, Freq: + 1.175031968523459E-10, Relative Freq (%): + 0.01
-Broad Race: HIS, Freq: + 2.800335081758642E-11, Relative Freq (%): + 0.00
-Detailed Race: EURCAU, Freq: + 6.149889048527766E-10, Relative Freq (%): + 0.00
-Detailed Race: MENAFC, Freq: + 2.0947729707384031E-10, Relative Freq (%): + 0.00
-Detailed Race: MSWHIS, Freq: + 1.3377883385931973E-12, Relative Freq (%): + 0.00
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: HIS, Freq: + 7.362192809292109E-13, Relative Freq (%): + 0.00
-Broad Race: CAU, Freq: + 6.201281959370174E-12, Relative Freq (%): + 0.00
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*05:04
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*05:04
-Broad Race: CAU, Freq: + 1.2789473639116296E-12, Relative Freq (%): + 0.00
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*05:04
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: CAU, Freq: + 1.4731107070487704E-15, Relative Freq (%): + 0.00
-
-***************************************
-
-May 14, 2015 9:04:09 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-3
-GL String: HLA-A*01:01+HLA-A*01:02^HLA-B*07:01^HLA-DRB1*01:01:01+HLA-DRB1*03:01:01:01^HLA-DRB3*01:01:02:01^HLA-DQA1*05:01:01/HLA-DQA1*01:02:01:02^HLA-DQB1*02:01:01/HLA-DQB1*05:04
-
-HLA DB Version: HLADB3180
-
-Frequencies:  NMDP
-
-WARNING - No BC haplotype pairs detected.
-
-First DRDQ Haplotype pair:
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*05:04
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*02:01g
-Broad Race: API, Freq: + 8.665332412642055E-9, Relative Freq (%): + 100.00
-Broad Race: AFA, Freq: + 1.0388330692506024E-6, Relative Freq (%): + 99.99
-Broad Race: CAU, Freq: + 4.708617385644287E-5, Relative Freq (%): + 99.87
-Broad Race: HIS, Freq: + 1.800574423044319E-6, Relative Freq (%): + 97.44
-Detailed Race: AAFA, Freq: + 9.690518901062102E-7, Relative Freq (%): + 100.00
-Detailed Race: MSWHIS, Freq: + 6.121461919476323E-7, Relative Freq (%): + 100.00
-Detailed Race: MENAFC, Freq: + 2.936661788444483E-5, Relative Freq (%): + 100.00
-Detailed Race: EURCAU, Freq: + 3.1864393728525435E-5, Relative Freq (%): + 100.00
-Detailed Race: SCAHIS, Freq: + 5.070727949875499E-6, Relative Freq (%): + 97.92
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: HIS, Freq: + 4.733782094965272E-8, Relative Freq (%): + 2.56
-Broad Race: CAU, Freq: + 5.4234559465950486E-8, Relative Freq (%): + 0.12
-Detailed Race: SCAHIS, Freq: + 1.0753295221288619E-7, Relative Freq (%): + 2.08
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*05:04
-Broad Race: CAU, Freq: + 5.383922047989468E-9, Relative Freq (%): + 0.01
-Broad Race: AFA, Freq: + 1.175031968523459E-10, Relative Freq (%): + 0.01
-Broad Race: HIS, Freq: + 2.800335081758642E-11, Relative Freq (%): + 0.00
-Detailed Race: EURCAU, Freq: + 6.149889048527766E-10, Relative Freq (%): + 0.00
-Detailed Race: MENAFC, Freq: + 2.0947729707384031E-10, Relative Freq (%): + 0.00
-Detailed Race: MSWHIS, Freq: + 1.3377883385931973E-12, Relative Freq (%): + 0.00
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: HIS, Freq: + 7.362192809292109E-13, Relative Freq (%): + 0.00
-Broad Race: CAU, Freq: + 6.201281959370174E-12, Relative Freq (%): + 0.00
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*05:04
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*05:04
-Broad Race: CAU, Freq: + 1.2789473639116296E-12, Relative Freq (%): + 0.00
-
-Possible DRDQ Haplotype Pair:
-HLA-DRB1*03:01^HLA-DRB3*01:01^HLA-DQB1*05:04
-HLA-DRB1*01:01^HLA-DRBX*NNNN^HLA-DQB1*02:01g
-Broad Race: CAU, Freq: + 1.4731107070487704E-15, Relative Freq (%): + 0.00
-
-***************************************
-
-May 14, 2015 9:04:11 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: strictExample.txt-0
-GL String: HLA-A*01:01:01:01+HLA-A*26:01:01^HLA-B*38:01:01+HLA-B*44:03:01^HLA-C*12:03:01:01+HLA-C*07:01:01:01^HLA-DRB1*07:01:02+HLA-DRB1*01:01:01^HLA-DQB1*02:01:01+HLA-DQB1*05:01:02
-
-HLA DB Version: HLADB3180
-
-Frequencies:  NMDP
-
-First BC Haplotype pair:
-HLA-B*44:03^HLA-C*07:01g
-HLA-B*38:01^HLA-C*12:03g
-Broad Race: AFA, Freq: + 9.05789966614952E-6, Relative Freq (%): + 100.00
-Broad Race: HIS, Freq: + 2.7125198787966958E-5, Relative Freq (%): + 100.00
-Broad Race: CAU, Freq: + 1.2271635601869618E-5, Relative Freq (%): + 99.99
-Detailed Race: AAFA, Freq: + 7.758247525167471E-6, Relative Freq (%): + 100.00
-Detailed Race: MENAFC, Freq: + 6.745013563876317E-5, Relative Freq (%): + 100.00
-Detailed Race: SCAHIS, Freq: + 1.9089359396962565E-5, Relative Freq (%): + 100.00
-Detailed Race: EURCAU, Freq: + 3.1916315351922415E-6, Relative Freq (%): + 100.00
-
-WARNING - No DRDQ haplotype pairs detected.
-
-Possible BC Haplotype Pair:
-HLA-B*38:01^HLA-C*07:01g
-HLA-B*44:03^HLA-C*12:03g
-Broad Race: CAU, Freq: + 6.98827518646818E-10, Relative Freq (%): + 0.01
-Broad Race: HIS, Freq: + 2.2156649691559852E-11, Relative Freq (%): + 0.00
-Detailed Race: EURCAU, Freq: + 1.1431748586150252E-10, Relative Freq (%): + 0.00
-Detailed Race: SCAHIS, Freq: + 5.807438938142464E-11, Relative Freq (%): + 0.00
-Detailed Race: MENAFC, Freq: + 1.9901189599208631E-10, Relative Freq (%): + 0.00
-
-***************************************
-
-May 14, 2015 9:29:20 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-0
-GL String: HLA-A*01:01+HLA-A*01:02^HLA-B*07:01^HLA-DRB1*01:01:01+HLA-DRB1*03:01:01:01^HLA-DRB3*01:01:02:01^HLA-DQA1*05:01:01^HLA-DQB1*02:01:01
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-WARNING - No BC haplotype pairs detected.
-
-WARNING - No DRDQ haplotype pairs detected.
-
-***************************************
-
-May 14, 2015 9:29:20 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-1
-GL String: HLA-B*07:02:01/HLA-B*07:02:04/HLA-B*07:05:01^HLA-C*07:02:01:01
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-First BC Haplotype pair:
-HLA-B*07:02:01^HLA-C*07:02:01:01
-HLA-B*07:02:01^HLA-C*07:02:01:01
-0.9*0.9
-
-WARNING - No DRDQ haplotype pairs detected.
-
-Possible BC Haplotype Pair:
-HLA-B*07:02:04^HLA-C*07:02:01:01
-HLA-B*07:02:01^HLA-C*07:02:01:01
-5*0.9
-
-Possible BC Haplotype Pair:
-HLA-B*07:05:01^HLA-C*07:02:01:01
-HLA-B*07:02:01^HLA-C*07:02:01:01
-3.3*0.9
-
-***************************************
-
-May 14, 2015 9:29:20 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-2
-GL String: HLA-A*01:01+HLA-A*01:02^HLA-B*07:01^HLA-DRB1*01:01:01+HLA-DRB1*03:01:01:01^HLA-DRB3*01:01:02:01^HLA-DQA1*05:01:01/HLA-DQA1*01:02:01:01^HLA-DQB1*02:01:01/HLA-DQB1*05:04
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-WARNING - No BC haplotype pairs detected.
-
-WARNING - No DRDQ haplotype pairs detected.
-
-***************************************
-
-May 14, 2015 9:29:20 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: contrivedExamples.txt-3
-GL String: HLA-A*01:01+HLA-A*01:02^HLA-B*07:01^HLA-DRB1*01:01:01+HLA-DRB1*03:01:01:01^HLA-DRB3*01:01:02:01^HLA-DQA1*05:01:01/HLA-DQA1*01:02:01:02^HLA-DQB1*02:01:01/HLA-DQB1*05:04
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-WARNING - No BC haplotype pairs detected.
-
-WARNING - No DRDQ haplotype pairs detected.
-
-***************************************
-
-May 14, 2015 9:29:20 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: fullyQualifiedExample.txt-0
-GL String: HLA-A*01:01:01:01+HLA-A*26:01:01^HLA-B*38:01:01/HLA-B*38:27+HLA-B*44:03:01/HLA-B*44:03:10/HLA-B*44:125^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02^HLA-DQA1*02:01+HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02/HLA-DQA1*05:05:01:03/HLA-DQA1*05:09/HLA-DQA1*05:11^HLA-DQB1*02:02+HLA-DQB1*03:01:01:01/HLA-DQB1*03:01:01:02/HLA-DQB1*03:01:01:03^HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02+HLA-DRB1*11:01:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02^HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-First BC Haplotype pair:
-HLA-B*38:01:01^HLA-C*12:03:01:01
-HLA-B*44:03:01^HLA-C*04:01:01:01
-1.7*1.8
-
-WARNING - No DRDQ haplotype pairs detected.
-
-***************************************
-
-May 14, 2015 9:29:20 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: strictExample.txt-0
-GL String: HLA-A*01:01:01:01+HLA-A*26:01:01^HLA-B*38:01:01+HLA-B*44:03:01^HLA-C*12:03:01:01+HLA-C*07:01:01:01^HLA-DRB1*07:01:02+HLA-DRB1*01:01:01^HLA-DQB1*02:01:01+HLA-DQB1*05:01:02
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-WARNING - No BC haplotype pairs detected.
-
-WARNING - No DRDQ haplotype pairs detected.
-
-***************************************
-
-May 14, 2015 9:29:21 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: shorthandExamples.txt-0
-GL String: HLA-A*01:01:01:01+HLA-A*26:01:01^HLA-B*38:01:01/HLA-B*38:27+HLA-B*44:03:01/HLA-B*44:03:10/HLA-B*44:125^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02^HLA-DQA1*02:01+HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02/HLA-DQA1*05:05:01:03/HLA-DQA1*05:09/HLA-DQA1*05:11^HLA-DQB1*02:02+HLA-DQB1*03:01:01:01/HLA-DQB1*03:01:01:02/HLA-DQB1*03:01:01:03^HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02+HLA-DRB1*11:01:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02^HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-First BC Haplotype pair:
-HLA-B*38:01:01^HLA-C*12:03:01:01
-HLA-B*44:03:01^HLA-C*04:01:01:01
-1.7*1.8
-
-WARNING - No DRDQ haplotype pairs detected.
-
-***************************************
-
-May 14, 2015 9:29:21 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: shorthandExamples.txt-1
-GL String: HLA-A*11:01:01+HLA-A*32:01:01^HLA-B*41:01/HLA-B*41:14+HLA-B*57:03:01^HLA-C*06:02:01:01/HLA-C*06:02:01:02+HLA-C*17:01:07^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*02:01:01^HLA-DPB1*02:01:02+HLA-DPB1*09:01^HLA-DQA1*02:01+HLA-DQA1*03:01:01^HLA-DQB1*03:03:02:01/HLA-DQB1*03:03:02:02/HLA-DQB1*03:03:02:03+HLA-DQB1*03:04^HLA-DRB1*04:03:01+HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02^HLA-DRB4*01:03:01:01/HLA-DRB4*01:03:01:03+HLA-DRB4*03:01N|HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N+HLA-DRB4*01:03:03
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-WARNING - No BC haplotype pairs detected.
-
-WARNING - No DRDQ haplotype pairs detected.
-
-***************************************
-
-May 14, 2015 9:29:21 PM org.dash.valid.report.HaplotypePairWriter reportDetectedLinkages
-WARNING: Id: shorthandExamples.txt-2
-GL String: HLA-A*01:01:01:01+HLA-A*32:01:01^HLA-B*41:01/HLA-B*41:14+HLA-B*44:03:01/HLA-B*44:03:10/HLA-B*44:125^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*17:01:07^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*02:01:01^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*09:01^HLA-DQA1*02:01+HLA-DQA1*02:01^HLA-DQB1*02:02+HLA-DQB1*03:03:02:01/HLA-DQB1*03:03:02:02/HLA-DQB1*03:03:02:03^HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02+HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02^HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N+HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N
-
-HLA DB Version: HLADB3180
-
-Frequencies:  WIKIVERSITY
-
-WARNING - No BC haplotype pairs detected.
-
-WARNING - No DRDQ haplotype pairs detected.
 
 ***************************************
 
