@@ -39,7 +39,7 @@ The results of the software should be used for supporting the evidence, but not 
 *Running a Test Data Set:*
 
 * Command:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="&lt;filename> &lt;filename>"
-* Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="resources/test/contrivedExamples.txt resources/test/strictExample.txt resources/test/shorthandExamples.txt resources/test/fullyQualifiedExample.txt" -Dorg.dash.frequencies="nmdp" -Dorg.dash.hladb="3.18.0" -Djava.util.logging.config.file="resources/logging.properties"
+* Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="contrivedExamples.txt strictExample.txt shorthandExamples.txt fullyQualifiedExample.txt" -Dorg.dash.frequencies="nmdp" -Dorg.dash.hladb="3.18.0" -Djava.util.logging.config.file="logging.properties"
 
 *Properties:*
 
@@ -50,10 +50,13 @@ The results of the software should be used for supporting the evidence, but not 
 * Value(s):  3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0
 
 * Name:  java.util.logging.config.file
-* Value(s):  resources/logging.properties
+* Value(s):  logging.properties
 
 *Logs:*
 
-* linkage output may be found in linkages.log
+* likely haplotype pairs, sorted by relative frequencies may be found in haplotypePairs.log
+* gl strings in which a likely B/C or DR/DQ block was not found, may be found in haplotypePairWarnings.log
+* haplotype linkage output may be found in linkages.log
+* haplotype linkage output for gl strings with missing pairs may be found in linkageWarnings.log
 * errors and basic logging in immuno.log
  
