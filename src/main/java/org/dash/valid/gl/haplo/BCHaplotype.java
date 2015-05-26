@@ -95,7 +95,7 @@ public class BCHaplotype extends Haplotype {
 		StringBuffer sb = new StringBuffer();
 
 		if (this.linkage != null) {
-			sb.append(linkage.getHitDegree(Locus.HLA_B).getMatchedValue() + GLStringConstants.GENE_DELIMITER + 
+			sb.append(linkage.getHitDegree(Locus.HLA_B).getMatchedValue() + GLStringConstants.GENE_PHASE_DELIMITER + 
 					linkage.getHitDegree(Locus.HLA_C).getMatchedValue());
 		}
 		else {

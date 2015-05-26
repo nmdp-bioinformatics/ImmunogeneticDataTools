@@ -161,11 +161,11 @@ public class DRDQHaplotype extends Haplotype {
 		StringBuffer sb = new StringBuffer();
 		
 		if (this.linkage != null) {
-			sb.append(linkage.getHitDegree(Locus.HLA_DRB1).getMatchedValue() + GLStringConstants.GENE_DELIMITER + 
-					linkage.getHitDegree(Locus.HLA_DRB345).getMatchedValue() + GLStringConstants.GENE_DELIMITER + 
+			sb.append(linkage.getHitDegree(Locus.HLA_DRB1).getMatchedValue() + GLStringConstants.GENE_PHASE_DELIMITER + 
+					linkage.getHitDegree(Locus.HLA_DRB345).getMatchedValue() + GLStringConstants.GENE_PHASE_DELIMITER + 
 					linkage.getHitDegree(Locus.HLA_DQB1).getMatchedValue());
 			if (EXPECTING_DQA1) {
-				sb.append(GLStringConstants.GENE_DELIMITER + linkage.getHitDegree(Locus.HLA_DQA1).getMatchedValue());
+				sb.append(GLStringConstants.GENE_PHASE_DELIMITER + linkage.getHitDegree(Locus.HLA_DQA1).getMatchedValue());
 			}
 		}
 		else {	
