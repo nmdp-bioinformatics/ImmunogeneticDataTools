@@ -102,21 +102,6 @@ public class LinkageDisequilibriumAnalyzer {
 		return findingsList;
 	}
 	
-	public static DetectedLinkageFindings detectLinkages(String glString) {
-		LinkageDisequilibriumGenotypeList linkedGLString;
-		DetectedLinkageFindings findings;
-
-		if (!GLStringUtilities.validateGLStringFormat(glString)) {
-			glString = GLStringUtilities.fullyQualifyGLString(glString);
-		}
-		
-		linkedGLString = new LinkageDisequilibriumGenotypeList("LONE STRING", glString);
-		
-		findings = detectLinkages(linkedGLString);
-		
-		return findings;
-	}
-	
 	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) {
 		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug);
 		DetectedLinkageFindings findings = detectLinkages(linkedGLString);
