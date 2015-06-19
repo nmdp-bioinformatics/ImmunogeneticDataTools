@@ -8,12 +8,12 @@ import java.util.logging.Logger;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.haplo.BCHaplotype;
 import org.dash.valid.gl.haplo.DRDQHaplotype;
-import org.immunogenomics.gl.Allele;
-import org.immunogenomics.gl.AlleleList;
-import org.immunogenomics.gl.Genotype;
-import org.immunogenomics.gl.GenotypeList;
-import org.immunogenomics.gl.Haplotype;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.Allele;
+import org.nmdp.gl.AlleleList;
+import org.nmdp.gl.Genotype;
+import org.nmdp.gl.GenotypeList;
+import org.nmdp.gl.Haplotype;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumGenotypeList {
 	private String id;
