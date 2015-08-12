@@ -3,7 +3,6 @@ package org.dash.valid.report;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -126,7 +125,8 @@ public class DetectedLinkageFindings {
 					relativeRaceFreq.setRelativeFrequency(new Float((relativeRaceFreq.getFrequency() * 100) / totalFreq));
 					freqsByRace.add(relativeRaceFreq);
 				}
-				pair.setFrequencies(new LinkedHashSet<Object>(freqsByRace));
+				// TODO:  Not sure this line is needed
+				//pair.setFrequencies(new LinkedHashSet<Object>(freqsByRace));
 				this.linkedPairs.add(pair);
 			}
 		}

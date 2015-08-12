@@ -158,8 +158,12 @@ public class GLStringUtilities {
 	 */
 	public static LinkageHitDegree checkAntigenRecognitionSite(String allele,
 			String referenceAllele) {
-		String[] parts = allele.split(ESCAPED_ASTERISK);
-		String locus = parts[0];
+		String matchedValue = convertToProteinLevel(allele);
+		
+		String[] whoParts = allele.split(ESCAPED_ASTERISK);
+		String locus = whoParts[0];
+		
+		int partLength = allele.split(COLON).length;
 		AntigenRecognitionSiteLoader instance = AntigenRecognitionSiteLoader
 				.getInstance();
 		HashMap<String, Set<String>> arsMap = new HashMap<String, Set<String>>();
@@ -190,7 +194,20 @@ public class GLStringUtilities {
 			return null;
 		}
 
-		parts = allele.split(COLON);
+		LinkageHitDegree hitDegree;
+		for (String arsCode : arsMap.keySet()) {
+			if (arsCode.equals(referenceAllele)
+					&& arsMap.get(arsCode).contains(matchedValue)) {
+				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode);
+				return hitDegree;
+			}
+		}
+
+		return null;
+	}
+
+	public static String convertToProteinLevel(String allele) {
+		String[] parts = allele.split(COLON);
 
 		String matchedValue = null;
 		if (parts.length > P_GROUP_LEVEL
@@ -204,17 +221,7 @@ public class GLStringUtilities {
 		} else {
 			matchedValue = parts[0] + COLON + parts[1];
 		}
-
-		LinkageHitDegree hitDegree;
-		for (String arsCode : arsMap.keySet()) {
-			if (arsCode.equals(referenceAllele)
-					&& arsMap.get(arsCode).contains(matchedValue)) {
-				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, parts.length, allele, arsCode);
-				return hitDegree;
-			}
-		}
-
-		return null;
+		return matchedValue;
 	}
 
 	public static boolean checkHomozygous(Set<Set<String>> alleles) {

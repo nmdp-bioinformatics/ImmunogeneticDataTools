@@ -111,10 +111,10 @@ public class HaplotypePair {
 		if (haplotypePair == null) {
 			return false;
 		}
-		else if (getHaplotype1().toString().equals(((HaplotypePair) haplotypePair).getHaplotype1().toString()) && 
-				getHaplotype2().toString().equals(((HaplotypePair) haplotypePair).getHaplotype2().toString()) ||
-				getHaplotype1().toString().equals(((HaplotypePair) haplotypePair).getHaplotype2().toString()) && 
-				getHaplotype2().toString().equals(((HaplotypePair) haplotypePair).getHaplotype1().toString())) {
+		else if ((getHaplotype1().equals(((HaplotypePair) haplotypePair).getHaplotype1()) && 
+				getHaplotype2().equals(((HaplotypePair) haplotypePair).getHaplotype2())) ||
+				(getHaplotype1().equals(((HaplotypePair) haplotypePair).getHaplotype2()) && 
+				getHaplotype2().equals(((HaplotypePair) haplotypePair).getHaplotype1()))) {
 			return true;
 		}
 		

@@ -30,6 +30,21 @@ public class LinkageDisequilibriumGenotypeList {
 		
     private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumGenotypeList.class.getName());
 	
+    private static Integer ALLELE_AMBIGUITY_THRESHOLD = 20;
+    private static Integer PROTEIN_THRESHOLD = 10;
+    
+    static {
+		String alleleAmbiguityThreshold;
+		if ((alleleAmbiguityThreshold = System.getProperty("org.dash.ambThreshold")) != null) {
+			ALLELE_AMBIGUITY_THRESHOLD = new Integer(alleleAmbiguityThreshold);
+		}
+		
+		String proteinThreshold;
+		if ((proteinThreshold = System.getProperty("org.dash.proteinThreshold")) != null) {
+			PROTEIN_THRESHOLD = new Integer(proteinThreshold);
+		}
+    }
+	
 	public LinkageDisequilibriumGenotypeList(String id, String glString) {
 		this.glString = glString;
 		this.id = id;
@@ -98,8 +113,49 @@ public class LinkageDisequilibriumGenotypeList {
 		case HLA_DQA1:
 			return getDqa1Alleles();
 		default:
-			return null;
+			return new HashSet<Set<String>>();
 		}
+	}
+	
+	// TODO:  Write unit tests
+	public boolean checkAmbiguitiesThresholds() {
+		for (Locus locus : Locus.values()) {
+			if (getAlleleCount(locus) > ALLELE_AMBIGUITY_THRESHOLD) {
+				LOGGER.warning("Exceeded the allele ambiguity threshold of : " + ALLELE_AMBIGUITY_THRESHOLD + " at locus: " + locus.getFullName());
+				return false;
+			}
+			
+			if (getProteinCount(locus) > PROTEIN_THRESHOLD) {
+				LOGGER.warning("Exceeded the protein threshold of : " + PROTEIN_THRESHOLD + " at locus: " + locus.getFullName());
+				return false;
+			}
+			
+			// TODO:  Check against single locus frequencies
+		}
+		
+		return true;
+	}
+	
+	public int getAlleleCount(Locus locus) {
+		int alleleCount = 0;
+		
+		for (Set<String> alleleList : getAlleles(locus)) {
+			alleleCount += alleleList.size();
+		}
+		
+		return alleleCount;
+	}
+	
+	public int getProteinCount(Locus locus) {
+		HashSet<String> proteins = new HashSet<String>();
+		
+		for (Set<String> alleleList : getAlleles(locus)) {
+			for (String allele : alleleList) {
+				proteins.add(GLStringUtilities.convertToProteinLevel(allele));
+			}
+		}
+		
+		return proteins.size();
 	}
 	
 	private void parseGLString() {		

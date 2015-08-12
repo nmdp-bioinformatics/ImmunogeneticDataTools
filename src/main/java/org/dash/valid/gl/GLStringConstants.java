@@ -14,4 +14,5 @@ public class GLStringConstants {
 	public static final String NEWLINE = "\n";
 	public static final String EMPTY_STRING = "";
 	public static final String NNNN = "HLA-DRBX*NNNN";
+	public static final String COMMA = ",";
 }

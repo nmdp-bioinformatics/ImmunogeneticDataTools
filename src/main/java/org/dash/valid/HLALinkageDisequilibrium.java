@@ -61,7 +61,6 @@ public class HLALinkageDisequilibrium {
 		
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
-		//Set<Haplotype> linkedHaplotypes = new HaplotypeSet(new HaplotypeComparator());
 		List<Haplotype> linkedHaplotypes = new ArrayList<Haplotype>();
 		Set<DetectedDisequilibriumElement> linkageElementsFound = new LinkageElementsSet(new DisequilibriumElementComparator());
 		

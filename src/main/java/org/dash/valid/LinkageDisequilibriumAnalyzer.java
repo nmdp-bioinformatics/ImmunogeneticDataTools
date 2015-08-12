@@ -13,6 +13,7 @@ import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.handler.ProgressConsoleHandler;
 import org.dash.valid.report.CommonWellDocumentedWriter;
+import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
@@ -44,6 +45,8 @@ public class LinkageDisequilibriumAnalyzer {
 		for (Handler handler : LogManager.getLogManager().getLogger(CommonWellDocumentedWriter.class.getName()).getHandlers()) {
 			handler.close();
 		}
+		
+		DetectedFindingsWriter.getInstance().closeWriters();
 	}
 	
 	private static void analyzeGLStringFiles(String[] filenames) {		
@@ -64,12 +67,10 @@ public class LinkageDisequilibriumAnalyzer {
 			findingsList = detectLinkages(glStrings);
 			
 			for (DetectedLinkageFindings findings : findingsList) {
-				LinkageDisequilibriumWriter writer = LinkageDisequilibriumWriter.getInstance();
-				writer.reportDetectedLinkages(findings);
-				HaplotypePairWriter pairWriter = HaplotypePairWriter.getInstance();
-				pairWriter.reportDetectedLinkages(findings);
-				CommonWellDocumentedWriter cwdWriter = CommonWellDocumentedWriter.getInstance();
-				cwdWriter.reportCommonWellDocumented(findings);
+				LinkageDisequilibriumWriter.getInstance().reportDetectedLinkages(findings);
+				HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
+				CommonWellDocumentedWriter.getInstance().reportCommonWellDocumented(findings);
+				DetectedFindingsWriter.getInstance().reportDetectedFindings(findings);
 			}
 		}
 		catch (IOException e) {
@@ -93,8 +94,13 @@ public class LinkageDisequilibriumAnalyzer {
 			if (!GLStringUtilities.validateGLStringFormat(glString)) {
 				glString = GLStringUtilities.fullyQualifyGLString(glString);
 			}
+			
 			linkedGLString = new LinkageDisequilibriumGenotypeList(key, glString);
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
+			if (!linkedGLString.checkAmbiguitiesThresholds()) {
+				LOGGER.info("GL String skipped due to volume of ambiguities, proteins and/or uncommon alleles");
+			}
+			
 			findingsList.add(detectLinkages(linkedGLString));
 			idx++;
 		}
