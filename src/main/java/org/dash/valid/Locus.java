@@ -5,23 +5,24 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 public enum Locus {
-	HLA_A ("HLA-A", "A"),
-	HLA_B ("HLA-B", "B"),
-	HLA_C ("HLA-C", "C"),
-	HLA_DRB1 ("HLA-DRB1", "DRB1"),
-	HLA_DRB3 ("HLA-DRB3", "DRB3"),
-	HLA_DRB4 ("HLA-DRB4", "DRB4"),
-	HLA_DRB5 ("HLA-DRB5", "DRB5"),
-	HLA_DRB345 ("HLA-DRB345", "DRB345"),
-	HLA_DRBX ("HLA-DRBX", "DRBX"),
-	HLA_DQB1 ("HLA-DQB1", "DQB1"),
-	HLA_DQA1 ("HLA-DQA1", "DQA1"),
-	HLA_DPB1 ("HLA-DPB1", "DPB1"),
-	HLA_DPA1 ("HLA-DPA1", "DPA1");
+	HLA_A ("HLA-A", "A", "A"),
+	HLA_B ("HLA-B", "B", "B"),
+	HLA_C ("HLA-C", "C", "C"),
+	HLA_DRB1 ("HLA-DRB1", "DRB1", "DRB1"),
+	HLA_DRB3 ("HLA-DRB3", "DRB3", null),
+	HLA_DRB4 ("HLA-DRB4", "DRB4", null),
+	HLA_DRB5 ("HLA-DRB5", "DRB5", null),
+	HLA_DRB345 ("HLA-DRB345", "DRB345", "DRB3-4-5"),
+	HLA_DRBX ("HLA-DRBX", "DRBX", null),
+	HLA_DQB1 ("HLA-DQB1", "DQB1", "DQB1"),
+	HLA_DQA1 ("HLA-DQA1", "DQA1", null),
+	HLA_DPB1 ("HLA-DPB1", "DPB1", null),
+	HLA_DPA1 ("HLA-DPA1", "DPA1", null);
 
 	
 	String fullName;
 	String shortName;
+	String freqName;
 	
 	public static final EnumSet<Locus> A_B_C_LOCI = EnumSet.of(Locus.HLA_A, Locus.HLA_B, Locus.HLA_C);
 	public static final EnumSet<Locus> B_C_LOCI = EnumSet.of(Locus.HLA_B, Locus.HLA_C);	
@@ -32,9 +33,10 @@ public enum Locus {
 	
 	private static final Logger LOGGER = Logger.getLogger(Locus.class.getName());
 	
-	private Locus(String fullName, String shortName) {
+	private Locus(String fullName, String shortName, String freqName) {
 		this.fullName = fullName;
 		this.shortName = shortName;
+		this.freqName = freqName;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -52,16 +54,20 @@ public enum Locus {
 		return fullName;
 	}
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
-
 	public String getShortName() {
 		return shortName;
 	}
-
-	public void setShortName(String shortName) {
-		this.shortName = shortName;
+	
+	public String getFrequencyName() {
+		return freqName;
+	}
+	
+	public boolean hasIndividualFrequencies() {
+		if (freqName != null) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public static Locus lookup(String value) {

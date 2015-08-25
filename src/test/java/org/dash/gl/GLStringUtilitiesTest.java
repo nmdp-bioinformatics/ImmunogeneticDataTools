@@ -44,8 +44,8 @@ public class GLStringUtilitiesTest extends TestCase {
 	@Test
 	public void testHasFrequency() {		
 		if (GLStringUtilities.individualFrequenciesLoaded()) {
-			assertTrue(GLStringUtilities.hasFrequency(HLA_DQB10302g));
-			assertFalse(GLStringUtilities.hasFrequency(BOGUS_ALLELE));
+			assertTrue(GLStringUtilities.hasFrequency(Locus.HLA_DQB1, HLA_DQB10302g));
+			assertFalse(GLStringUtilities.hasFrequency(Locus.HLA_A, BOGUS_ALLELE));
 		}
 	}
 	

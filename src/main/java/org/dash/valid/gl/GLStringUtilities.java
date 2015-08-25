@@ -113,7 +113,7 @@ public class GLStringUtilities {
 	}
 	
 	public static boolean individualFrequenciesLoaded() {
-		List<String> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
+		HashMap<Locus, List<String>> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
 		
 		if (individualFrequencies != null && individualFrequencies.size() > 0) {
 			return true;
@@ -122,8 +122,16 @@ public class GLStringUtilities {
 		return false;
 	}
 	
-	public static boolean hasFrequency(String allele) {
-		return HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies().contains(allele);
+	public static boolean hasFrequency(Locus locus, String allele) {
+		HashMap<Locus, List<String>> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
+		for (String alleleWithFrequency : individualFrequencies.get(locus)) {
+			if (fieldLevelComparison(allele, alleleWithFrequency) != null || 
+					checkAntigenRecognitionSite(allele, alleleWithFrequency) != null) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	public static LinkageHitDegree fieldLevelComparison(String allele,

@@ -32,7 +32,7 @@ import org.dash.valid.race.FrequencyByRaceComparator;
 
 public class HLAFrequenciesLoader {	
 	private HashMap<EnumSet<Locus>, List<DisequilibriumElement>> disequilibriumElementsMap = new HashMap<EnumSet<Locus>, List<DisequilibriumElement>>();
-	private final List<String> individualLocusFrequencies = new ArrayList<String>();
+	private final HashMap<Locus, List<String>> individualLocusFrequencies = new HashMap<Locus, List<String>>();
 	
 	private static final String UNDERSCORE = "_";
 	
@@ -138,7 +138,7 @@ public class HLAFrequenciesLoader {
 		return new ArrayList<DisequilibriumElement>();
 	}
 	
-	public List<String> getIndividualLocusFrequencies() {
+	public HashMap<Locus, List<String>> getIndividualLocusFrequencies() {
 		return individualLocusFrequencies;
 	}
 	
@@ -177,36 +177,43 @@ public class HLAFrequenciesLoader {
 	}
 	
 	private void loadIndividualLocusFrequencies() throws IOException, InvalidFormatException {
-		String filenames[] = {"frequencies/nmdp/A.xlsx", "frequencies/nmdp/B.xlsx", "frequencies/nmdp/C.xlsx", "frequencies/nmdp/DRB1.xlsx", 
-								"frequencies/nmdp/DRB3-4-5.xlsx", "frequencies/nmdp/DQB1.xlsx"};
-        
-        // Finds the workbook instance for XLSX file
-		
-		for (String filename : filenames) {
-			Workbook workbook = WorkbookFactory.create(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename));
-	       
-	        // Return first sheet from the XLSX workbook
-	        Sheet mySheet = workbook.getSheetAt(0);
-	       
-	        // Get iterator to all the rows in current sheet
-	        Iterator<Row> rowIterator = mySheet.iterator();
-	        
-	        int firstRow = mySheet.getFirstRowNum();
-	        	
-	        // Traversing over each row of XLSX file
-	        while (rowIterator.hasNext()) {
-	            Row row = rowIterator.next();
-	
-	            if (row.getRowNum() == firstRow) {
-	            	continue;
-	            }
-	            else {
-	        		individualLocusFrequencies.add(GLStringConstants.HLA_DASH + row.getCell(0).getStringCellValue());
-	            }            
-	        }
-	        
-	        workbook.close();
+		for (Linkages linkage : getLinkages()) {
+			for (Locus locus : linkage.getLoci()) {
+				if (locus.hasIndividualFrequencies()) {
+					loadIndividualLocusFrequency(locus);
+				}
+			}
 		}
+	}
+
+	private void loadIndividualLocusFrequency(Locus locus)
+			throws IOException, InvalidFormatException {
+		List<String> singleLocusFrequencies = new ArrayList<String>();
+		Workbook workbook = WorkbookFactory.create(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream("frequencies/nmdp/" + locus.getFrequencyName() + ".xlsx"));
+      
+		// Return first sheet from the XLSX workbook
+		Sheet mySheet = workbook.getSheetAt(0);
+      
+		// Get iterator to all the rows in current sheet
+		Iterator<Row> rowIterator = mySheet.iterator();
+		
+		int firstRow = mySheet.getFirstRowNum();
+			
+		// Traversing over each row of XLSX file
+		while (rowIterator.hasNext()) {
+		    Row row = rowIterator.next();
+
+		    if (row.getRowNum() == firstRow) {
+		    	continue;
+		    }
+		    else {
+				singleLocusFrequencies.add(GLStringConstants.HLA_DASH + row.getCell(0).getStringCellValue());
+		    }            
+		}
+		
+		individualLocusFrequencies.put(locus,  singleLocusFrequencies);
+		
+		workbook.close();
 	}
 	
 	private List<String> readHeaderElementsByRace(Row row) {		

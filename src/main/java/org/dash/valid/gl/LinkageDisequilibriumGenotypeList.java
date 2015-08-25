@@ -142,39 +142,41 @@ public class LinkageDisequilibriumGenotypeList {
 
 	// TODO: Write unit tests
 	public boolean checkAmbiguitiesThresholds() {
-		for (Locus locus : Locus.values()) {
-			if (getAlleleCount(locus) > ALLELE_AMBIGUITY_THRESHOLD) {
-				LOGGER.warning("Exceeded the allele ambiguity threshold of : "
-						+ ALLELE_AMBIGUITY_THRESHOLD + " at locus: "
-						+ locus.getFullName());
-				return false;
-			}
-
-			if (getProteinCount(locus) > PROTEIN_THRESHOLD) {
-				LOGGER.warning("Exceeded the protein threshold of : "
-						+ PROTEIN_THRESHOLD + " at locus: "
-						+ locus.getFullName());
-				return false;
-			}
-
-			// TODO: Check against single locus frequencies - move elsewhere (perhaps when alleles are originally parse)
-			
-			List<String> allelesToRemove = new ArrayList<String>();
-			
-			if (GLStringUtilities.individualFrequenciesLoaded()) {
-				List<List<String>> allLocusAlleles = getAlleles(locus);
-				for (List<String> locusAlleles : allLocusAlleles) {
+		for (Linkages linkages : HLAFrequenciesLoader.getInstance().getLinkages()) {
+			for (Locus locus : linkages.getLoci()) {
+				if (getAlleleCount(locus) > ALLELE_AMBIGUITY_THRESHOLD) {
+					LOGGER.warning("Exceeded the allele ambiguity threshold of : "
+							+ ALLELE_AMBIGUITY_THRESHOLD + " at locus: "
+							+ locus.getFullName());
+					return false;
+				}
+	
+				if (getProteinCount(locus) > PROTEIN_THRESHOLD) {
+					LOGGER.warning("Exceeded the protein threshold of : "
+							+ PROTEIN_THRESHOLD + " at locus: "
+							+ locus.getFullName());
+					return false;
+				}
+	
+				// TODO: Check against single locus frequencies - move elsewhere (perhaps when alleles are originally parse)
+				
+				List<String> allelesToRemove = new ArrayList<String>();
+				
+				if (GLStringUtilities.individualFrequenciesLoaded()) {
+					List<List<String>> allLocusAlleles = getAlleles(locus);
 					allelesToRemove = new ArrayList<String>();
-					
-					for (String allele : locusAlleles) {
-						if (!GLStringUtilities.hasFrequency(allele)) {
-							LOGGER.finest("Removing allele with no frequency: " + allele);
-							allelesToRemove.add(allele);
+
+					for (List<String> locusAlleles : allLocusAlleles) {						
+						for (String allele : locusAlleles) {
+							if (!GLStringUtilities.hasFrequency(locus, allele)) {
+								LOGGER.finest("Removing allele with no frequency: " + allele);
+								allelesToRemove.add(allele);
+							}
 						}
 					}
+					
+					removeAlleles(allelesToRemove);
 				}
-				
-//				removeAlleles(allelesToRemove);
 			}
 		}
 
