@@ -1,6 +1,5 @@
 package org.dash.valid.gl.haplo;
 
-import java.util.Arrays;
 import java.util.Comparator;
 
 public class HaplotypeComparator implements Comparator<Haplotype> {
@@ -15,7 +14,7 @@ public class HaplotypeComparator implements Comparator<Haplotype> {
 		int ret = element1.toString().compareTo(element2.toString());
 		
 		if (ret == 0) {
-			ret = Arrays.equals(element1.getHaplotypeInstances(), element2.getHaplotypeInstances()) ? 0 : 1;
+			ret = element1.getHaplotypeInstances().equals(element2.getHaplotypeInstances()) ? 0 : 1;
 		}
 		return ret;
 	}

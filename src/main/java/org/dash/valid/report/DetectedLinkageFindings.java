@@ -1,6 +1,8 @@
 package org.dash.valid.report;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,13 +10,12 @@ import java.util.Set;
 
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.LinkageElementsSet;
+import org.dash.valid.Locus;
 import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.HaplotypePair;
 import org.dash.valid.gl.haplo.HaplotypePairComparator;
 import org.dash.valid.gl.haplo.HaplotypePairSet;
-import org.dash.valid.race.DisequilibriumElementByRace;
-import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.race.RelativeFrequencyByRace;
 import org.dash.valid.race.RelativeFrequencyByRaceComparator;
 import org.dash.valid.race.RelativeFrequencyByRaceSet;
@@ -27,51 +28,53 @@ public class DetectedLinkageFindings {
 	private Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 	private Set<String> nonCWDAlleles;
 	private HLADatabaseVersion hladb;
-	private int bcLinkageCount;
-	private int drdqLinkageCount;
-	private boolean bcLinkedPairs;
-	private boolean drdqLinkedPairs;
-	private HaplotypePair firstBCPair;
-	private HaplotypePair firstDRDQPair;
+	
+	private HashMap<Set<Locus>, Integer> linkageCountsMap = new HashMap<Set<Locus>, Integer>();
+	private HashMap<EnumSet<Locus>, Boolean> linkedPairsMap = new HashMap<EnumSet<Locus>, Boolean>();
+	private HashMap<EnumSet<Locus>, HaplotypePair> firstPairsMap = new HashMap<EnumSet<Locus>, HaplotypePair>();
+
 	private List<String> commonRaceElements = new ArrayList<String>();
 	
-	public boolean hasBcLinkedPairs() {
-		return bcLinkedPairs;
-	}
-	public void setBcLinkedPairs(boolean bcLinkedPairs) {
-		this.bcLinkedPairs = bcLinkedPairs;
-	}
-	public boolean hasDrdqLinkedPairs() {
-		return drdqLinkedPairs;
-	}
-	public void setDrdqLinkedPairs(boolean drdqLinkedPairs) {
-		this.drdqLinkedPairs = drdqLinkedPairs;
+	private Set<EnumSet<Locus>> findingsSought = new HashSet<EnumSet<Locus>>();
+	
+	public void addFindingSought(EnumSet<Locus> findingSought) {
+		this.findingsSought.add(findingSought);
 	}
 	
-	public HaplotypePair getFirstBCPair() {
-		if (firstBCPair == null) {
+	public boolean hasLinkedPairs(Set<Locus> loci) {
+		if (linkedPairsMap.get(loci) == null) {
+			return false;
+		}
+		
+		return linkedPairsMap.get(loci);
+	}
+	
+	public Set<EnumSet<Locus>> getFindingsSought() {
+		return this.findingsSought;
+	}
+	
+	public void setLinkedPairs(EnumSet<Locus> loci, boolean linkedPairs) {
+		linkedPairsMap.put(loci, linkedPairs);
+	}
+	
+	public HaplotypePair getFirstPair(EnumSet<Locus> loci) {
+		if (firstPairsMap.containsKey(loci)) {
+			return firstPairsMap.get(loci);
+		}
+		else {
 			for (HaplotypePair pair : linkedPairs) {
-				if (pair.isBCPair()) {
-					firstBCPair = pair;
-					return firstBCPair;
+				if (Locus.lookup(pair.getLoci()).equals(loci)) {
+					firstPairsMap.put(loci, pair);
+					return pair;
 				}
 			}
 		}
 		
-		return firstBCPair;
+		return null;
 	}
 	
-	public HaplotypePair getFirstDRDQPair() {
-		if (firstDRDQPair == null) {
-			for (HaplotypePair pair : linkedPairs) {
-				if (!pair.isBCPair()) {
-					firstDRDQPair = pair;
-					return firstDRDQPair;
-				}
-			}
-		}
-		
-		return firstDRDQPair;
+	public Collection<HaplotypePair> getFirstPairs() {
+		return firstPairsMap.values();
 	}
 	
 	public Set<HaplotypePair> getLinkedPairs() {
@@ -80,15 +83,18 @@ public class DetectedLinkageFindings {
 	
 	public void setLinkedPairs(Set<HaplotypePair> linkedPairs) {	
 		if (linkedPairs.iterator().hasNext() && linkedPairs.iterator().next().isByRace()) {
-			HashMap<String, Double> bcRaceTotalFreqs = new HashMap<String, Double>();
-			HashMap<String, Double> drdqRaceTotalFreqs = new HashMap<String, Double>();
+			HashMap<Set<Locus>, HashMap<String, Double>> raceTotalFreqsMap = new HashMap<Set<Locus>, HashMap<String, Double>>();
+			
 			Set<HaplotypePair> noRaceOverlapPairs = new HashSet<HaplotypePair>();
 
 			RelativeFrequencyByRace relativeRaceFreq;
 			String race;
 			Double totalFreq;
-			
+			EnumSet<Locus> loci = null;
+									
 			for (HaplotypePair pair : linkedPairs) {
+				loci = Locus.lookup(pair.getLoci());
+
 				if (pair.getPrimaryFrequency() == null) {
 					noRaceOverlapPairs.add(pair);
 					continue;
@@ -96,41 +102,32 @@ public class DetectedLinkageFindings {
 				for (Object freqByRace : pair.getFrequencies()) {
 					relativeRaceFreq = (RelativeFrequencyByRace) freqByRace;
 					race = relativeRaceFreq.getRace();
-
-					if (pair.isBCPair()) {
-						bcRaceTotalFreqs = calculateTotalFrequency(bcRaceTotalFreqs, relativeRaceFreq,
-								race);
-					}
-					else {
-						drdqRaceTotalFreqs = calculateTotalFrequency(drdqRaceTotalFreqs, relativeRaceFreq,
-								race);
-					}
 					
+					raceTotalFreqsMap = calculateTotalFrequency(loci, raceTotalFreqsMap, relativeRaceFreq,
+							race);
 				}
 			}
 			
 			linkedPairs.removeAll(noRaceOverlapPairs);
 			
 			for (HaplotypePair pair : linkedPairs) {
+				loci = Locus.lookup(pair.getLoci());
+				
 				Set<RelativeFrequencyByRace> freqsByRace = new RelativeFrequencyByRaceSet(new RelativeFrequencyByRaceComparator());
 				for (Object freqByRace : pair.getFrequencies()) {
 					relativeRaceFreq = (RelativeFrequencyByRace) freqByRace;
-					if (pair.isBCPair()) {
-						totalFreq = bcRaceTotalFreqs.get(relativeRaceFreq.getRace());
-					}
-					else {
-						totalFreq = drdqRaceTotalFreqs.get(relativeRaceFreq.getRace());
-					}
+										
+					totalFreq = raceTotalFreqsMap.get(loci).get(relativeRaceFreq.getRace());
 					
 					relativeRaceFreq.setRelativeFrequency(new Float((relativeRaceFreq.getFrequency() * 100) / totalFreq));
 					freqsByRace.add(relativeRaceFreq);
 				}
-				// TODO:  Not sure this line is needed
-				//pair.setFrequencies(new LinkedHashSet<Object>(freqsByRace));
+
 				this.linkedPairs.add(pair);
 			}
 		}
 		else {
+			// TODO:  Investigate whether this should change to addAll
 			this.linkedPairs = linkedPairs;
 		}
 	}
@@ -139,12 +136,17 @@ public class DetectedLinkageFindings {
 	 * @param relativeRaceFreq
 	 * @param race
 	 */
-	private HashMap<String, Double> calculateTotalFrequency(
-			HashMap<String, Double> raceTotalFreqs,
+	private HashMap<Set<Locus>, HashMap<String, Double>> calculateTotalFrequency(
+			EnumSet<Locus> loci, HashMap<Set<Locus>, HashMap<String, Double>> raceTotalFreqsMap,
 			RelativeFrequencyByRace relativeRaceFreq, String race) {
 		Double totalFreq;
 		
-		if (raceTotalFreqs.containsKey(race)) {
+		HashMap<String, Double> raceTotalFreqs = raceTotalFreqsMap.get(loci);
+		if (raceTotalFreqs == null) {
+			raceTotalFreqs = new HashMap<String, Double>();
+		}
+		
+		if (raceTotalFreqs != null && raceTotalFreqs.containsKey(race)) {
 			totalFreq = raceTotalFreqs.get(race);
 			totalFreq = new Double(totalFreq + relativeRaceFreq.getFrequency());
 		}
@@ -154,21 +156,26 @@ public class DetectedLinkageFindings {
 
 		raceTotalFreqs.put(race, totalFreq);
 		
-		return raceTotalFreqs;
+		raceTotalFreqsMap.put(loci, raceTotalFreqs);
+		
+		return raceTotalFreqsMap;
 	}
 	
-	public int getDrdqLinkageCount() {
-		return drdqLinkageCount;
+	public int getLinkageCount(EnumSet<Locus> loci) {
+		if (linkageCountsMap.get(loci) == null) {
+			return 0;
+		}
+	
+		return linkageCountsMap.get(loci);
 	}
+	
 	public boolean hasCommonRaceElements() {
 		return getCommonRaceElements().size() > 0;
 	}
 	public List<String> getCommonRaceElements() {
 		return commonRaceElements;
 	}
-	public int getBcLinkageCount() {
-		return bcLinkageCount;
-	}
+
 	public HLADatabaseVersion getHladb() {
 		return hladb;
 	}
@@ -194,38 +201,11 @@ public class DetectedLinkageFindings {
 	public void addLinkages(Set<DetectedDisequilibriumElement> linkages) {
 		this.linkages.addAll(linkages);
 		
+		int linkageCount = 0;
 		for (DetectedDisequilibriumElement linkage : this.linkages) {
-			if (linkage instanceof DetectedBCDisequilibriumElement) {
-				this.bcLinkageCount++;
-			}
-			else if (linkage instanceof DetectedDRDQDisequilibriumElement) {
-				this.drdqLinkageCount++;
-			}
-		}
-	}
-	
-	/**
-	 * @param raceLoop
-	 * @param linkage
-	 * 
-	 * This logic is not needed near term - but is a candidate to revisit and re-factor for implementation
-	 */
-	@SuppressWarnings(value = { "unused" })
-	private void detectCommonRaceElements(int raceLoop,
-			DetectedDisequilibriumElement linkage) {
-		if (linkage.getDisequilibriumElement() instanceof DisequilibriumElementByRace) {	
-			List<String> raceElementsFound = new ArrayList<String>();
-
-			for (FrequencyByRace frequencyByRace : ((DisequilibriumElementByRace)linkage.getDisequilibriumElement()).getFrequenciesByRace()) {
-				raceElementsFound.add(frequencyByRace.getRace());
-			}
-			
-			if (raceLoop == 0) {
-				this.commonRaceElements.addAll(raceElementsFound);
-			}
-			else {
-				this.commonRaceElements.retainAll(raceElementsFound);
-			}
+			linkageCount = getLinkageCount(Locus.lookup(linkage.getDisequilibriumElement().getLoci()));
+			linkageCount++;
+			this.linkageCountsMap.put(linkage.getDisequilibriumElement().getLoci(), linkageCount);
 		}
 	}
 	
@@ -234,7 +214,17 @@ public class DetectedLinkageFindings {
 	}
 	
 	public boolean hasAnomalies() {
-		return !hasLinkages() || !hasBcLinkedPairs() || !hasDrdqLinkedPairs();
+		if (!hasLinkages()) {
+			return true;
+		}
+		
+		for (EnumSet<Locus> findingSought : this.findingsSought) {
+			if (!hasLinkedPairs(findingSought)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	@Override

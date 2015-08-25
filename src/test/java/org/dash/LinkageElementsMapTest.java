@@ -1,6 +1,7 @@
 package org.dash;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -8,9 +9,9 @@ import junit.framework.TestCase;
 
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.LinkageElementsSet;
-import org.dash.valid.race.BCDisequilibriumElementByRace;
+import org.dash.valid.Locus;
+import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
-import org.dash.valid.report.DetectedBCDisequilibriumElement;
 import org.dash.valid.report.DetectedDisequilibriumElement;
 import org.junit.Test;
 
@@ -22,7 +23,12 @@ public class LinkageElementsMapTest extends TestCase {
 		FrequencyByRace freq = new FrequencyByRace(new Double(.2), "1","AAFA");
 		frequenciesByRace.add(freq);
 		
-		BCDisequilibriumElementByRace element1 = new BCDisequilibriumElementByRace("HLA-C*01:01", "HLA-B*07:01", frequenciesByRace);
+		HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
+		hlaElementMap.put(Locus.HLA_B, "HLA-B*07:01");
+		hlaElementMap.put(Locus.HLA_C, "HLA-C*01:01");
+		
+		
+		DisequilibriumElementByRace element1 = new DisequilibriumElementByRace(hlaElementMap, frequenciesByRace);
 		
 		frequenciesByRace = new ArrayList<FrequencyByRace>();
 		
@@ -31,12 +37,16 @@ public class LinkageElementsMapTest extends TestCase {
 		freq = new FrequencyByRace(new Double(.4), "3", "API");
 		frequenciesByRace.add(freq);
 		
-		BCDisequilibriumElementByRace element2 = new BCDisequilibriumElementByRace("HLA-C*04:01", "HLA-B*52:01", frequenciesByRace);
+		hlaElementMap = new HashMap<Locus, String>();
+		hlaElementMap.put(Locus.HLA_B, "HLA-B*52:01");
+		hlaElementMap.put(Locus.HLA_C, "HLA-C*04:01");
+		
+		DisequilibriumElementByRace element2 = new DisequilibriumElementByRace(hlaElementMap, frequenciesByRace);
 		
 		Set<DetectedDisequilibriumElement> set = new LinkageElementsSet(new DisequilibriumElementComparator());
 		
-		set.add(new DetectedBCDisequilibriumElement(element1));
-		set.add(new DetectedBCDisequilibriumElement(element2));
+		set.add(new DetectedDisequilibriumElement(element1));
+		set.add(new DetectedDisequilibriumElement(element2));
 				
 		int idx = 0;
 		for (DetectedDisequilibriumElement obj : set) {

@@ -1,8 +1,10 @@
 package org.dash.valid.report;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.logging.Logger;
 
+import org.dash.valid.Locus;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.haplo.HaplotypePair;
@@ -45,26 +47,21 @@ public class HaplotypePairWriter {
 		
 		sb.append(GLStringConstants.NEWLINE + "Frequencies:  " + Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)) + GLStringConstants.NEWLINE);
 		
-		if (findings.hasBcLinkedPairs() && findings.getFirstBCPair() != null) {
-			sb.append(GLStringConstants.NEWLINE + "First BC Haplotype pair:" + GLStringConstants.NEWLINE + findings.getFirstBCPair());
-		}
-		else {
-			sb.append(GLStringConstants.NEWLINE + "WARNING - No BC haplotype pairs detected." + GLStringConstants.NEWLINE);
-		}
-		
-		if (findings.hasDrdqLinkedPairs() && findings.getFirstDRDQPair() != null) {
-			sb.append(GLStringConstants.NEWLINE + "First DRDQ Haplotype pair:" + GLStringConstants.NEWLINE + findings.getFirstDRDQPair());
-		}
-		else {
-			sb.append(GLStringConstants.NEWLINE + "WARNING - No DRDQ haplotype pairs detected." + GLStringConstants.NEWLINE);
+		for (EnumSet<Locus> findingSought : findings.getFindingsSought()) {
+			if (findings.hasLinkedPairs(findingSought) && findings.getFirstPair(findingSought) != null) {
+				sb.append(GLStringConstants.NEWLINE + "First " + findingSought + " Haplotype pair:" + GLStringConstants.NEWLINE + findings.getFirstPair(findingSought));
+			}
+			else {
+				sb.append(GLStringConstants.NEWLINE + "WARNING - No " + findingSought + " haplotype pairs detected." + GLStringConstants.NEWLINE);
+			}
 		}
 		
 		for (HaplotypePair pair : findings.getLinkedPairs()) {
-			if (pair.equals(findings.getFirstBCPair()) || pair.equals(findings.getFirstDRDQPair())) {
+			if (findings.getFirstPairs().contains(pair)) {
 				continue;
 			}
 			else {
-				sb.append(GLStringConstants.NEWLINE + "Possible " + (pair.isBCPair() ? "BC " : "DRDQ ") + "Haplotype Pair:" + GLStringConstants.NEWLINE);
+				sb.append(GLStringConstants.NEWLINE + "Possible " + pair.getLoci() + " Haplotype Pair:" + GLStringConstants.NEWLINE);
 			}
 			sb.append(pair);
 		}

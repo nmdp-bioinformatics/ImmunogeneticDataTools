@@ -97,6 +97,7 @@ public class LinkageDisequilibriumAnalyzer {
 			
 			linkedGLString = new LinkageDisequilibriumGenotypeList(key, glString);
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
+			// TODO:  Actually implement by skipping the record
 			if (!linkedGLString.checkAmbiguitiesThresholds()) {
 				LOGGER.info("GL String skipped due to volume of ambiguities, proteins and/or uncommon alleles");
 			}

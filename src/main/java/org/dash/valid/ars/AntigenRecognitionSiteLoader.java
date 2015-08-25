@@ -4,27 +4,28 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 
 public class AntigenRecognitionSiteLoader {
 	private static AntigenRecognitionSiteLoader instance = null;
-	private HashMap<String, Set<String>> bArsMap;
-	private HashMap<String, Set<String>> cArsMap;
-	private HashMap<String, Set<String>> drb1ArsMap;
-	private HashMap<String, Set<String>> drb3ArsMap;
-	private HashMap<String, Set<String>> drb4ArsMap;
-	private HashMap<String, Set<String>> drb5ArsMap;
-	private HashMap<String, Set<String>> dqb1ArsMap;
+	HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
 	
-	private static final Locus[] loci = {Locus.HLA_B, 
+	private static final Locus[] loci = {Locus.HLA_A,
+											Locus.HLA_B, 
 											Locus.HLA_C, 
 											Locus.HLA_DRB1, 
 											Locus.HLA_DRB3,
@@ -33,16 +34,33 @@ public class AntigenRecognitionSiteLoader {
 											Locus.HLA_DQB1};
 
     private static final Logger LOGGER = Logger.getLogger(AntigenRecognitionSiteLoader.class.getName());
+    
+    private static final String DEFAULT_ARS_FILE = "reference/mmc1.xls";
 	
 	private AntigenRecognitionSiteLoader(HLADatabaseVersion hladb) {
 		init(hladb);
 	}
 	
+	private AntigenRecognitionSiteLoader() {
+		init();
+	}
+	
+	public HashMap<String, List<String>> getArsMap() {
+		return this.arsMap;
+	}
+	
 	public static AntigenRecognitionSiteLoader getInstance() {
 		HLADatabaseVersion hladb = null;
 		if (instance == null) {
-			hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
-			instance = new AntigenRecognitionSiteLoader(hladb);
+			String ars = System.getProperty(HLADatabaseVersion.ARS_PROPERTY);
+			if (ars != null && ars.equals(HLADatabaseVersion.ARS_BY_HLADB)) {
+				hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
+				instance = new AntigenRecognitionSiteLoader(hladb);
+			}
+			else {
+
+				instance = new AntigenRecognitionSiteLoader();
+			}
 		}
 
 		return instance;
@@ -50,40 +68,20 @@ public class AntigenRecognitionSiteLoader {
 	
 	private void init(HLADatabaseVersion hladb) {
 		for (Locus locus : loci) {
-			HashMap<String, Set<String>> arsMap = loadARSData(hladb, locus);
-			switch (locus) {
-			case HLA_B:
-				setbArsMap(arsMap);
-				break;
-			case HLA_C:
-				setcArsMap(arsMap);
-				break;
-			case HLA_DRB1:
-				setDrb1ArsMap(arsMap);
-				break;
-			case HLA_DRB3:
-				setDrb3ArsMap(arsMap);
-				break;
-			case HLA_DRB4:
-				setDrb4ArsMap(arsMap);
-				break;
-			case HLA_DRB5:
-				setDrb5ArsMap(arsMap);
-				break;
-			case HLA_DQB1:
-				setDqb1ArsMap(arsMap);
-				break;
-			default:
-				break;	
-			}
+			HashMap<String, List<String>> locusArsMap = loadARSData(hladb, locus);
+			this.arsMap.putAll(locusArsMap);
 		}
 	}
 	
-	private static HashMap<String, Set<String>> loadARSData(HLADatabaseVersion hladb, Locus locus) {
+	private void init() {
+		this.arsMap = loadARSData();
+	}
+	
+	private static HashMap<String, List<String>> loadARSData(HLADatabaseVersion hladb, Locus locus) {
 		BufferedReader reader = null;
-		HashMap<String, Set<String>> arsMap = new HashMap<String, Set<String>>();
+		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
 		
-		String filename = "reference/" + hladb.getArsName() + "/" + locus.getShortName() + ".txt";
+		String filename = "reference/" + hladb.getCwdName() + "/" + locus.getShortName() + ".txt";
 		
 		try {			
 			reader = new BufferedReader(new InputStreamReader(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(filename)));
@@ -111,19 +109,68 @@ public class AntigenRecognitionSiteLoader {
 		
 		return arsMap;
 	}
+	
+	private static HashMap<String, List<String>> loadARSData() {
+		Workbook workbook = null;
+		try {
+			workbook = WorkbookFactory.create(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(DEFAULT_ARS_FILE));
+		} catch (InvalidFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	       
+        // Return first sheet from the XLSX workbook
+        Sheet mySheet = workbook.getSheetAt(0);
+       
+        // Get iterator to all the rows in current sheet
+        Iterator<Row> rowIterator = mySheet.iterator();
+        
+        String gCode;
+        String alleleString;
+        List<String> alleles;
+		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
+                
+        // Traversing over each row of XLSX file
+        while (rowIterator.hasNext()) {
+        	alleles = new ArrayList<String>();
+            Row row = rowIterator.next();
+            gCode = row.getCell(0).getStringCellValue();
+            if (gCode.contains(GLStringConstants.ASTERISK)) {
+            	alleleString = row.getCell(1).getStringCellValue();
+            	String[] parts = alleleString.split(GLStringConstants.COMMA);
+            	for (String part : parts) {
+            		alleles.add(GLStringConstants.HLA_DASH + part);
+            	}
+            	
+        		arsMap.put(GLStringConstants.HLA_DASH + gCode, alleles);
+            }           
+        }
+        
+        try {
+			workbook.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+		return arsMap;
+	}
 
 	/**
 	 * @param arsMap
 	 * @param row
 	 */
-	private static HashMap<String, Set<String>> assembleARSMap(String row) {
+	private static HashMap<String, List<String>> assembleARSMap(String row) {
 		String[] parts;
 		String[] columns;
 		String arsCode;
-		Set<String> alleles = new HashSet<String>();
+		List<String> alleles = new ArrayList<String>();
 		String allele;
 		
-		HashMap<String, Set<String>> arsMap = new HashMap<String, Set<String>>();
+		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
 
 		columns = row.split(GLStringConstants.TAB);
 		parts = columns[0].split(GLStringUtilities.COLON);
@@ -148,61 +195,5 @@ public class AntigenRecognitionSiteLoader {
 		arsMap.put(arsCode, alleles);
 		
 		return arsMap;
-	}
-	
-    public HashMap<String, Set<String>> getbArsMap() {
-		return bArsMap;
-	}
-
-	private void setbArsMap(HashMap<String, Set<String>> bArsMap) {
-		this.bArsMap = bArsMap;
-	}
-
-	public HashMap<String, Set<String>> getcArsMap() {
-		return cArsMap;
-	}
-
-	private void setcArsMap(HashMap<String, Set<String>> cArsMap) {
-		this.cArsMap = cArsMap;
-	}
-
-	public HashMap<String, Set<String>> getDrb1ArsMap() {
-		return drb1ArsMap;
-	}
-
-	private void setDrb1ArsMap(HashMap<String, Set<String>> drb1ArsMap) {
-		this.drb1ArsMap = drb1ArsMap;
-	}
-
-	public HashMap<String, Set<String>> getDrb3ArsMap() {
-		return drb3ArsMap;
-	}
-
-	private void setDrb3ArsMap(HashMap<String, Set<String>> drb3ArsMap) {
-		this.drb3ArsMap = drb3ArsMap;
-	}
-
-	public HashMap<String, Set<String>> getDrb4ArsMap() {
-		return drb4ArsMap;
-	}
-
-	private void setDrb4ArsMap(HashMap<String, Set<String>> drb4ArsMap) {
-		this.drb4ArsMap = drb4ArsMap;
-	}
-
-	public HashMap<String, Set<String>> getDrb5ArsMap() {
-		return drb5ArsMap;
-	}
-
-	private void setDrb5ArsMap(HashMap<String, Set<String>> drb5ArsMap) {
-		this.drb5ArsMap = drb5ArsMap;
-	}
-
-	public HashMap<String, Set<String>> getDqb1ArsMap() {
-		return dqb1ArsMap;
-	}
-
-	private void setDqb1ArsMap(HashMap<String, Set<String>> dqb1ArsMap) {
-		this.dqb1ArsMap = dqb1ArsMap;
 	}
 }

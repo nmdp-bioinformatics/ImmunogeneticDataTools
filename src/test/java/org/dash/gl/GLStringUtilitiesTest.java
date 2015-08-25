@@ -1,6 +1,7 @@
 package org.dash.gl;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import junit.framework.TestCase;
@@ -14,12 +15,13 @@ import org.junit.Test;
 public class GLStringUtilitiesTest extends TestCase {
 	private static final String BOGUS_ALLELE = "HLA-A*QI:UD";
 	private static final String HLA_DQB10202 = "HLA-DQB1*02:02";
+	private static final String HLA_DQB10302g = "HLA-DQB1*03:02g";
 	private static final String HLA_A0101 = "HLA-A*01:01";
 	private static final String HLA_A0102 = "HLA-A*01:02";
 	private static final String A0101 = "01:01";
 	private static final String HLA_A01010101 = "HLA-A*01:01:01:01";
 	private static final String HLA_A010101 = "HLA-A*01:01:01";
-	private static final String HLA_B15010102N = "HLA-B*15:01:01:02N";
+	private static final String HLA_B1501 = "HLA-B*15:01";
 	private static final String HLA_B1501g = "HLA-B*15:01g";
 	private static final String HLA_C0702g = "HLA-C*07:02g";
 	private static final String HLA_C07020101 = "HLA-C*07:02:01:01";
@@ -33,9 +35,18 @@ public class GLStringUtilitiesTest extends TestCase {
 	@Test
 	public void testParse() {
 		String alleleList = HLA_A0101 + GLStringConstants.ALLELE_AMBIGUITY_DELIMITER + HLA_A0102;
-		Set<String> elements = GLStringUtilities.parse(alleleList, GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
+		List<String> elements = GLStringUtilities.parse(alleleList, GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
 		assertTrue(elements.contains(HLA_A0101));
 		assertTrue(elements.contains(HLA_A0102));
+	}
+	
+	// TODO:  Revisit - not elegantly supporting whether individual frequencies are available to be checked
+	@Test
+	public void testHasFrequency() {		
+		if (GLStringUtilities.individualFrequenciesLoaded()) {
+			assertTrue(GLStringUtilities.hasFrequency(HLA_DQB10302g));
+			assertFalse(GLStringUtilities.hasFrequency(BOGUS_ALLELE));
+		}
 	}
 	
 	@Test
@@ -60,7 +71,7 @@ public class GLStringUtilitiesTest extends TestCase {
 		
 		assertNotNull(GLStringUtilities.checkAntigenRecognitionSite(HLA_C04010101, HLA_C0401g));
 		
-		assertNotNull(GLStringUtilities.checkAntigenRecognitionSite(HLA_B15010102N, HLA_B1501g));
+		assertNotNull(GLStringUtilities.checkAntigenRecognitionSite(HLA_B1501, HLA_B1501g));
 	}
 	
 	@Test
