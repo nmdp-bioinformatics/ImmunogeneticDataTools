@@ -124,6 +124,10 @@ public class GLStringUtilities {
 	
 	public static boolean hasFrequency(Locus locus, String allele) {
 		HashMap<Locus, List<String>> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
+		if (individualFrequencies == null || individualFrequencies.get(locus) == null) {
+			return false;
+		}
+		
 		for (String alleleWithFrequency : individualFrequencies.get(locus)) {
 			if (fieldLevelComparison(allele, alleleWithFrequency) != null || 
 					checkAntigenRecognitionSite(allele, alleleWithFrequency) != null) {
