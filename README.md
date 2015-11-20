@@ -31,7 +31,7 @@ The results of the software should be used for supporting the evidence, but not 
 *Basic Installation Process:*
 
 * Install Git
-* Clone the repository (git clone https://github.com/mpresteg/ImmunogeneticDataTools.git)
+* Clone the repository (git clone https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools.git)
 * Install Java (written for 1.8)
 * Install Maven (configured for 3.2.5)
 * Run ‘mvn compile package test’ from the root of the ImmunogeneticDataTools cloned (local) repository
