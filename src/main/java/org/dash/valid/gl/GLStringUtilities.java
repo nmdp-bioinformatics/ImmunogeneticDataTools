@@ -6,9 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -17,7 +19,7 @@ import java.util.regex.Pattern;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
-import org.dash.valid.gl.haplo.Haplotype;
+import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.report.LinkageHitDegree;
 import org.immunogenomics.gl.MultilocusUnphasedGenotype;
 import org.immunogenomics.gl.client.GlClient;
@@ -36,8 +38,8 @@ public class GLStringUtilities {
 	private static final Logger LOGGER = Logger
 			.getLogger(GLStringUtilities.class.getName());
 
-	public static Set<String> parse(String value, String delimiter) {
-		Set<String> elements = new HashSet<String>();
+	public static List<String> parse(String value, String delimiter) {
+		List<String> elements = new ArrayList<String>();
 		StringTokenizer st = new StringTokenizer(value, delimiter);
 		while (st.hasMoreTokens()) {
 			elements.add(st.nextToken());
@@ -60,7 +62,7 @@ public class GLStringUtilities {
 						+ GLStringConstants.HLA_DASH + " for segment: " + token);
 				return false;
 			}
-			if (parts.length < P_GROUP_LEVEL) {
+			if (parts.length < P_GROUP_LEVEL && !GLStringConstants.NNNN.equals(parts)) {
 				LOGGER.warning("GLString is invalid: " + glString);
 				LOGGER.warning("Unexpected allele: " + token);
 				return false;
@@ -109,6 +111,32 @@ public class GLStringUtilities {
 
 		return false;
 	}
+	
+	public static boolean individualFrequenciesLoaded() {
+		HashMap<Locus, List<String>> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
+		
+		if (individualFrequencies != null && individualFrequencies.size() > 0) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public static boolean hasFrequency(Locus locus, String allele) {
+		HashMap<Locus, List<String>> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
+		if (individualFrequencies == null || individualFrequencies.get(locus) == null) {
+			return false;
+		}
+		
+		for (String alleleWithFrequency : individualFrequencies.get(locus)) {
+			if (fieldLevelComparison(allele, alleleWithFrequency) != null || 
+					checkAntigenRecognitionSite(allele, alleleWithFrequency) != null) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
 	public static LinkageHitDegree fieldLevelComparison(String allele,
 			String referenceAllele) {
@@ -140,14 +168,6 @@ public class GLStringUtilities {
 
 		return null;
 	}
-	
-	public static boolean checkFromSameHaplotype(Locus locus, Haplotype haplotype1, Haplotype haplotype2) {
-		if (haplotype1.getHaplotypeInstance(locus) == haplotype2.getHaplotypeInstance(locus)) {
-			return true;
-		}
-
-		return false;
-	}
 
 	/**
 	 * @param locus
@@ -158,39 +178,29 @@ public class GLStringUtilities {
 	 */
 	public static LinkageHitDegree checkAntigenRecognitionSite(String allele,
 			String referenceAllele) {
-		String[] parts = allele.split(ESCAPED_ASTERISK);
-		String locus = parts[0];
+		String matchedValue = convertToProteinLevel(allele);
+				
+		int partLength = allele.split(COLON).length;
 		AntigenRecognitionSiteLoader instance = AntigenRecognitionSiteLoader
 				.getInstance();
-		HashMap<String, Set<String>> arsMap = new HashMap<String, Set<String>>();
+		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
+		
+		arsMap = instance.getArsMap();
 
-		switch (Locus.lookup(locus)) {
-		case HLA_B:
-			arsMap = instance.getbArsMap();
-			break;
-		case HLA_C:
-			arsMap = instance.getcArsMap();
-			break;
-		case HLA_DRB1:
-			arsMap = instance.getDrb1ArsMap();
-			break;
-		case HLA_DRB3:
-			arsMap = instance.getDrb3ArsMap();
-			break;
-		case HLA_DRB4:
-			arsMap = instance.getDrb4ArsMap();
-			break;
-		case HLA_DRB5:
-			arsMap = instance.getDrb5ArsMap();
-			break;
-		case HLA_DQB1:
-			arsMap = instance.getDqb1ArsMap();
-			break;
-		default:
-			return null;
+		LinkageHitDegree hitDegree;
+		for (String arsCode : arsMap.keySet()) {
+			if (arsCode.equals(referenceAllele)
+					&& arsMap.get(arsCode).contains(matchedValue)) {
+				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode);
+				return hitDegree;
+			}
 		}
 
-		parts = allele.split(COLON);
+		return null;
+	}
+
+	public static String convertToProteinLevel(String allele) {
+		String[] parts = allele.split(COLON);
 
 		String matchedValue = null;
 		if (parts.length > P_GROUP_LEVEL
@@ -200,37 +210,33 @@ public class GLStringUtilities {
 					+ allele.charAt(allele.length() - 1);
 			LOGGER.finest("Found an SNLQ while comparing ARS: " + allele);
 		} else if (parts.length < P_GROUP_LEVEL) {
-			LOGGER.warning("Unexpected allele: " + allele);
+			 if (!allele.equals(GLStringConstants.NNNN)) {
+				 LOGGER.warning("Unexpected allele: " + allele);
+			 }
 		} else {
 			matchedValue = parts[0] + COLON + parts[1];
 		}
-
-		LinkageHitDegree hitDegree;
-		for (String arsCode : arsMap.keySet()) {
-			if (arsCode.equals(referenceAllele)
-					&& arsMap.get(arsCode).contains(matchedValue)) {
-				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, parts.length, allele, arsCode);
-				return hitDegree;
-			}
-		}
-
-		return null;
+		return matchedValue;
 	}
 
-	public static boolean checkHomozygous(Set<Set<String>> alleles) {
+	public static boolean checkHomozygous(List<List<String>> alleles) {
+		if (alleles == null) {
+			return false;
+		}
+		
 		if (alleles.size() <= 1) {
 			return true;
 		}
 
-		for (Set<String> haplotypeAlleles : alleles) {
-			for (Set<String> haplotypeAllelesLoop : alleles) {
+		for (List<String> haplotypeAlleles : alleles) {
+			for (List<String> haplotypeAllelesLoop : alleles) {
 				if (!haplotypeAlleles.containsAll(haplotypeAllelesLoop)) {
 					return false;
 				}
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 	public static String fullyQualifyGLString(String shorthand) {

@@ -1,11 +1,13 @@
 package org.dash.valid.gl.haplo;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.dash.valid.Locus;
 import org.dash.valid.base.BaseDisequilibriumElement;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.race.DisequilibriumElementByRace;
@@ -17,7 +19,7 @@ public class HaplotypePair {
 	private Haplotype haplotype1;
 	private Haplotype haplotype2;
 	private boolean byRace;
-	private boolean bcPair;
+	private EnumSet<Locus> loci;
 	
     private static final Logger LOGGER = Logger.getLogger(HaplotypePair.class.getName());
 	
@@ -37,12 +39,16 @@ public class HaplotypePair {
 		this.byRace = val;
 	}
 	
-	public boolean isBCPair() {
-		return bcPair;
+	public boolean isMatchingLoci(Set<Locus> loci) {
+		return this.loci.equals(loci);
 	}
 	
-	private void setBCPair(boolean val) {
-		this.bcPair = val;
+	private void setLoci(EnumSet<Locus> loci) {
+		this.loci = loci;
+	}
+	
+	public EnumSet<Locus> getLoci() {
+		return this.loci;
 	}
 	
 	Set<Object> frequencies = new LinkedHashSet<Object>();
@@ -64,13 +70,17 @@ public class HaplotypePair {
 	}
 
 	
-	public HaplotypePair(Haplotype haplotype1, Haplotype haplotype2) {
-		this.haplotype1 = haplotype1;
-		this.haplotype2 = haplotype2;
-		
-		if (haplotype1 instanceof BCHaplotype && haplotype2 instanceof BCHaplotype) {
-			setBCPair(true);
+	public HaplotypePair(Haplotype haplotype1, Haplotype haplotype2) {		
+		if (new HaplotypeComparator().compare(haplotype1, haplotype2) <= 0) {
+			this.haplotype1 = haplotype1;
+			this.haplotype2 = haplotype2;
 		}
+		else {
+			this.haplotype2 = haplotype1;
+			this.haplotype1 = haplotype2;
+		}
+		
+		setLoci(Locus.lookup(haplotype1.getLoci()));
 		
 		if (haplotype1.getLinkage() == null || haplotype2.getLinkage() == null) {
 			return;
@@ -111,10 +121,10 @@ public class HaplotypePair {
 		if (haplotypePair == null) {
 			return false;
 		}
-		else if (getHaplotype1().toString().equals(((HaplotypePair) haplotypePair).getHaplotype1().toString()) && 
-				getHaplotype2().toString().equals(((HaplotypePair) haplotypePair).getHaplotype2().toString()) ||
-				getHaplotype1().toString().equals(((HaplotypePair) haplotypePair).getHaplotype2().toString()) && 
-				getHaplotype2().toString().equals(((HaplotypePair) haplotypePair).getHaplotype1().toString())) {
+		else if ((getHaplotype1().equals(((HaplotypePair) haplotypePair).getHaplotype1()) && 
+				getHaplotype2().equals(((HaplotypePair) haplotypePair).getHaplotype2())) ||
+				(getHaplotype1().equals(((HaplotypePair) haplotypePair).getHaplotype2()) && 
+				getHaplotype2().equals(((HaplotypePair) haplotypePair).getHaplotype1()))) {
 			return true;
 		}
 		

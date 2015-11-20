@@ -13,6 +13,12 @@ public class HaplotypePairComparator implements Comparator<HaplotypePair> {
 		if (element1.equals(element2)) {
 			return 0;
 		}
+		else if (element1.getPrimaryFrequency() != null && element2.getPrimaryFrequency() == null) {
+			return -1;
+		}
+		else if (element1.getPrimaryFrequency() == null && element2.getPrimaryFrequency() != null) {
+			return 1;
+		}
 		else if (element1.getPrimaryFrequency() != null && element1.getPrimaryFrequency() instanceof RelativeFrequencyByRace &&
 				element2.getPrimaryFrequency() != null) {
 			ret =  new RelativeFrequencyByRaceComparator().compare((RelativeFrequencyByRace) element1.getPrimaryFrequency(), 
@@ -24,7 +30,7 @@ public class HaplotypePairComparator implements Comparator<HaplotypePair> {
 		}
 		
 		// else sort alphabetically
-		ret = element1.getHaplotype1().toString().compareTo(element2.getHaplotype1().toString());
+		ret = element1.toString().compareTo(element2.toString());
 		return ret;
 	}
 }

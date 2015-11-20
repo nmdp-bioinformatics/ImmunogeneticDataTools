@@ -32,7 +32,7 @@ The results of the software should be used for supporting the evidence, but not 
 
 * Install Git
 * Clone the repository (git clone https://github.com/mpresteg/ImmunogeneticDataTools.git)
-* Install Java (written for 1.7)
+* Install Java (written for 1.8)
 * Install Maven (configured for 3.2.5)
 * Run ‘mvn compile package test’ from the root of the ImmunogeneticDataTools cloned (local) repository
 
@@ -45,9 +45,19 @@ The results of the software should be used for supporting the evidence, but not 
 
 * Name:  org.dash.frequencies
 * Value(s):  wiki, nmdp
+* Description:  Specifies the desired frequency set
 
 * Name:  org.dash.hladb
-* Value(s):  3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0
+* Value(s):  3.20.0, 3.19.0, 3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0
+* Description:  Specifies the HLA DB version against which to validate common well documented alleles
+
+* Name:  org.dash.ars
+* Value(s):  hladb
+* Description:  If specified, applies the antigen recognition site mappings from the HLA DB property specified.  Otherwise, uses the antigen recognition site mappings associated with the frequencies
+
+* Name:  org.dash.linkages
+* Value(s):  abc, bc, drdq
+* Description:  Specifies the loci across which to detect linkages using provided frequencies
 
 * Name:  java.util.logging.config.file
 * Value(s):  logging.properties

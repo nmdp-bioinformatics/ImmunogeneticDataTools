@@ -1,6 +1,6 @@
 package org.dash.valid.gl.haplo;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.dash.valid.Locus;
@@ -19,10 +19,13 @@ public abstract class Haplotype {
 	
 	public abstract String getHaplotypeString();
 	
-	public abstract Set<String> getAlleles();
-	public abstract Set<String> getAlleles(Locus locus);
-	public abstract int getHaplotypeInstance(Locus locus);
-	public abstract int[] getHaplotypeInstances();
+	public abstract List<String> getAlleles();
+	public abstract List<String> getAlleles(Locus locus);
+	public abstract Integer getHaplotypeInstance(Locus locus);
+	
+	public abstract Set<Locus> getLoci();
+	
+	public abstract List<Integer> getHaplotypeInstances();
 	
 	public String toString() {
 		return getHaplotypeString();
@@ -30,8 +33,9 @@ public abstract class Haplotype {
 	
 	@Override
 	public boolean equals(Object element1) {		
-		if (Arrays.equals(getHaplotypeInstances(), ((Haplotype) element1).getHaplotypeInstances()) && getAlleles().containsAll(((Haplotype) element1).getAlleles()) &&
-				getHaplotypeString().equals(((Haplotype) element1).getHaplotypeString()) && getLinkage().equals(((Haplotype) element1).getLinkage())) {
+		if (getHaplotypeInstances().equals(((Haplotype) element1).getHaplotypeInstances()) && getAlleles().containsAll(((Haplotype) element1).getAlleles()) &&
+				getHaplotypeString().equals(((Haplotype) element1).getHaplotypeString()) && 
+				(getLinkage() == null || (getLinkage() != null && getLinkage().equals(((Haplotype) element1).getLinkage())))) {
 			return true;
 		}
 		

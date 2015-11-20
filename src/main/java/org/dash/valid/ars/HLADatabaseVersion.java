@@ -15,6 +15,9 @@ public enum HLADatabaseVersion {
 	private String cwdName;
 	 
 	public static final String HLADB_PROPERTY = "org.dash.hladb";
+	public static final String ARS_PROPERTY = "org.dash.ars";
+	
+	public static final String ARS_BY_HLADB = "hladb";
 	 
 	private static final Logger LOGGER = Logger.getLogger(HLADatabaseVersion.class.getName());
 	 

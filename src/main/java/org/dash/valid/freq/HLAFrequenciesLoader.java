@@ -6,46 +6,52 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.dash.valid.BCDisequilibriumElement;
-import org.dash.valid.DRDQDisequilibriumElement;
-import org.dash.valid.base.BaseBCDisequilibriumElement;
-import org.dash.valid.base.BaseDRDQDisequilibriumElement;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.dash.valid.DisequilibriumElement;
+import org.dash.valid.Linkages;
+import org.dash.valid.Locus;
+import org.dash.valid.base.BaseDisequilibriumElement;
 import org.dash.valid.gl.GLStringConstants;
-import org.dash.valid.race.BCDisequilibriumElementByRace;
-import org.dash.valid.race.DRDQDisequilibriumElementByRace;
+import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.race.FrequencyByRaceComparator;
 
-public class HLAFrequenciesLoader {
-	private final List<BCDisequilibriumElement> bcDisequilibriumElements = new ArrayList<BCDisequilibriumElement>();
-	private final List<DRDQDisequilibriumElement> drdqDisequilibriumElements = new ArrayList<DRDQDisequilibriumElement>();
-	private final Set<String> individualLocusFrequencies = new HashSet<String>();
+public class HLAFrequenciesLoader {	
+	private HashMap<EnumSet<Locus>, List<DisequilibriumElement>> disequilibriumElementsMap = new HashMap<EnumSet<Locus>, List<DisequilibriumElement>>();
+	private final HashMap<Locus, List<String>> individualLocusFrequencies = new HashMap<Locus, List<String>>();
 	
 	private static final String UNDERSCORE = "_";
 	
-	private static final int BASE_DRB1_POS = 0;
-	private static final int BASE_DRB345_POS = 1;
-	private static final int BASE_DQA1_POS = 2;
-	private static final int BASE_DQB1_POS = 3;
-	private static final int BASE_DRDQ_FREQ_POS = 4;
-	private static final int BASE_DRDQ_NOTE_POS = 5;
+	private static final String WIKIVERSITY_BC_FREQUENCIES = "frequencies/wikiversity/BCLinkageDisequilibrium.txt";
+	private static final String WIKIVERSITY_DRDQ_FREQUENCIES = "frequencies/wikiversity/DRDQLinkageDisequilibrium.txt";
 	
-	private static final int BASE_B_POS = 0;
-	private static final int BASE_C_POS = 1;
-	private static final int BASE_BC_FREQ_POS = 2;
-	private static final int BASE_BC_NOTE_POS = 3;
+	private static final String NMDP_ABC_FREQUENCIES = "frequencies/nmdp/A~C~B.xlsx";
+	private static final String NMDP_BC_FREQUENCIES = "frequencies/nmdp/C~B.xlsx";
+	private static final String NMDP_DRDQ_FREQUENCIES = "frequencies/nmdp/DRB3-4-5~DRB1~DQB1.xlsx";
+	
+	private static final Locus[] BASE_BC_LOCI_POS = new Locus[] {Locus.HLA_B, Locus.HLA_C};
+	private static final Locus[] BASE_DRDQ_LOCI_POS = new Locus[] {Locus.HLA_DRB1, Locus.HLA_DRB345, Locus.HLA_DQA1, Locus.HLA_DQB1};
+	private static final Locus[] NMDP_ABC_LOCI_POS = new Locus[] {Locus.HLA_A, Locus.HLA_C, Locus.HLA_B};
+	private static final Locus[] NMDP_BC_LOCI_POS = new Locus[] {Locus.HLA_C, Locus.HLA_B};
+	private static final Locus[] NMDP_DRDQ_LOCI_POS = new Locus[] {Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1};
 	
 	private static HLAFrequenciesLoader instance = null;
+	
+	private Set<Linkages> linkages = null;
 	
     private static final Logger LOGGER = Logger.getLogger(HLAFrequenciesLoader.class.getName());
     
@@ -57,58 +63,94 @@ public class HLAFrequenciesLoader {
 		if (instance == null) {
 			instance = new HLAFrequenciesLoader();
 			Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
+			
+			Set<String> linkageNames = new HashSet<String>();
+			String linkageProperties = System.getProperty(Linkages.LINKAGES_PROPERTY);
+			
+			if (linkageProperties != null) {
+				StringTokenizer st = new StringTokenizer(linkageProperties, GLStringConstants.SPACE);
+				while (st.hasMoreTokens()) {
+					linkageNames.add(st.nextToken());
+				}
+			}
+			
+			instance.linkages = Linkages.lookup(linkageNames);
+			
 			instance.init(Frequencies.NMDP.equals(freq));
 		}
 		
 		return instance;
 	}
 	
+	public Set<Linkages> getLinkages() {
+		return linkages;
+	}
+	
 	public void reloadFrequencies() {
 		Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
-		bcDisequilibriumElements.removeAll(bcDisequilibriumElements);
-		drdqDisequilibriumElements.removeAll(drdqDisequilibriumElements);
+		
+		this.disequilibriumElementsMap = new HashMap<EnumSet<Locus>, List<DisequilibriumElement>>();
+
 		init(Frequencies.NMDP.equals(freq));
 	}
 	
 	private void init(boolean useNMDPFrequencies) {
 		try {
 			if (useNMDPFrequencies) {
-				loadNMDPBCLinkageReferenceData();
-				loadNMDPDRDQLinkageReferenceData();
+				for (Linkages linkage : getLinkages()) {
+					switch (linkage) {
+					case A_B_C:
+						this.disequilibriumElementsMap.put(Locus.A_B_C_LOCI, loadNMDPLinkageReferenceData(NMDP_ABC_FREQUENCIES, NMDP_ABC_LOCI_POS));
+					case B_C:
+						this.disequilibriumElementsMap.put(Locus.B_C_LOCI, loadNMDPLinkageReferenceData(NMDP_BC_FREQUENCIES, NMDP_BC_LOCI_POS));
+					case DRB_DQB:
+						this.disequilibriumElementsMap.put(Locus.DRB_DQB_LOCI, loadNMDPLinkageReferenceData(NMDP_DRDQ_FREQUENCIES, NMDP_DRDQ_LOCI_POS));
+					default:
+						break;
+					}
+				}
 				loadIndividualLocusFrequencies();
 			}
 			else {
-				loadBCLinkageReferenceData();
-				loadDRDQLinkageReferenceData();
+				for (Linkages linkage : getLinkages()) {
+					switch (linkage) {
+					case B_C:
+						this.disequilibriumElementsMap.put(Locus.B_C_LOCI, loadLinkageReferenceData(WIKIVERSITY_BC_FREQUENCIES, BASE_BC_LOCI_POS));
+					case DRB_DQB:
+						this.disequilibriumElementsMap.put(Locus.DRB_DQ_LOCI, loadLinkageReferenceData(WIKIVERSITY_DRDQ_FREQUENCIES, BASE_DRDQ_LOCI_POS));
+					default:
+						break;
+					}
+				}
 			}			
 		}
-		catch (IOException ioe) {
+		catch (IOException | InvalidFormatException ioe) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
 			ioe.printStackTrace();
 		}
 	}
 	
-	public List<BCDisequilibriumElement> getBCDisequilibriumElements() {
-		return bcDisequilibriumElements;
-	}
-
-	public List<DRDQDisequilibriumElement> getDRDQDisequilibriumElements() {
-		return drdqDisequilibriumElements;
+	public List<DisequilibriumElement> getDisequilibriumElements(EnumSet<Locus> loci) {
+		if (this.disequilibriumElementsMap.containsKey(loci)) {
+			return this.disequilibriumElementsMap.get(loci);
+		}
+		
+		return new ArrayList<DisequilibriumElement>();
 	}
 	
-	public Set<String> getIndividualLocusFrequencies() {
+	public HashMap<Locus, List<String>> getIndividualLocusFrequencies() {
 		return individualLocusFrequencies;
 	}
-
-	private void loadNMDPBCLinkageReferenceData() throws IOException {
-		String filename = "frequencies/nmdp/C~B.xlsx";
-        
+	
+	private List<DisequilibriumElement> loadNMDPLinkageReferenceData(String filename, Locus[] locusPositions) throws IOException, InvalidFormatException {  
+		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
+		
         // Finds the workbook instance for XLSX file
 		
-        XSSFWorkbook myWorkBook = new XSSFWorkbook(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename));
+        Workbook workbook = WorkbookFactory.create(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename));
        
         // Return first sheet from the XLSX workbook
-        XSSFSheet mySheet = myWorkBook.getSheetAt(0);
+        Sheet mySheet = workbook.getSheetAt(0);
        
         // Get iterator to all the rows in current sheet
         Iterator<Row> rowIterator = mySheet.iterator();
@@ -125,75 +167,53 @@ public class HLAFrequenciesLoader {
             	raceHeaders = readHeaderElementsByRace(row);
             }
             else {
-	            readBCDiseqilibriumElementsByRace(row, raceHeaders);
+	            disequilibriumElements.add(readDiseqilibriumElementsByRace(row, raceHeaders, locusPositions));
             }            
         }
         
-        myWorkBook.close();
+        workbook.close();
+        
+        return disequilibriumElements;
 	}
 	
-	private void loadNMDPDRDQLinkageReferenceData() throws IOException {
-		String filename = "frequencies/nmdp/DRB3-4-5~DRB1~DQB1.xlsx";
-        
-        // Finds the workbook instance for XLSX file
-        XSSFWorkbook myWorkBook = new XSSFWorkbook(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename));
-       
-        // Return first sheet from the XLSX workbook
-        XSSFSheet mySheet = myWorkBook.getSheetAt(0);
-       
-        // Get iterator to all the rows in current sheet
-        Iterator<Row> rowIterator = mySheet.iterator();
-        
-        int firstRow = mySheet.getFirstRowNum();
-        
-        List<String> raceHeaders = null;
-
-        // Traversing over each row of XLSX file
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
-
-            if (row.getRowNum() == firstRow) {
-            	raceHeaders = readHeaderElementsByRace(row);
-            }
-            else {
-            	readDRDQDiseqilibriumElementsByRace(row, raceHeaders);
-            }
-        }
-        
-        myWorkBook.close();
-	}
-	
-	private void loadIndividualLocusFrequencies() throws IOException {
-		String filenames[] = {"frequencies/nmdp/B.xlsx", "frequencies/nmdp/C.xlsx", "frequencies/nmdp/DRB1.xlsx", 
-								"frequencies/nmdp/DRB3-4-5.xlsx", "frequencies/nmdp/DQB1.xlsx"};
-        
-        // Finds the workbook instance for XLSX file
-		
-		for (String filename : filenames) {
-	        XSSFWorkbook myWorkBook = new XSSFWorkbook(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename));
-	       
-	        // Return first sheet from the XLSX workbook
-	        XSSFSheet mySheet = myWorkBook.getSheetAt(0);
-	       
-	        // Get iterator to all the rows in current sheet
-	        Iterator<Row> rowIterator = mySheet.iterator();
-	        
-	        int firstRow = mySheet.getFirstRowNum();
-	        	
-	        // Traversing over each row of XLSX file
-	        while (rowIterator.hasNext()) {
-	            Row row = rowIterator.next();
-	
-	            if (row.getRowNum() == firstRow) {
-	            	continue;
-	            }
-	            else {
-	        		individualLocusFrequencies.add(row.getCell(0).getStringCellValue());
-	            }            
-	        }
-	        
-	        myWorkBook.close();
+	private void loadIndividualLocusFrequencies() throws IOException, InvalidFormatException {
+		for (Linkages linkage : getLinkages()) {
+			for (Locus locus : linkage.getLoci()) {
+				if (locus.hasIndividualFrequencies()) {
+					loadIndividualLocusFrequency(locus);
+				}
+			}
 		}
+	}
+
+	private void loadIndividualLocusFrequency(Locus locus)
+			throws IOException, InvalidFormatException {
+		List<String> singleLocusFrequencies = new ArrayList<String>();
+		Workbook workbook = WorkbookFactory.create(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream("frequencies/nmdp/" + locus.getFrequencyName() + ".xlsx"));
+      
+		// Return first sheet from the XLSX workbook
+		Sheet mySheet = workbook.getSheetAt(0);
+      
+		// Get iterator to all the rows in current sheet
+		Iterator<Row> rowIterator = mySheet.iterator();
+		
+		int firstRow = mySheet.getFirstRowNum();
+			
+		// Traversing over each row of XLSX file
+		while (rowIterator.hasNext()) {
+		    Row row = rowIterator.next();
+
+		    if (row.getRowNum() == firstRow) {
+		    	continue;
+		    }
+		    else {
+				singleLocusFrequencies.add(GLStringConstants.HLA_DASH + row.getCell(0).getStringCellValue());
+		    }            
+		}
+		
+		individualLocusFrequencies.put(locus,  singleLocusFrequencies);
+		
+		workbook.close();
 	}
 	
 	private List<String> readHeaderElementsByRace(Row row) {		
@@ -214,64 +234,31 @@ public class HLAFrequenciesLoader {
 	/**
 	 * @param row
 	 */
-	private void readBCDiseqilibriumElementsByRace(Row row, List<String> raceHeaders) {
+	private DisequilibriumElement readDiseqilibriumElementsByRace(Row row, List<String> raceHeaders, Locus[] locusPositions) {		
 		// For each row, iterate through each columns
 		Iterator<Cell> cellIterator = row.cellIterator();
 		
 		List<FrequencyByRace> frequenciesByRace  = new ArrayList<FrequencyByRace>();
-		BCDisequilibriumElementByRace disElement = new BCDisequilibriumElementByRace();
+		DisequilibriumElementByRace disElement = new DisequilibriumElementByRace();
+		
+		int columnIndex;
 		
 		while (cellIterator.hasNext()) {
 		    Cell cell = cellIterator.next();
 
-		    switch (cell.getColumnIndex()) {
-		    case 0:
-		        disElement.setHlacElement(GLStringConstants.HLA_DASH + cell.getStringCellValue());
-		        break;
-		    case 1:
-		    	disElement.setHlabElement(GLStringConstants.HLA_DASH + cell.getStringCellValue());
-		    	break;
-		    default :
-		    	if (cell.getColumnIndex() % 2 == 0) {
+		    columnIndex = cell.getColumnIndex();
+		    
+		    if (columnIndex < locusPositions.length) {
+		    	disElement.setHlaElement(locusPositions[cell.getColumnIndex()], GLStringConstants.HLA_DASH + cell.getStringCellValue());
+		    }
+		    else {
+		    	if ((locusPositions.length % 2 == 0 && columnIndex % 2 == 0) || (locusPositions.length % 2 != 0 && columnIndex % 2 != 0)) {
 		    		disElement.setFrequenciesByRace(loadFrequencyAndRank(row, cell, frequenciesByRace, raceHeaders));
 		    	}
-		    }		    
+		    }
 		}
 		
-	    bcDisequilibriumElements.add(disElement);
-	}
-	
-	/**
-	 * @param row
-	 */
-	private void readDRDQDiseqilibriumElementsByRace(Row row, List<String> raceHeaders) {
-		// For each row, iterate through each columns
-		Iterator<Cell> cellIterator = row.cellIterator();
-		
-		List<FrequencyByRace> frequenciesByRace  = new ArrayList<FrequencyByRace>();
-		DRDQDisequilibriumElementByRace disElement = new DRDQDisequilibriumElementByRace();
-		
-		while (cellIterator.hasNext()) {
-		    Cell cell = cellIterator.next();
-
-		    switch (cell.getColumnIndex()) {
-		    case 0:
-		        disElement.setHladrb345Element(GLStringConstants.HLA_DASH + cell.getStringCellValue());
-		        break;
-		    case 1:
-		    	disElement.setHladrb1Element(GLStringConstants.HLA_DASH + cell.getStringCellValue());
-		    	break;
-		    case 2:
-		    	disElement.setHladqb1Element(GLStringConstants.HLA_DASH + cell.getStringCellValue());
-		    	break;
-		    default :
-		    	if (cell.getColumnIndex() % 2 != 0) {
-		    		disElement.setFrequenciesByRace(loadFrequencyAndRank(row, cell, frequenciesByRace, raceHeaders));
-		    	}
-		    }		    
-		}
-		
-	    drdqDisequilibriumElements.add(disElement);
+	    return disElement;
 	}
 
 	/**
@@ -293,34 +280,28 @@ public class HLAFrequenciesLoader {
 		
 		return frequenciesByRace;
 	}
-
-	private void loadBCLinkageReferenceData() throws FileNotFoundException, IOException {
-		String filename = "frequencies/wikiversity/BCLinkageDisequilibrium.txt";
+	
+	private List<DisequilibriumElement> loadLinkageReferenceData(String filename, Locus[] locusPositions) throws FileNotFoundException, IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename)));
 		String row;
 		String[] columns;
+		HashMap<Locus, String> hlaElementMap;
+		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
+		
 		while ((row = reader.readLine()) != null) {
+			hlaElementMap = new HashMap<Locus, String>();
+			
 			columns = row.split(GLStringConstants.TAB);
-
-			bcDisequilibriumElements.add(new BaseBCDisequilibriumElement(columns[BASE_B_POS], columns[BASE_C_POS], columns[BASE_BC_FREQ_POS], columns[BASE_BC_NOTE_POS]));
+			
+			for (int i=0;i<locusPositions.length;i++) {
+				hlaElementMap.put(locusPositions[i],  columns[i]);
+			}
+			
+			disequilibriumElements.add(new BaseDisequilibriumElement(hlaElementMap, columns[locusPositions.length], columns[locusPositions.length + 1]));
 		}
 		
 		reader.close();
-	}
-	
-	private void loadDRDQLinkageReferenceData() throws FileNotFoundException, IOException {
-		String row;
-		String[] columns;
 		
-		String filename = "frequencies/wikiversity/DRDQLinkageDisequilibrium.txt";
-		BufferedReader reader = new BufferedReader(new InputStreamReader(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename)));
-		
-		while ((row = reader.readLine()) != null) {
-			columns = row.split(GLStringConstants.TAB);
-			
-			drdqDisequilibriumElements.add(new BaseDRDQDisequilibriumElement(columns[BASE_DRB1_POS], columns[BASE_DRB345_POS], columns[BASE_DQA1_POS], columns[BASE_DQB1_POS], columns[BASE_DRDQ_FREQ_POS], columns[BASE_DRDQ_NOTE_POS]));
-		}
-		
-		reader.close();		
+		return disequilibriumElements;
 	}
 }

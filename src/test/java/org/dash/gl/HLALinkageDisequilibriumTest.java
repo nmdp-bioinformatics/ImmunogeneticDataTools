@@ -2,6 +2,7 @@ package org.dash.gl;
 
 import junit.framework.TestCase;
 
+import org.dash.valid.Locus;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.junit.Test;
@@ -13,8 +14,8 @@ public class HLALinkageDisequilibriumTest extends TestCase {
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		assertNotNull(freqLoader);
 		freqLoader.reloadFrequencies();
-		assertTrue(freqLoader.getBCDisequilibriumElements() != null && freqLoader.getBCDisequilibriumElements().size() > 0);
-		assertTrue(freqLoader.getDRDQDisequilibriumElements() != null && freqLoader.getDRDQDisequilibriumElements().size() > 0);
+		assertTrue(freqLoader.getDisequilibriumElements(Locus.B_C_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.B_C_LOCI).size() > 0);
+		assertTrue(freqLoader.getDisequilibriumElements(Locus.DRB_DQB_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.DRB_DQB_LOCI).size() > 0);
 	}
 
 	@Test
@@ -23,7 +24,7 @@ public class HLALinkageDisequilibriumTest extends TestCase {
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		assertNotNull(freqLoader);
 		freqLoader.reloadFrequencies();
-		assertTrue(freqLoader.getBCDisequilibriumElements() != null && freqLoader.getBCDisequilibriumElements().size() > 0);
-		assertTrue(freqLoader.getDRDQDisequilibriumElements() != null && freqLoader.getDRDQDisequilibriumElements().size() > 0);
+		assertTrue(freqLoader.getDisequilibriumElements(Locus.B_C_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.B_C_LOCI).size() > 0);
+		assertTrue(freqLoader.getDisequilibriumElements(Locus.DRB_DQ_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.DRB_DQ_LOCI).size() > 0);
 	}
 }

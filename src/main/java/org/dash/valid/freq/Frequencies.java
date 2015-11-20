@@ -32,4 +32,9 @@ public enum Frequencies {
 		LOGGER.warning("The specified frequencies: " + shortName + " are not supported.  Defaulting to : " + getDefault());
 		return Frequencies.getDefault();
 	}
+	
+	@Override
+	public String toString() {
+		return getShortName();
+	}
 }
