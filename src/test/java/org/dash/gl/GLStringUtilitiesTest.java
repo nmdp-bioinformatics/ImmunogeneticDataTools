@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
 
 public class GLStringUtilitiesTest extends TestCase {
