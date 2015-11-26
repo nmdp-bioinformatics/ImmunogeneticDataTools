@@ -17,7 +17,7 @@ import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumAnalyzer {		
     private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumAnalyzer.class.getName());

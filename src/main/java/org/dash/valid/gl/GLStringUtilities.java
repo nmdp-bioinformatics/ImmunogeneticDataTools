@@ -21,10 +21,10 @@ import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.report.LinkageHitDegree;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
-import org.immunogenomics.gl.client.GlClient;
-import org.immunogenomics.gl.client.GlClientException;
-import org.immunogenomics.gl.client.local.LocalGlClient;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.client.GlClient;
+import org.nmdp.gl.client.GlClientException;
+import org.nmdp.gl.client.local.LocalGlClient;
 
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
