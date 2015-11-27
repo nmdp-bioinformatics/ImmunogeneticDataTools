@@ -11,7 +11,8 @@ public enum Linkages {
 	A_B_C ("abc", Locus.A_B_C_LOCI), 
 	B_C ("bc", Locus.B_C_LOCI), 
 	DRB_DQB ("drb_dqb", Locus.DRB_DQB_LOCI), 
-	DRB_DQ ("drb_dq", Locus.DRB_DQ_LOCI);
+	DRB_DQ ("drb_dq", Locus.DRB_DQ_LOCI),
+	DRB1_DQB1 ("drb1_dqb1", Locus.DRB1_DQB1_LOCI);
 	
 	private String shortName;
 	private EnumSet<Locus> loci;
