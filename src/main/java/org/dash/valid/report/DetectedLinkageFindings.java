@@ -1,7 +1,9 @@
 package org.dash.valid.report;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,10 +34,44 @@ public class DetectedLinkageFindings {
 	private HashMap<Set<Locus>, Integer> linkageCountsMap = new HashMap<Set<Locus>, Integer>();
 	private HashMap<EnumSet<Locus>, Boolean> linkedPairsMap = new HashMap<EnumSet<Locus>, Boolean>();
 	private HashMap<EnumSet<Locus>, HaplotypePair> firstPairsMap = new HashMap<EnumSet<Locus>, HaplotypePair>();
-
+	
 	private List<String> commonRaceElements = new ArrayList<String>();
 	
 	private Set<EnumSet<Locus>> findingsSought = new HashSet<EnumSet<Locus>>();
+	
+	HashMap<EnumSet<Locus>, HashMap<String, List<Float>>> minimumDifferenceMapOfMaps = new HashMap<EnumSet<Locus>, HashMap<String, List<Float>>>();
+		
+	public Float getMinimumDifference(HashMap<String, List<Float>> minimumDifferenceMap) {
+		List<Float> mins = new ArrayList<Float>();
+		
+		if (minimumDifferenceMap == null) {
+			return null;
+		}
+		
+		for (List<Float> relativeFrequencies : minimumDifferenceMap.values()) {
+			Float[] a = new Float[relativeFrequencies.size()];
+			a = relativeFrequencies.toArray(a);
+			Arrays.sort(a);
+			float minDiff;
+			
+			if (a.length == 1) {
+				minDiff = a[0];
+			}
+			else {
+				minDiff = a[1]-a[0];
+			}
+			
+			for (int i = 2 ; i < a.length ; i++) {
+			    minDiff = Math.min(minDiff, a[i]-a[i-1]);
+			}
+			
+			mins.add(minDiff);
+		}
+		
+		Collections.sort(mins);
+		
+		return mins.get(0);
+	}
 	
 	public void addFindingSought(EnumSet<Locus> findingSought) {
 		this.findingsSought.add(findingSought);
@@ -99,6 +135,7 @@ public class DetectedLinkageFindings {
 					noRaceOverlapPairs.add(pair);
 					continue;
 				}
+				
 				for (Object freqByRace : pair.getFrequencies()) {
 					relativeRaceFreq = (RelativeFrequencyByRace) freqByRace;
 					race = relativeRaceFreq.getRace();
@@ -110,8 +147,11 @@ public class DetectedLinkageFindings {
 			
 			linkedPairs.removeAll(noRaceOverlapPairs);
 			
+			HashMap<String, List<Float>> minimumDifferenceMap;
+
 			for (HaplotypePair pair : linkedPairs) {
 				loci = Locus.lookup(pair.getLoci());
+				minimumDifferenceMap = minimumDifferenceMapOfMaps.get(loci) != null ? minimumDifferenceMapOfMaps.get(loci) : new HashMap<String, List<Float>>();
 				
 				Set<RelativeFrequencyByRace> freqsByRace = new RelativeFrequencyByRaceSet(new RelativeFrequencyByRaceComparator());
 				for (Object freqByRace : pair.getFrequencies()) {
@@ -121,8 +161,19 @@ public class DetectedLinkageFindings {
 					
 					relativeRaceFreq.setRelativeFrequency(new Float((relativeRaceFreq.getFrequency() * 100) / totalFreq));
 					freqsByRace.add(relativeRaceFreq);
+					
+					List<Float> relativeFrequencies;
+					if (minimumDifferenceMap.containsKey(relativeRaceFreq.getRace())) {
+						relativeFrequencies = minimumDifferenceMap.get(relativeRaceFreq.getRace());
+					}
+					else {
+						relativeFrequencies = new ArrayList<Float>();
+					}
+					relativeFrequencies.add(relativeRaceFreq.getRelativeFrequency());
+					minimumDifferenceMap.put(relativeRaceFreq.getRace(), relativeFrequencies);
 				}
 
+				minimumDifferenceMapOfMaps.put(loci, minimumDifferenceMap);
 				this.linkedPairs.add(pair);
 			}
 		}
