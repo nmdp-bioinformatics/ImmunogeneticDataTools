@@ -3,6 +3,7 @@ package org.dash.valid.freq;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -215,8 +216,12 @@ public class HLAFrequenciesLoader {
 			throws IOException, InvalidFormatException {
 		List<String> singleLocusFrequencies = new ArrayList<String>();
 		String extension = freq.equals(Frequencies.NMDP) ? ".xlsx" : ".xls";
-		Workbook workbook = WorkbookFactory.create(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream("frequencies/" + freq.getShortName() + "/" + locus.getFrequencyName() + extension));
+		InputStream inputStream = HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream("frequencies/" + freq.getShortName() + "/" + locus.getFrequencyName() + extension);
       
+		if (inputStream == null) return;
+		
+		Workbook workbook = WorkbookFactory.create(inputStream);
+		
 		// Return first sheet from the XLSX workbook
 		Sheet mySheet = workbook.getSheetAt(0);
       

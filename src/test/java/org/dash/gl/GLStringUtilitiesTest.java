@@ -15,7 +15,7 @@ import org.junit.Test;
 public class GLStringUtilitiesTest extends TestCase {
 	private static final String BOGUS_ALLELE = "HLA-A*QI:UD";
 	private static final String HLA_DQB10202 = "HLA-DQB1*02:02";
-	private static final String HLA_DQB10302g = "HLA-DQB1*03:02g";
+	private static final String HLA_DQB10301g = "HLA-DQB1*03:01g";
 	private static final String HLA_A0101 = "HLA-A*01:01";
 	private static final String HLA_A0102 = "HLA-A*01:02";
 	private static final String A0101 = "01:01";
@@ -44,7 +44,7 @@ public class GLStringUtilitiesTest extends TestCase {
 	@Test
 	public void testHasFrequency() {		
 		if (GLStringUtilities.individualFrequenciesLoaded()) {
-			assertTrue(GLStringUtilities.hasFrequency(Locus.HLA_DQB1, HLA_DQB10302g));
+			assertTrue(GLStringUtilities.hasFrequency(Locus.HLA_DQB1, HLA_DQB10301g));
 			assertFalse(GLStringUtilities.hasFrequency(Locus.HLA_A, BOGUS_ALLELE));
 		}
 	}
