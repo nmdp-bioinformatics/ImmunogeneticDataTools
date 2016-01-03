@@ -41,7 +41,7 @@ public class DetectedLinkageFindings {
 	
 	HashMap<EnumSet<Locus>, HashMap<String, List<Float>>> minimumDifferenceMapOfMaps = new HashMap<EnumSet<Locus>, HashMap<String, List<Float>>>();
 		
-	public Float getMinimumDifference(HashMap<String, List<Float>> minimumDifferenceMap) {
+	private Float getMinimumDifference(HashMap<String, List<Float>> minimumDifferenceMap) {
 		List<Float> mins = new ArrayList<Float>();
 		
 		if (minimumDifferenceMap == null) {
@@ -71,6 +71,10 @@ public class DetectedLinkageFindings {
 		Collections.sort(mins);
 		
 		return mins.get(0);
+	}
+	
+	public Float getMinimumDifference(EnumSet<Locus> loci) {		
+		return getMinimumDifference(minimumDifferenceMapOfMaps.get(loci));
 	}
 	
 	public void addFindingSought(EnumSet<Locus> findingSought) {

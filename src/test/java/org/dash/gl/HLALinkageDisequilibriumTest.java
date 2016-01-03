@@ -1,5 +1,7 @@
 package org.dash.gl;
 
+import java.io.IOException;
+
 import junit.framework.TestCase;
 
 import org.dash.valid.Locus;
@@ -9,7 +11,7 @@ import org.junit.Test;
 
 public class HLALinkageDisequilibriumTest extends TestCase {
 	@Test
-	public void testLoadNMDPLinkageReferenceData() {
+	public void testLoadNMDPLinkageReferenceData() throws IOException {
 		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP.getShortName());
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		assertNotNull(freqLoader);
@@ -19,7 +21,7 @@ public class HLALinkageDisequilibriumTest extends TestCase {
 	}
 
 	@Test
-	public void testLoadBaseLinkageReferenceData() {
+	public void testLoadBaseLinkageReferenceData() throws IOException {
 		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.WIKIVERSITY.getShortName());
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		assertNotNull(freqLoader);

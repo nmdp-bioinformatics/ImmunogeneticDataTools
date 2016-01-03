@@ -18,7 +18,7 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 	}
 	
 	@Test
-	public void testLinkageReportingMugs() {
+	public void testLinkageReportingMugs() throws IOException {
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("fullyQualifiedExample.txt");
 		
 		for (String key : glStrings.keySet()) {

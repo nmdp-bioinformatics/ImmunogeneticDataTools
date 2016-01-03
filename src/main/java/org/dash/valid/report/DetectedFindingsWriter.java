@@ -2,7 +2,9 @@ package org.dash.valid.report;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Logger;
 
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -10,8 +12,9 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.dash.valid.Linkages;
+import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
-import org.dash.valid.freq.HLAFrequenciesLoader;
+import org.dash.valid.gl.GLStringConstants;
 
 public class DetectedFindingsWriter {	
 	private static DetectedFindingsWriter instance = null;
@@ -20,9 +23,14 @@ public class DetectedFindingsWriter {
 	private static XSSFSheet spreadsheet;
 	private static FileOutputStream out;
 	private static int rowId = 0;
+	private static FileWriter fileWriter;
+	private static PrintWriter printWriter;
 
 	static {
 		try {			
+			  fileWriter = new FileWriter("./detectedFindings.csv");
+			  printWriter = new PrintWriter(fileWriter);
+			
 		      //Create blank workbook
 		      workbook = new XSSFWorkbook(); 
 		      //Create a blank sheet
@@ -40,7 +48,7 @@ public class DetectedFindingsWriter {
 			      cell = row.createCell(cellId);
 		    	  cell.setCellValue(labels[cellId]);
 		      }
-			  for (Linkages linkage : HLAFrequenciesLoader.getInstance().getLinkages()) {
+			  for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 				  cell = row.createCell(cellId++);
 				  cell.setCellValue("n" + linkage.getLoci() + " Linkages");
 				  cell = row.createCell(cellId++);
@@ -56,6 +64,10 @@ public class DetectedFindingsWriter {
 			//Write the workbook in file system
 			workbook.write(out);
 		    out.close();
+		    
+			printWriter.flush();
+			printWriter.close();
+			fileWriter.close();
 		}
 		catch (IOException ioe) {
 			LOGGER.warning("Couldn't close fileWriter after writing to detectedFindings.csv.");
@@ -78,7 +90,7 @@ public class DetectedFindingsWriter {
 	 * @throws IOException 
 	 * @throws SecurityException 
 	 */
-	public synchronized void reportDetectedFindings(DetectedLinkageFindings findings) throws SecurityException, IOException {				
+	public synchronized void reportDetectedFindings(DetectedLinkageFindings findings) {				
 	   XSSFRow row = spreadsheet.createRow(rowId++);
 	   int cellId = 0;
 	   XSSFCell cell = row.createCell(cellId++);
@@ -95,11 +107,24 @@ public class DetectedFindingsWriter {
 	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB345));
 	   cell = row.createCell(cellId++);
 	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_DQB1));
-	   for (Linkages linkage : HLAFrequenciesLoader.getInstance().getLinkages()) {
+	   for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 		   cell = row.createCell(cellId++);
 		   cell.setCellValue(findings.getLinkageCount(linkage.getLoci()));
 		   cell = row.createCell(cellId++);
-		   cell.setCellValue(findings.getMinimumDifference(findings.minimumDifferenceMapOfMaps.get(linkage.getLoci())) + "");
+		   cell.setCellValue(findings.getMinimumDifference(linkage.getLoci()) + "");
 	   }
+	   
+		printWriter.write(findings.getGenotypeList().getId() + GLStringConstants.COMMA);
+		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_A) + GLStringConstants.COMMA);
+		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_B) + GLStringConstants.COMMA);
+		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_C) + GLStringConstants.COMMA);
+		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB1) + GLStringConstants.COMMA);
+		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB345) + GLStringConstants.COMMA);
+		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_DQB1) + GLStringConstants.COMMA);
+		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
+			printWriter.write(findings.getLinkageCount(linkage.getLoci()) + GLStringConstants.COMMA);
+			printWriter.write(findings.getMinimumDifference(linkage.getLoci()) + GLStringConstants.COMMA);
+		}
+		printWriter.write(GLStringConstants.NEWLINE);
 	}
 }

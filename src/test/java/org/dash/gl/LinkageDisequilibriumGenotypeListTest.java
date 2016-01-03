@@ -1,5 +1,6 @@
 package org.dash.gl;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public class LinkageDisequilibriumGenotypeListTest extends TestCase {
 												C0702 + GLStringConstants.GENE_COPY_DELIMITER + C1203;
 
 	@Test
-	public void testHaplotypePairs() {	
+	public void testHaplotypePairs() throws IOException {	
 		LinkageDisequilibriumGenotypeList genotypeList = new LinkageDisequilibriumGenotypeList("HaplotypePairs", TEST_BC_PAIRS);
 		
 		Set<Locus> loci = new HashSet<Locus>();
