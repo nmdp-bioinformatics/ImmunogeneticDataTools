@@ -1,5 +1,6 @@
 package org.dash.valid.gl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -9,17 +10,18 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.dash.valid.Linkages;
+import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.haplo.MultiLocusHaplotype;
 import org.dash.valid.gl.haplo.SingleLocusHaplotype;
-import org.immunogenomics.gl.Allele;
-import org.immunogenomics.gl.AlleleList;
-import org.immunogenomics.gl.Genotype;
-import org.immunogenomics.gl.GenotypeList;
-import org.immunogenomics.gl.Haplotype;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.Allele;
+import org.nmdp.gl.AlleleList;
+import org.nmdp.gl.Genotype;
+import org.nmdp.gl.GenotypeList;
+import org.nmdp.gl.Haplotype;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumGenotypeList {
 	private String id;
@@ -60,7 +62,7 @@ public class LinkageDisequilibriumGenotypeList {
 		parseGLString();
 		postParseInit();
 		
-		for (Linkages linkage : HLAFrequenciesLoader.getInstance().getLinkages()) {
+		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 			setPossibleHaplotypes(linkage.getLoci());
 		}
 	}
@@ -72,7 +74,7 @@ public class LinkageDisequilibriumGenotypeList {
 		decomposeMug();
 		postParseInit();
 
-		for (Linkages linkage : HLAFrequenciesLoader.getInstance().getLinkages()) {
+		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 			setPossibleHaplotypes(linkage.getLoci());
 		}
 	}
@@ -141,8 +143,9 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 
 	// TODO: Write unit tests
-	public boolean checkAmbiguitiesThresholds() {
-		for (Linkages linkages : HLAFrequenciesLoader.getInstance().getLinkages()) {
+	public boolean checkAmbiguitiesThresholds() throws IOException {
+		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
+		for (Linkages linkages : LinkagesLoader.getInstance().getLinkages()) {
 			for (Locus locus : linkages.getLoci()) {
 				if (getAlleleCount(locus) > ALLELE_AMBIGUITY_THRESHOLD) {
 					LOGGER.warning("Exceeded the allele ambiguity threshold of : "
@@ -162,13 +165,13 @@ public class LinkageDisequilibriumGenotypeList {
 				
 				List<String> allelesToRemove = new ArrayList<String>();
 				
-				if (GLStringUtilities.individualFrequenciesLoaded()) {
+				if (freqLoader.individualFrequenciesLoaded()) {
 					List<List<String>> allLocusAlleles = getAlleles(locus);
 					allelesToRemove = new ArrayList<String>();
 
 					for (List<String> locusAlleles : allLocusAlleles) {						
 						for (String allele : locusAlleles) {
-							if (!GLStringUtilities.hasFrequency(locus, allele)) {
+							if (!freqLoader.hasFrequency(locus, allele)) {
 								LOGGER.finest("Removing allele with no frequency: " + allele);
 								allelesToRemove.add(allele);
 							}

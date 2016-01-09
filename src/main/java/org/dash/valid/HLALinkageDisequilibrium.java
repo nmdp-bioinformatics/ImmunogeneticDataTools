@@ -1,5 +1,6 @@
 package org.dash.valid;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -53,23 +54,27 @@ public class HLALinkageDisequilibrium {
 		}
 	}
 			
-	public static DetectedLinkageFindings hasDisequilibriumLinkage(LinkageDisequilibriumGenotypeList glString) {		
-		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
+	public static DetectedLinkageFindings hasDisequilibriumLinkage(LinkageDisequilibriumGenotypeList glString) throws IOException {		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 		List<Haplotype> linkedHaplotypes = new ArrayList<Haplotype>();
 		Set<DetectedDisequilibriumElement> linkageElementsFound = new LinkageElementsSet(new DisequilibriumElementComparator());
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 		
-		Set<Linkages> linkages = freqLoader.getLinkages();
+		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
+		
+		DetectedLinkageFindings findings = new DetectedLinkageFindings();
+
+		if (linkages == null) {
+			return findings;
+		}
+		
 		List<DisequilibriumElement> disequilibriumElements;
 				
-		DetectedLinkageFindings findings = new DetectedLinkageFindings();
-		
 		for (Linkages linkage : linkages) {
 			findings.addFindingSought(linkage.getLoci());
 			
-			disequilibriumElements = freqLoader.getDisequilibriumElements(linkage.getLoci());
+			disequilibriumElements = HLAFrequenciesLoader.getInstance().getDisequilibriumElements(linkage.getLoci());
 			for (DisequilibriumElement disElement : disequilibriumElements) {
 				linkedHaplotypes.addAll(detectLinkages(glString, disElement, linkage.getLoci()));
 			}

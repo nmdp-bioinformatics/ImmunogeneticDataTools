@@ -1,5 +1,6 @@
 package org.dash.gl;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -7,15 +8,16 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.dash.valid.Locus;
+import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
 
 public class GLStringUtilitiesTest extends TestCase {
 	private static final String BOGUS_ALLELE = "HLA-A*QI:UD";
 	private static final String HLA_DQB10202 = "HLA-DQB1*02:02";
-	private static final String HLA_DQB10302g = "HLA-DQB1*03:02g";
+	private static final String HLA_DQB10301g = "HLA-DQB1*03:01g";
 	private static final String HLA_A0101 = "HLA-A*01:01";
 	private static final String HLA_A0102 = "HLA-A*01:02";
 	private static final String A0101 = "01:01";
@@ -42,10 +44,11 @@ public class GLStringUtilitiesTest extends TestCase {
 	
 	// TODO:  Revisit - not elegantly supporting whether individual frequencies are available to be checked
 	@Test
-	public void testHasFrequency() {		
-		if (GLStringUtilities.individualFrequenciesLoaded()) {
-			assertTrue(GLStringUtilities.hasFrequency(Locus.HLA_DQB1, HLA_DQB10302g));
-			assertFalse(GLStringUtilities.hasFrequency(Locus.HLA_A, BOGUS_ALLELE));
+	public void testHasFrequency() throws IOException {
+		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
+		if (freqLoader.individualFrequenciesLoaded()) {
+			assertTrue(freqLoader.hasFrequency(Locus.HLA_DQB1, HLA_DQB10301g));
+			assertFalse(freqLoader.hasFrequency(Locus.HLA_A, BOGUS_ALLELE));
 		}
 	}
 	

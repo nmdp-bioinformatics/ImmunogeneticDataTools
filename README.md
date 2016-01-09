@@ -43,24 +43,25 @@ The results of the software should be used for supporting the evidence, but not 
 
 *Properties:*
 
-* Name:  org.dash.frequencies
-* Value(s):  wiki, nmdp
-* Description:  Specifies the desired frequency set
++ **Name:**  org.dash.frequencies
++ **Value(s):**  wiki, nmdp-2007, nmdp
++ **Description:**  Specifies the desired frequency set
++ **Note:**  The 2011 NMDP Frequencies (if specifying 'nmdp') are associated with a license agreement, specifying the allowance of use for research, but disallowing re-distribution.  If you wish to use the 2011 NMDP Frequencies, you'll need to install them in your local repository by following the frequency install instructions at the bottom of this file.
 
-* Name:  org.dash.hladb
-* Value(s):  3.20.0, 3.19.0, 3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0
-* Description:  Specifies the HLA DB version against which to validate common well documented alleles
++ **Name:**  org.dash.hladb
++ **Value(s):**  3.20.0, 3.19.0, 3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0, 3.9.0, 3.8.0, 3.7.0, 3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.0, 3.1.0, 3.0.0
++ **Description:**  Specifies the HLA DB version against which to validate common well documented alleles
 
-* Name:  org.dash.ars
-* Value(s):  hladb
-* Description:  If specified, applies the antigen recognition site mappings from the HLA DB property specified.  Otherwise, uses the antigen recognition site mappings associated with the frequencies
++ **Name:**  org.dash.ars
++ **Value(s):**  hladb
++ **Description:**  If specified, applies the antigen recognition site mappings from the HLA DB property specified.  Otherwise, uses the antigen recognition site mappings associated with the NMDP 2011 frequencies
 
-* Name:  org.dash.linkages
-* Value(s):  abc, bc, drdq
-* Description:  Specifies the loci across which to detect linkages using provided frequencies
++ **Name:**  org.dash.linkages
++ **Value(s):**  abc, bc, drb_dq, drb_dqb, drb1_dqb1
++ **Description:**  Specifies the loci across which to detect linkages using provided frequencies
 
-* Name:  java.util.logging.config.file
-* Value(s):  logging.properties
++ **Name:**  java.util.logging.config.file
++ **Value(s):**  logging.properties
 
 *Logs:*
 
@@ -69,4 +70,14 @@ The results of the software should be used for supporting the evidence, but not 
 * haplotype linkage output may be found in linkages.log
 * haplotype linkage output for gl strings with missing pairs may be found in linkageWarnings.log
 * errors and basic logging in immuno.log
+
+
+*2011 NMDP Frequency Install Instructions:*
+ 
++ Access the frequencies at http://frequency.nmdp.org/NMDPFrequencies2011/
++ Login using OpenId
++ Carefully read and accept the license agreement
++ Grab the following files and install at src/main/resources/frequencies/nmdp
++ *A.xlsx, A~C~B.xlsx, B.xlsx, C.xlsx, C~B.xlsx, DQB1.xlsx, DRB1.xlsx, DRB3-4-5.xlsx, DRB3-4-5~DRB1~DQB1.xlsx*
+
  

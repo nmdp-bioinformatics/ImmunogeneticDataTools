@@ -9,7 +9,17 @@ public enum HLADatabaseVersion {
 	HLADB3150 ("3.15.0", "3150"), 
 	HLADB3120 ("3.12.0", "3120"),
 	HLADB3110 ("3.11.0", "3110"),
-	HLADB3100 ("3.10.0", "3100");
+	HLADB3100 ("3.10.0", "3100"),
+	HLADB390 ("3.9.0", "390"),
+	HLADB380 ("3.8.0", "380"),
+	HLADB370 ("3.7.0", "370"),
+	HLADB360 ("3.6.0", "360"),
+	HLADB350 ("3.5.0", "350"),
+	HLADB340 ("3.4.0", "340"),
+	HLADB330 ("3.3.0", "330"),
+	HLADB320 ("3.2.0", "320"),
+	HLADB310 ("3.1.0", "310"),
+	HLADB300 ("3.0.0", "300");
 	 
 	private String arsName;
 	private String cwdName;

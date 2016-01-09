@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.report.DetectedLinkageFindings;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
 
 public class LinkageDisequilibriumAnalyzerTest extends TestCase {	
@@ -18,7 +18,7 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 	}
 	
 	@Test
-	public void testLinkageReportingMugs() {
+	public void testLinkageReportingMugs() throws IOException {
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("fullyQualifiedExample.txt");
 		
 		for (String key : glStrings.keySet()) {

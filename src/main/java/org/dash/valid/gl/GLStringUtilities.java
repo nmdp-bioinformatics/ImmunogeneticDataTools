@@ -19,12 +19,11 @@ import java.util.regex.Pattern;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
-import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.report.LinkageHitDegree;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
-import org.immunogenomics.gl.client.GlClient;
-import org.immunogenomics.gl.client.GlClientException;
-import org.immunogenomics.gl.client.local.LocalGlClient;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.client.GlClient;
+import org.nmdp.gl.client.GlClientException;
+import org.nmdp.gl.client.local.LocalGlClient;
 
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
@@ -109,32 +108,6 @@ public class GLStringUtilities {
 			}
 		}
 
-		return false;
-	}
-	
-	public static boolean individualFrequenciesLoaded() {
-		HashMap<Locus, List<String>> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
-		
-		if (individualFrequencies != null && individualFrequencies.size() > 0) {
-			return true;
-		}
-		
-		return false;
-	}
-	
-	public static boolean hasFrequency(Locus locus, String allele) {
-		HashMap<Locus, List<String>> individualFrequencies = HLAFrequenciesLoader.getInstance().getIndividualLocusFrequencies();
-		if (individualFrequencies == null || individualFrequencies.get(locus) == null) {
-			return false;
-		}
-		
-		for (String alleleWithFrequency : individualFrequencies.get(locus)) {
-			if (fieldLevelComparison(allele, alleleWithFrequency) != null || 
-					checkAntigenRecognitionSite(allele, alleleWithFrequency) != null) {
-				return true;
-			}
-		}
-		
 		return false;
 	}
 

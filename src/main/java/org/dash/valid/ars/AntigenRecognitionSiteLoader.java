@@ -58,7 +58,6 @@ public class AntigenRecognitionSiteLoader {
 				instance = new AntigenRecognitionSiteLoader(hladb);
 			}
 			else {
-
 				instance = new AntigenRecognitionSiteLoader();
 			}
 		}

@@ -17,7 +17,7 @@ import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
-import org.immunogenomics.gl.MultilocusUnphasedGenotype;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumAnalyzer {		
     private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumAnalyzer.class.getName());
@@ -32,7 +32,12 @@ public class LinkageDisequilibriumAnalyzer {
     }
     
 	public static void main(String[] args) {
-		analyzeGLStringFiles(args);
+		try {
+			analyzeGLStringFiles(args);
+		} catch (IOException e) {
+			LOGGER.severe("Unable to process.  Please check log files and configuration.");
+			return;
+		}
 		
 		for (Handler handler : LogManager.getLogManager().getLogger(LinkageDisequilibriumWriter.class.getName()).getHandlers()) {
 			handler.close();
@@ -49,33 +54,28 @@ public class LinkageDisequilibriumAnalyzer {
 		DetectedFindingsWriter.getInstance().closeWriters();
 	}
 	
-	private static void analyzeGLStringFiles(String[] filenames) {		
+	private static void analyzeGLStringFiles(String[] filenames) throws IOException {		
 		for (int i=0;i<filenames.length;i++) {
 			LOGGER.info("Processing file: " + filenames[i] + " (" + (i+1) + " of " + filenames.length + ")");
 			analyzeGLStringFile(filenames[i]);		
-		}
+		}		
 	}
 
 	/**
 	 * @param filename
 	 */
-	public static void analyzeGLStringFile(String filename) {				
+	public static void analyzeGLStringFile(String filename) throws IOException {				
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(filename);
 		List<DetectedLinkageFindings> findingsList = null;
 		
-		try {
-			findingsList = detectLinkages(glStrings);
-			
-			for (DetectedLinkageFindings findings : findingsList) {
-				LinkageDisequilibriumWriter.getInstance().reportDetectedLinkages(findings);
-				HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
-				CommonWellDocumentedWriter.getInstance().reportCommonWellDocumented(findings);
-				DetectedFindingsWriter.getInstance().reportDetectedFindings(findings);
-			}
+		findingsList = detectLinkages(glStrings);
+		
+		for (DetectedLinkageFindings findings : findingsList) {
+			LinkageDisequilibriumWriter.getInstance().reportDetectedLinkages(findings);
+			HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
+			CommonWellDocumentedWriter.getInstance().reportCommonWellDocumented(findings);
+			DetectedFindingsWriter.getInstance().reportDetectedFindings(findings);
 		}
-		catch (IOException e) {
-			LOGGER.warning("Could not use file handler:  LinkageDisequiibrimFileHandler");
-		}		
 	}
 
 	/**
@@ -109,14 +109,14 @@ public class LinkageDisequilibriumAnalyzer {
 		return findingsList;
 	}
 	
-	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) {
+	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) throws IOException {
 		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug);
 		DetectedLinkageFindings findings = detectLinkages(linkedGLString);
 
 		return findings;
 	}
 
-	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
+	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) throws IOException {
 		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasDisequilibriumLinkage(linkedGLString);
 				
 		return findings;

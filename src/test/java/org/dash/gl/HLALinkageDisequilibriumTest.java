@@ -1,5 +1,7 @@
 package org.dash.gl;
 
+import java.io.IOException;
+
 import junit.framework.TestCase;
 
 import org.dash.valid.Locus;
@@ -9,17 +11,17 @@ import org.junit.Test;
 
 public class HLALinkageDisequilibriumTest extends TestCase {
 	@Test
-	public void testLoadNMDPLinkageReferenceData() {
-		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP.getShortName());
+	public void testLoadNMDPLinkageReferenceData() throws IOException {
+		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP_2007.getShortName());
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		assertNotNull(freqLoader);
 		freqLoader.reloadFrequencies();
 		assertTrue(freqLoader.getDisequilibriumElements(Locus.B_C_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.B_C_LOCI).size() > 0);
-		assertTrue(freqLoader.getDisequilibriumElements(Locus.DRB_DQB_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.DRB_DQB_LOCI).size() > 0);
+		assertTrue(freqLoader.getDisequilibriumElements(Locus.DRB1_DQB1_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.DRB1_DQB1_LOCI).size() > 0);
 	}
 
 	@Test
-	public void testLoadBaseLinkageReferenceData() {
+	public void testLoadBaseLinkageReferenceData() throws IOException {
 		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.WIKIVERSITY.getShortName());
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		assertNotNull(freqLoader);
