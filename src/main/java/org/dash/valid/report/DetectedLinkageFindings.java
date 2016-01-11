@@ -182,7 +182,6 @@ public class DetectedLinkageFindings {
 			}
 		}
 		else {
-			// TODO:  Investigate whether this should change to addAll
 			this.linkedPairs = linkedPairs;
 		}
 	}

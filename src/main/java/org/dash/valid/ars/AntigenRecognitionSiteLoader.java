@@ -1,7 +1,6 @@
 package org.dash.valid.ars;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -38,88 +37,67 @@ public class AntigenRecognitionSiteLoader {
     private static final String DEFAULT_ARS_FILE = "reference/mmc1.xls";
 	
 	private AntigenRecognitionSiteLoader(HLADatabaseVersion hladb) {
-		init(hladb);
 	}
 	
 	private AntigenRecognitionSiteLoader() {
-		init();
 	}
 	
 	public HashMap<String, List<String>> getArsMap() {
 		return this.arsMap;
 	}
 	
-	public static AntigenRecognitionSiteLoader getInstance() {
+	public static AntigenRecognitionSiteLoader getInstance() throws IOException, InvalidFormatException {
 		HLADatabaseVersion hladb = null;
 		if (instance == null) {
 			String ars = System.getProperty(HLADatabaseVersion.ARS_PROPERTY);
 			if (ars != null && ars.equals(HLADatabaseVersion.ARS_BY_HLADB)) {
 				hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
 				instance = new AntigenRecognitionSiteLoader(hladb);
+				instance.init(hladb);
 			}
 			else {
 				instance = new AntigenRecognitionSiteLoader();
+				instance.init();
 			}
 		}
 
 		return instance;
 	}
 	
-	private void init(HLADatabaseVersion hladb) {
+	private void init(HLADatabaseVersion hladb) throws IOException {
 		for (Locus locus : loci) {
 			HashMap<String, List<String>> locusArsMap = loadARSData(hladb, locus);
 			this.arsMap.putAll(locusArsMap);
 		}
 	}
 	
-	private void init() {
+	private void init() throws InvalidFormatException, IOException {
 		this.arsMap = loadARSData();
 	}
 	
-	private static HashMap<String, List<String>> loadARSData(HLADatabaseVersion hladb, Locus locus) {
+	private static HashMap<String, List<String>> loadARSData(HLADatabaseVersion hladb, Locus locus) throws IOException {
 		BufferedReader reader = null;
 		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
 		
 		String filename = "reference/" + hladb.getCwdName() + "/" + locus.getShortName() + ".txt";
 		
-		try {			
-			reader = new BufferedReader(new InputStreamReader(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(filename)));
-			
-			String row;
-			
-			while ((row = reader.readLine()) != null) {
-				arsMap.putAll(assembleARSMap(row));
-			}
+		reader = new BufferedReader(new InputStreamReader(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(filename)));
+		
+		String row;
+		
+		while ((row = reader.readLine()) != null) {
+			arsMap.putAll(assembleARSMap(row));
 		}
-		catch (FileNotFoundException e) {
-			LOGGER.severe("Could not open ARS file: " + filename);
-		}
-		catch (IOException e) {
-			LOGGER.severe("Could not read ARS file: " + filename);
-		}
-		finally {
-			try {
-				reader.close();
-			}
-			catch (IOException e) {
-				LOGGER.severe("Could not close reader");
-			}
-		}
+
+		reader.close();
 		
 		return arsMap;
 	}
 	
-	private static HashMap<String, List<String>> loadARSData() {
+	private static HashMap<String, List<String>> loadARSData() throws InvalidFormatException, IOException {
 		Workbook workbook = null;
-		try {
-			workbook = WorkbookFactory.create(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(DEFAULT_ARS_FILE));
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+		workbook = WorkbookFactory.create(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(DEFAULT_ARS_FILE));
 	       
         // Return first sheet from the XLSX workbook
         Sheet mySheet = workbook.getSheetAt(0);
@@ -148,12 +126,7 @@ public class AntigenRecognitionSiteLoader {
             }           
         }
         
-        try {
-			workbook.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        workbook.close();
         
 		return arsMap;
 	}

@@ -117,7 +117,7 @@ public class LinkageDisequilibriumAnalyzer {
 	}
 
 	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) throws IOException {
-		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasDisequilibriumLinkage(linkedGLString);
+		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString);
 				
 		return findings;
 	}

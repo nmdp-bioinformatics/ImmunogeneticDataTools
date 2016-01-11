@@ -16,6 +16,7 @@ import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
@@ -154,8 +155,16 @@ public class GLStringUtilities {
 		String matchedValue = convertToProteinLevel(allele);
 				
 		int partLength = allele.split(COLON).length;
-		AntigenRecognitionSiteLoader instance = AntigenRecognitionSiteLoader
-				.getInstance();
+		AntigenRecognitionSiteLoader instance = null;
+		
+		try {
+			instance = AntigenRecognitionSiteLoader.getInstance();
+		}
+		catch (IOException | InvalidFormatException e) {
+			LOGGER.warning("Could not load ars data.");
+			e.printStackTrace();
+		}
+		
 		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
 		
 		arsMap = instance.getArsMap();

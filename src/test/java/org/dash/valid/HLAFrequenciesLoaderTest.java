@@ -1,4 +1,4 @@
-package org.dash.gl;
+package org.dash.valid;
 
 import java.io.IOException;
 
@@ -9,7 +9,7 @@ import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.junit.Test;
 
-public class HLALinkageDisequilibriumTest extends TestCase {
+public class HLAFrequenciesLoaderTest extends TestCase {
 	@Test
 	public void testLoadNMDPLinkageReferenceData() throws IOException {
 		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP_2007.getShortName());

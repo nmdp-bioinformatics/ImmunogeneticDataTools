@@ -1,4 +1,4 @@
-package org.dash;
+package org.dash.valid;
 
 import java.util.ArrayList;
 import java.util.HashMap;

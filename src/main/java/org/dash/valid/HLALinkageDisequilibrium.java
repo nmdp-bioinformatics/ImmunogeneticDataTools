@@ -54,7 +54,7 @@ public class HLALinkageDisequilibrium {
 		}
 	}
 			
-	public static DetectedLinkageFindings hasDisequilibriumLinkage(LinkageDisequilibriumGenotypeList glString) throws IOException {		
+	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) throws IOException {		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 		List<Haplotype> linkedHaplotypes = new ArrayList<Haplotype>();
 		Set<DetectedDisequilibriumElement> linkageElementsFound = new LinkageElementsSet(new DisequilibriumElementComparator());
@@ -120,7 +120,6 @@ public class HLALinkageDisequilibrium {
 		return findings;
 	}
 	
-	// keep
 	private static Set<Haplotype> detectLinkages(LinkageDisequilibriumGenotypeList glString, DisequilibriumElement disElement, EnumSet<Locus> loci) {
 		Set<MultiLocusHaplotype> possibleHaplotypes = glString.getPossibleHaplotypes(loci);
 		
