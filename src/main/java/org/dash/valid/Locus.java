@@ -29,8 +29,9 @@ public enum Locus {
 	public static final EnumSet<Locus> DRB1_DQB1_LOCI = EnumSet.of(Locus.HLA_DRB1, Locus.HLA_DQB1);
 	public static final EnumSet<Locus> DRB_DQB_LOCI = EnumSet.of(Locus.HLA_DRB1, Locus.HLA_DRB345, Locus.HLA_DQB1);
 	public static final EnumSet<Locus> DRB_DQ_LOCI = EnumSet.of(Locus.HLA_DRB1, Locus.HLA_DRB345, Locus.HLA_DQB1, Locus.HLA_DQA1);
+	public static final EnumSet<Locus> FIVE_LOCUS = EnumSet.of(Locus.HLA_A, Locus.HLA_B, Locus.HLA_C, Locus.HLA_DRB1, Locus.HLA_DQB1);
 	
-	private static final EnumSet<?>[] LOCI_ARRAY = new EnumSet<?>[] {A_B_C_LOCI, B_C_LOCI, DRB1_DQB1_LOCI, DRB_DQB_LOCI, DRB_DQ_LOCI};
+	private static final EnumSet<?>[] LOCI_ARRAY = new EnumSet<?>[] {A_B_C_LOCI, B_C_LOCI, DRB1_DQB1_LOCI, DRB_DQB_LOCI, DRB_DQ_LOCI, FIVE_LOCUS};
 	
 	private static final Logger LOGGER = Logger.getLogger(Locus.class.getName());
 	

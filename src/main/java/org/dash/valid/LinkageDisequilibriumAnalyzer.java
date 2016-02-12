@@ -97,9 +97,17 @@ public class LinkageDisequilibriumAnalyzer {
 			
 			linkedGLString = new LinkageDisequilibriumGenotypeList(key, glString);
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
+			
 			// TODO:  Actually implement by skipping the record
+			boolean homozygousOnly = "true".equals(System.getProperty("org.dash.homozygous")) ? true : false;
+			
 			if (!linkedGLString.checkAmbiguitiesThresholds()) {
 				LOGGER.info("GL String contains an unusual number of ambiguities, proteins and/or uncommon alleles");
+			}
+			
+			if (homozygousOnly && !linkedGLString.hasHomozygous()) {
+				LOGGER.info("Only checking for homozygous.  GL String contains no homozygous typings.  Bypassing record.");
+				continue;
 			}
 			
 			findingsList.add(detectLinkages(linkedGLString));

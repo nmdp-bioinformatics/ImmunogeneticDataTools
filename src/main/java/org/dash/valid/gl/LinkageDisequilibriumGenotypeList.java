@@ -111,6 +111,17 @@ public class LinkageDisequilibriumGenotypeList {
 		locus = normalizeLocus(locus);
 		return GLStringUtilities.checkHomozygous(getAlleles(locus));
 	}
+	
+	public boolean hasHomozygous() {
+		Set<Locus> loci = allelesMap.keySet();
+		for (Locus locus : loci) {
+			if (checkHomozygous(locus)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
 	private List<?>[] getAlleles(Locus... loci) {
 		List<?>[] allelesByLocus = new List[loci.length];

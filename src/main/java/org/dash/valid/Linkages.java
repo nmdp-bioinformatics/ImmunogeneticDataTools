@@ -12,7 +12,8 @@ public enum Linkages {
 	B_C ("bc", Locus.B_C_LOCI), 
 	DRB_DQB ("drb_dqb", Locus.DRB_DQB_LOCI), 
 	DRB_DQ ("drb_dq", Locus.DRB_DQ_LOCI),
-	DRB1_DQB1 ("drb1_dqb1", Locus.DRB1_DQB1_LOCI);
+	DRB1_DQB1 ("drb1_dqb1", Locus.DRB1_DQB1_LOCI),
+	FIVE_LOCUS ("five_loc", Locus.FIVE_LOCUS);
 	
 	private String shortName;
 	private EnumSet<Locus> loci;
@@ -36,10 +37,10 @@ public enum Linkages {
 	
 	private static EnumSet<Linkages> getDefault() {
 		if (Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).equals(Frequencies.NMDP)) {
-			return EnumSet.of(Linkages.B_C, Linkages.DRB_DQB);
+			return EnumSet.of(Linkages.FIVE_LOCUS);
 		}
 		else if (Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).equals(Frequencies.NMDP_2007)) {
-			return EnumSet.of(Linkages.B_C, Linkages.DRB1_DQB1);
+			return EnumSet.of(Linkages.FIVE_LOCUS);
 		}
 		else {
 			return EnumSet.of(Linkages.B_C, Linkages.DRB_DQ);
