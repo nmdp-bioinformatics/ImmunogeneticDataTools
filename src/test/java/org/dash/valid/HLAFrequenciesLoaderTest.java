@@ -18,13 +18,13 @@ public class HLAFrequenciesLoaderTest extends TestCase {
 		assertTrue(freqLoader.getDisequilibriumElements(Locus.FIVE_LOCUS) != null && freqLoader.getDisequilibriumElements(Locus.FIVE_LOCUS).size() > 0);
 	}
 
-	@Test
-	public void testLoadBaseLinkageReferenceData() throws IOException {
-		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.WIKIVERSITY.getShortName());
-		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
-		assertNotNull(freqLoader);
-		freqLoader.reloadFrequencies();
-		assertTrue(freqLoader.getDisequilibriumElements(Locus.B_C_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.B_C_LOCI).size() > 0);
-		assertTrue(freqLoader.getDisequilibriumElements(Locus.DRB_DQ_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.DRB_DQ_LOCI).size() > 0);
-	}
+//	@Test
+//	public void testLoadBaseLinkageReferenceData() throws IOException {
+//		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.WIKIVERSITY.getShortName());
+//		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
+//		assertNotNull(freqLoader);
+//		freqLoader.reloadFrequencies();
+//		assertTrue(freqLoader.getDisequilibriumElements(Locus.B_C_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.B_C_LOCI).size() > 0);
+//		assertTrue(freqLoader.getDisequilibriumElements(Locus.DRB_DQ_LOCI) != null && freqLoader.getDisequilibriumElements(Locus.DRB_DQ_LOCI).size() > 0);
+//	}
 }
