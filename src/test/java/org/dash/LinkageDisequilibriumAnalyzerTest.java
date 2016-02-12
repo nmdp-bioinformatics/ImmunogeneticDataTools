@@ -8,8 +8,8 @@ import junit.framework.TestCase;
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.report.DetectedLinkageFindings;
-import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumAnalyzerTest extends TestCase {	
 	@Test

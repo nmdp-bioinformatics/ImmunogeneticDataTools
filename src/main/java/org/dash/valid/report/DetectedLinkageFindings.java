@@ -182,8 +182,12 @@ public class DetectedLinkageFindings {
 			}
 		}
 		else {
-			// TODO:  Investigate whether this should change to addAll
 			this.linkedPairs = linkedPairs;
+		}
+		
+		Set<EnumSet<Locus>> lociSet = this.linkedPairsMap.keySet();
+		for (EnumSet<Locus> loci : lociSet) {
+			getFirstPair(loci);
 		}
 	}
 	/**
