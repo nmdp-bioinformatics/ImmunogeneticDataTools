@@ -1,6 +1,6 @@
 Immunogenetic Data Tools
 =======================
-[![Build Status](https://api.travis-ci.org/mpresteg/ImmunogeneticDataTools.svg?branch=master)](https://travis-ci.org/mpresteg/ImmunogeneticDataTools)
+[![Build Status](https://api.travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools.svg?branch=master)](https://travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools)
 
 ##Use Cases and Implementations
 
