@@ -49,6 +49,8 @@ public class HLAFrequenciesLoader {
 	private static final String NMDP_2007_DRB1DQB1_FREQUENCIES = "frequencies/nmdp-2007/DRB1DQB1.xls";
 	private static final String NMDP_2007_FIVE_LOCUS_FREQUENCIES = "frequencies/nmdp-2007/ACBDRB1DQB1.xls";
 	
+	private static final String NMDP_STD_FIVE_LOCUS_FREQUENCIES = "frequencies/nmdp-std/2015_ALL.csv";
+	
 	private static final Locus[] BASE_BC_LOCI_POS = new Locus[] {Locus.HLA_B, Locus.HLA_C};
 	private static final Locus[] BASE_DRDQ_LOCI_POS = new Locus[] {Locus.HLA_DRB1, Locus.HLA_DRB345, Locus.HLA_DQA1, Locus.HLA_DQB1};
 	private static final Locus[] NMDP_ABC_LOCI_POS = new Locus[] {Locus.HLA_A, Locus.HLA_C, Locus.HLA_B};
@@ -76,30 +78,30 @@ public class HLAFrequenciesLoader {
 		return instance;
 	}
 	
-	public boolean individualFrequenciesLoaded() {
+	public boolean hasIndividualFrequency(Locus locus) {
 		HashMap<Locus, List<String>> individualFrequencies = getIndividualLocusFrequencies();
 		
-		if (individualFrequencies != null && individualFrequencies.size() > 0) {
+		if (individualFrequencies != null && individualFrequencies.size() > 0 && individualFrequencies.get(locus) != null) {
 			return true;
 		}
 		
 		return false;
 	}
 	
-	public boolean hasFrequency(Locus locus, String allele) {
+	public String hasFrequency(Locus locus, String allele) {
 		HashMap<Locus, List<String>> individualFrequencies = getIndividualLocusFrequencies();
 		if (individualFrequencies == null || individualFrequencies.get(locus) == null) {
-			return false;
+			return null;
 		}
 		
 		for (String alleleWithFrequency : individualFrequencies.get(locus)) {
 			if (GLStringUtilities.fieldLevelComparison(allele, alleleWithFrequency) != null || 
 					GLStringUtilities.checkAntigenRecognitionSite(allele, alleleWithFrequency) != null) {
-				return true;
+				return alleleWithFrequency;
 			}
 		}
 		
-		return false;
+		return null;
 	}
 	
 	public void reloadFrequencies() throws IOException {
@@ -147,6 +149,17 @@ public class HLAFrequenciesLoader {
 				}
 				loadIndividualLocusFrequencies(freq);
 				break;
+			case NMDP_STD:
+				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
+					switch (linkage) {
+					case FIVE_LOCUS:
+						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadStandardReferenceData(NMDP_STD_FIVE_LOCUS_FREQUENCIES));
+					default:
+						break;
+					}
+				}
+				loadIndividualLocusFrequencies(freq);
+				break;
 			case WIKIVERSITY:
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 					switch (linkage) {
@@ -181,6 +194,55 @@ public class HLAFrequenciesLoader {
 	
 	public HashMap<Locus, List<String>> getIndividualLocusFrequencies() {
 		return individualLocusFrequencies;
+	}
+	
+	private List<DisequilibriumElement> loadStandardReferenceData(String filename) throws IOException, InvalidFormatException {
+		InputStream is = HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename);
+		InputStreamReader isr = new InputStreamReader(is);
+		BufferedReader reader = new BufferedReader(isr);
+
+		String row;
+		String[] columns;
+		HashMap<String, List<FrequencyByRace>> frequencyMap = new HashMap<String, List<FrequencyByRace>>();
+		
+		while ((row = reader.readLine()) != null) {			
+			columns = row.split(GLStringConstants.COMMA);
+						
+			String race = columns[0];
+			String haplotype = columns[1];
+			Double frequency = new Double(columns[2]);
+												
+			List<FrequencyByRace> freqList = frequencyMap.get(haplotype);
+			
+			if (freqList == null) {
+				freqList = new ArrayList<FrequencyByRace>();
+			}
+			
+			FrequencyByRace freqByRace = new FrequencyByRace(frequency, null, race);
+			freqList.add(freqByRace);
+			
+			frequencyMap.put(haplotype, freqList);
+		}
+		
+		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
+		DisequilibriumElementByRace disElement;
+		
+		for (String haplotype : frequencyMap.keySet()) {
+			String[] locusHaplotypes = haplotype.split(GLStringConstants.GENE_PHASE_DELIMITER);
+			
+			HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
+			for (String locusHaplotype : locusHaplotypes) {
+				String[] parts = locusHaplotype.split(GLStringUtilities.ESCAPED_ASTERISK);
+				hlaElementMap.put(Locus.lookup(parts[0]), locusHaplotype);
+			}
+			disElement = new DisequilibriumElementByRace(hlaElementMap, frequencyMap.get(haplotype));
+			
+			disequilibriumElements.add(disElement);
+		}
+		
+		reader.close();
+		
+		return disequilibriumElements;
 	}
 	
 	private List<DisequilibriumElement> loadNMDPLinkageReferenceData(String filename, Locus[] locusPositions) throws IOException, InvalidFormatException {  

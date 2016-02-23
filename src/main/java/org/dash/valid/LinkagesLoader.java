@@ -40,4 +40,14 @@ public class LinkagesLoader {
 	public Set<Linkages> getLinkages() {
 		return linkages;
 	}
+	
+	public Set<Locus> getLoci() {
+		Set<Linkages> linkages = getLinkages();
+		Set<Locus> loci = new HashSet<Locus>();
+		for (Linkages linkage : linkages) {
+			loci.addAll(linkage.getLoci());
+		}
+		
+		return loci;
+	}
 }

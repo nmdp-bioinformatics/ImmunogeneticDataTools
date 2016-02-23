@@ -44,13 +44,13 @@ public class GLStringTest extends TestCase {
 	
 	@Test
 	public void testDRB345AppearsHomozygous() throws IOException {
-		assertFalse(glString.checkHomozygous(Locus.HLA_DRB4));
+		assertFalse(glString.hasHomozygous(Locus.HLA_DRB4));
 		
 		LinkageDisequilibriumGenotypeList simpleDRB4String = new LinkageDisequilibriumGenotypeList("HOMOZYGOUS-DRB4", SIMPLE_DRB4_STRING);
-		assertTrue(simpleDRB4String.checkHomozygous(Locus.HLA_DRB4));
+		assertTrue(simpleDRB4String.hasHomozygous(Locus.HLA_DRB4));
 		
 		LinkageDisequilibriumGenotypeList homozygousCString = new LinkageDisequilibriumGenotypeList("HOMOZYGOUS-C", HOMOZYGOUS_C_STRING);
-		assertTrue(homozygousCString.checkHomozygous(Locus.HLA_C));
+		assertTrue(homozygousCString.hasHomozygous(Locus.HLA_C));
 	}
 	
 //	@Test

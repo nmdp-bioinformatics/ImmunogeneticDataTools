@@ -176,6 +176,12 @@ public class GLStringUtilities {
 				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode);
 				return hitDegree;
 			}
+			else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
+					&& arsMap.get(arsCode).contains(matchedValue)) {
+				// TODO:  Revisit for proper handling / stripping of little g
+				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode.substring(0, arsCode.length() - 1));
+				return hitDegree;
+			}
 		}
 
 		return null;
@@ -201,6 +207,7 @@ public class GLStringUtilities {
 		return matchedValue;
 	}
 
+	// TODO:  Fix homozygous checker - not dealing with genotypic ambiguity appropriately (S2 - DRB4 example)
 	public static boolean checkHomozygous(List<List<String>> alleles) {
 		if (alleles == null) {
 			return false;
@@ -210,15 +217,21 @@ public class GLStringUtilities {
 			return true;
 		}
 
+		int i=0;
+		int j=0;
+		
 		for (List<String> haplotypeAlleles : alleles) {
+			j=0;
 			for (List<String> haplotypeAllelesLoop : alleles) {
-				if (!haplotypeAlleles.containsAll(haplotypeAllelesLoop)) {
-					return false;
+				if (i != j && haplotypeAlleles.containsAll(haplotypeAllelesLoop)) {
+					return true;
 				}
+				j++;
 			}
+			i++;
 		}
 
-		return true;
+		return false;
 	}
 
 	public static String fullyQualifyGLString(String shorthand) {
