@@ -14,7 +14,7 @@ import org.nmdp.gl.MultilocusUnphasedGenotype;
 public class LinkageDisequilibriumAnalyzerTest extends TestCase {	
 	@Test
 	public void testLinkageReportingExamples() {
-		LinkageDisequilibriumAnalyzer.main(new String[] {"contrivedExamples.txt", "fullyQualifiedExample.txt", "strictExample.txt", "shorthandExamples.txt"});
+		LinkageDisequilibriumAnalyzer.main(new String[] {"contrivedExamples.txt", "fullyQualifiedExample.txt", "strictExample.txt"});//, "shorthandExamples.txt"});
 	}
 	
 	@Test
