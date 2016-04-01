@@ -279,7 +279,7 @@
      <dependency>
       <groupId>org.nmdp.ngs</groupId>
       <artifactId>ngs-hml</artifactId>
-      <version>1.9-SNAPSHOT</version>
+      <version>1.8.3</version>
     </dependency>
   </dependencies>
 
