@@ -1,6 +1,5 @@
 /*
 
-    ngs-tools  Next generation sequencing (NGS/HTS) command line tools.
     Copyright (c) 2014-2015 National Marrow Donor Program (NMDP)
 
     This library is free software; you can redistribute it and/or modify it
@@ -149,7 +148,7 @@ public final class ExtractMugs implements Callable<Integer> {
 	                    }
 	                }
 	                String glstring = Joiner.on("^").join(genotypes);
-	                System.out.println(sampleId + "\t" + glstring);
+	                writer.println(sampleId + "\t" + glstring);
                 }
             }
             return 0;
