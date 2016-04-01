@@ -37,6 +37,7 @@ import java.util.List;
 
 import java.util.concurrent.Callable;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -147,7 +148,7 @@ public final class ExtractMugs implements Callable<Integer> {
 	                        }
 	                    }
 	                }
-	                String glstring = String.join("^", genotypes);
+	                String glstring = Joiner.on("^").join(genotypes);
 	                System.out.println(sampleId + "\t" + glstring);
                 }
             }
