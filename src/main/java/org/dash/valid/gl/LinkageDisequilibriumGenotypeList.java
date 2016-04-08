@@ -55,6 +55,10 @@ public class LinkageDisequilibriumGenotypeList {
 			PROTEIN_THRESHOLD = new Integer(proteinThreshold);
 		}
 	}
+	
+	public Set<Locus> getLoci() {
+		return allelesMap.keySet();
+	}
 
 	public LinkageDisequilibriumGenotypeList(String id, String glString) {
 		this.glString = glString;
@@ -87,14 +91,6 @@ public class LinkageDisequilibriumGenotypeList {
 		}
 	}
 	
-	private void removeAlleles(List<String> allelesToRemove) {
-		for (Locus locus : allelesMap.keySet()) {
-			for (List<String> alleles : getAlleles(locus)) {
-				alleles.removeAll(allelesToRemove);
-			}
-		}
-	}
-	
 	public static Locus normalizeLocus(Locus locus) {
 		switch (locus) {
 		case HLA_DRB3:
@@ -107,15 +103,14 @@ public class LinkageDisequilibriumGenotypeList {
 		}
 	}
 
-	public boolean checkHomozygous(Locus locus) {
+	public boolean hasHomozygous(Locus locus) {
 		locus = normalizeLocus(locus);
 		return GLStringUtilities.checkHomozygous(getAlleles(locus));
 	}
 	
-	public boolean hasHomozygous() {
-		Set<Locus> loci = allelesMap.keySet();
+	public boolean hasHomozygous(Set<Locus> loci) {
 		for (Locus locus : loci) {
-			if (checkHomozygous(locus)) {
+			if (hasHomozygous(locus)) {
 				return true;
 			}
 		}
@@ -155,7 +150,6 @@ public class LinkageDisequilibriumGenotypeList {
 
 	// TODO: Write unit tests
 	public boolean checkAmbiguitiesThresholds() throws IOException {
-		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		for (Linkages linkages : LinkagesLoader.getInstance().getLinkages()) {
 			for (Locus locus : linkages.getLoci()) {
 				if (getAlleleCount(locus) > ALLELE_AMBIGUITY_THRESHOLD) {
@@ -170,26 +164,6 @@ public class LinkageDisequilibriumGenotypeList {
 							+ PROTEIN_THRESHOLD + " at locus: "
 							+ locus.getFullName());
 					return false;
-				}
-	
-				// TODO: Check against single locus frequencies - move elsewhere (perhaps when alleles are originally parse)
-				
-				List<String> allelesToRemove = new ArrayList<String>();
-				
-				if (freqLoader.individualFrequenciesLoaded()) {
-					List<List<String>> allLocusAlleles = getAlleles(locus);
-					allelesToRemove = new ArrayList<String>();
-
-					for (List<String> locusAlleles : allLocusAlleles) {						
-						for (String allele : locusAlleles) {
-							if (!freqLoader.hasFrequency(locus, allele)) {
-								LOGGER.finest("Removing allele with no frequency: " + allele);
-								allelesToRemove.add(allele);
-							}
-						}
-					}
-					
-					removeAlleles(allelesToRemove);
 				}
 			}
 		}
@@ -272,14 +246,39 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 
 	private void setAlleles(Locus locus, List<String> alleleAmbiguities) {
-		if (alleleAmbiguities.size() == 0) {
-			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList.  No alleles found");
-			return;
+		try {
+			HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
+			List<String> replacementAlleles = new ArrayList<String>();
+			
+			if (freqLoader.hasIndividualFrequency(locus)) {
+				String alleleWithFrequency;
+				for (String allele : alleleAmbiguities) {
+					alleleWithFrequency = freqLoader.hasFrequency(locus, allele);
+					if (alleleWithFrequency == null) {
+						LOGGER.finest("Removing allele with no frequency: " + allele);
+					}
+					else {
+						if (!replacementAlleles.contains(alleleWithFrequency)) {
+							LOGGER.finest("Swapping in allele with frequency: " + alleleWithFrequency);
+							replacementAlleles.add(alleleWithFrequency);
+						}
+					}	
+				}	
+				
+				if (replacementAlleles.size() == 0) {
+					LOGGER.finest("Couldn't find frequencies for entire haploid.  Leaving originals in place.");
+				}
+				else {
+					alleleAmbiguities = replacementAlleles;
+				}
+			}			
 		}
-
-		String allele = alleleAmbiguities.iterator().next();
-		if (allele == null) {
-			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList, allele == null");
+		catch (IOException e) {
+			LOGGER.warning("Unable to check against single locus frequencies");
+		}
+		
+		if (alleleAmbiguities.size() == 0) {
+			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList.  No alleles found or no alleles w/ haplotype frequencies found.");
 			return;
 		}
 		

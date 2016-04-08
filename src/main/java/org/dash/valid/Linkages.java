@@ -42,6 +42,9 @@ public enum Linkages {
 		else if (Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).equals(Frequencies.NMDP_2007)) {
 			return EnumSet.of(Linkages.FIVE_LOCUS);
 		}
+		else if (Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).equals(Frequencies.NMDP_STD)) {
+			return EnumSet.of(Linkages.FIVE_LOCUS);
+		}
 		else {
 			return EnumSet.of(Linkages.B_C, Linkages.DRB_DQ);
 		}

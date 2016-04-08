@@ -46,9 +46,12 @@ public class GLStringUtilitiesTest extends TestCase {
 	@Test
 	public void testHasFrequency() throws IOException {
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
-		if (freqLoader.individualFrequenciesLoaded()) {
-			assertTrue(freqLoader.hasFrequency(Locus.HLA_DQB1, HLA_DQB10301g));
-			assertFalse(freqLoader.hasFrequency(Locus.HLA_A, BOGUS_ALLELE));
+		if (freqLoader.hasIndividualFrequency(Locus.HLA_DQB1)) {
+			assertNotNull(freqLoader.hasFrequency(Locus.HLA_DQB1, HLA_DQB10301g));
+		}
+		
+		if (freqLoader.hasIndividualFrequency(Locus.HLA_A)) {
+			assertNull(freqLoader.hasFrequency(Locus.HLA_A, BOGUS_ALLELE));
 		}
 	}
 	

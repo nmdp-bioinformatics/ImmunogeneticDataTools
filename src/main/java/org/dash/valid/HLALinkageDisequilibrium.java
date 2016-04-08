@@ -91,7 +91,7 @@ public class HLALinkageDisequilibrium {
 					for (Haplotype haplotype2 : linkedHaplotypes) {
 						int idx = 0;
 						for (Locus locus : linkage.getLoci()) {
-							if ((!glString.checkHomozygous(locus) && haplotype1.getHaplotypeInstance(locus) == haplotype2.getHaplotypeInstance(locus))) {
+							if ((!glString.hasHomozygous(locus) && haplotype1.getHaplotypeInstance(locus) == haplotype2.getHaplotypeInstance(locus))) {
 								// move on to next haplotype2
 								break;
 							}
@@ -152,7 +152,7 @@ public class HLALinkageDisequilibrium {
 			for (String allele : haplotype.getAlleles(locus)) {
 				hitDegree = GLStringUtilities.fieldLevelComparison(allele, disElement.getHlaElement(locus));
 				
-				if (Locus.HLA_DRB345.equals(locus) && glString.checkHomozygous(Locus.HLA_DRB345) && (disElement.getHlaElement(Locus.HLA_DRB345).equals(DASH) || disElement.getHlaElement(Locus.HLA_DRB345).equals(GLStringConstants.NNNN))) {
+				if (Locus.HLA_DRB345.equals(locus) && glString.hasHomozygous(Locus.HLA_DRB345) && (disElement.getHlaElement(Locus.HLA_DRB345).equals(DASH) || disElement.getHlaElement(Locus.HLA_DRB345).equals(GLStringConstants.NNNN))) {
 					hitDegree = new LinkageHitDegree(GLStringUtilities.P_GROUP_LEVEL, GLStringUtilities.P_GROUP_LEVEL, GLStringConstants.NNNN, GLStringConstants.NNNN);
 					foundElement = buildFoundElement(foundElement, disElement, Locus.HLA_DRB345, hitDegree);
 					noHits = false;
