@@ -1,0 +1,9 @@
+/target/
+/detectedFindings.csv
+/detectedFindings.xlsx
+/haplotypePairs.log
+/haplotypePairWarnings.log
+/immuno.log
+/linkages.log
+/linkageWarnings.log
+/nonCwdWarnings.log
