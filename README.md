@@ -35,7 +35,7 @@ The results of the software should be used for supporting the evidence, but not 
 * Clone the repository (git clone https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools.git)
 * Install Java (written for 1.8)
 * Install Maven (configured for 3.2.5)
-* Run ‘mvn compile package test’ from the root of the ImmunogeneticDataTools cloned (local) repository
+* Run ‘mvn clean package’ from the root of the ImmunogeneticDataTools cloned (local) repository
 
 *Running a Test Data Set:*
 
@@ -50,7 +50,7 @@ The results of the software should be used for supporting the evidence, but not 
 + **Note:**  The 2011 NMDP Frequencies (if specifying 'nmdp') are associated with a license agreement, specifying the allowance of use for research, but disallowing re-distribution.  If you wish to use the 2011 NMDP Frequencies, you'll need to install them in your local repository by following the frequency install instructions at the bottom of this file.
 
 + **Name:**  org.dash.hladb
-+ **Value(s):**  3.20.0, 3.19.0, 3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0, 3.9.0, 3.8.0, 3.7.0, 3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.0, 3.1.0, 3.0.0
++ **Value(s):**  3.25.0, 3.24.0, 3.23.0, 3.22.0, 3.21.0, 3.20.0, 3.19.0, 3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0, 3.9.0, 3.8.0, 3.7.0, 3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.0, 3.1.0, 3.0.0
 + **Description:**  Specifies the HLA DB version against which to validate common well documented alleles
 
 + **Name:**  org.dash.ars
