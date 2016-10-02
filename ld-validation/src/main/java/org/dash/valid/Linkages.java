@@ -29,12 +29,13 @@ import java.util.logging.Logger;
 import org.dash.valid.freq.Frequencies;
 
 public enum Linkages {
-	A_B_C ("abc", Locus.A_B_C_LOCI), 
-	B_C ("bc", Locus.B_C_LOCI), 
+	A_B_C ("acb", Locus.A_C_B_LOCI), 
+	B_C ("cb", Locus.C_B_LOCI), 
 	DRB_DQB ("drb_dqb", Locus.DRB_DQB_LOCI), 
 	DRB_DQ ("drb_dq", Locus.DRB_DQ_LOCI),
 	DRB1_DQB1 ("drb1_dqb1", Locus.DRB1_DQB1_LOCI),
-	FIVE_LOCUS ("five_loc", Locus.FIVE_LOCUS);
+	FIVE_LOCUS ("five_loc", Locus.FIVE_LOCUS),
+	SIX_LOCUS ("six_loc", Locus.SIX_LOCUS);
 	
 	private String shortName;
 	private EnumSet<Locus> loci;

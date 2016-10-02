@@ -34,11 +34,12 @@ The results of the software should be used for supporting the evidence, but not 
 * Install Git
 * Clone the repository (git clone https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools.git)
 * Install Java (written for 1.8)
-* Install Maven (configured for 3.2.5)
+* Install Maven (configured for 3.3.3)
 * Run ‘mvn clean package’ from the root of the ImmunogeneticDataTools cloned (local) repository
 
 *Running a Test Data Set:*
 
+* Directory:  'cd ld-validation' from the root of the ImmunogeneticDataTools cloned (local) repository
 * Command:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="&lt;filename> &lt;filename>"
 * Example:  mvn exec:java -Dexec.mainClass="org.dash.valid.LinkageDisequilibriumAnalyzer" -Dexec.args="contrivedExamples.txt strictExample.txt shorthandExamples.txt fullyQualifiedExample.txt" -Dorg.dash.frequencies="nmdp" -Dorg.dash.hladb="3.18.0" -Djava.util.logging.config.file="logging.properties"
 
@@ -58,7 +59,7 @@ The results of the software should be used for supporting the evidence, but not 
 + **Description:**  If specified, applies the antigen recognition site mappings from the HLA DB property specified.  Otherwise, uses the antigen recognition site mappings associated with the NMDP 2011 frequencies
 
 + **Name:**  org.dash.linkages
-+ **Value(s):**  abc, bc, drb_dq, drb_dqb, drb1_dqb1
++ **Value(s):**  acb, cb, drb_dq, drb_dqb, drb1_dqb1, fiv_loc, six_loc
 + **Description:**  Specifies the loci across which to detect linkages using provided frequencies
 
 + **Name:**  java.util.logging.config.file
@@ -67,7 +68,7 @@ The results of the software should be used for supporting the evidence, but not 
 *Logs:*
 
 * likely haplotype pairs, sorted by relative frequencies may be found in haplotypePairs.log
-* gl strings in which a likely B/C or DR/DQ block was not found, may be found in haplotypePairWarnings.log
+* gl strings in which a likely C/B or DR/DQ block was not found, may be found in haplotypePairWarnings.log
 * haplotype linkage output may be found in linkages.log
 * haplotype linkage output for gl strings with missing pairs may be found in linkageWarnings.log
 * errors and basic logging in immuno.log
@@ -79,6 +80,6 @@ The results of the software should be used for supporting the evidence, but not 
 + Login using OpenId
 + Carefully read and accept the license agreement
 + Grab the following files and install at src/main/resources/frequencies/nmdp
-+ *A.xlsx, A~C~B.xlsx, B.xlsx, C.xlsx, C~B.xlsx, DQB1.xlsx, DRB1.xlsx, DRB3-4-5.xlsx, DRB3-4-5~DRB1~DQB1.xlsx*
++ *A.xlsx, A~C~B.xlsx, C.xlsx, B.xlsx, C~B.xlsx, DRB3-4-5.xlsx, DRB1.xlsx, DQB1.xlsx, DRB3-4-5~DRB1~DQB1.xlsx*
 
  

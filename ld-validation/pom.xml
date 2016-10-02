@@ -70,6 +70,8 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.4.0</version>
         <configuration>
+          <mainClass>org.dash.valid.LinkageDisequilibriumAnalyzer</mainClass>
+          <cleanupDaemonThreads>false</cleanupDaemonThreads>
           <killAfter>-1</killAfter>
         </configuration>
       </plugin>

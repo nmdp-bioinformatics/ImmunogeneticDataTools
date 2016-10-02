@@ -27,14 +27,14 @@ import java.util.logging.Logger;
 
 public enum Locus {
 	HLA_A ("HLA-A", "A", "A"),
-	HLA_B ("HLA-B", "B", "B"),
 	HLA_C ("HLA-C", "C", "C"),
-	HLA_DRB1 ("HLA-DRB1", "DRB1", "DRB1"),
+	HLA_B ("HLA-B", "B", "B"),
 	HLA_DRB3 ("HLA-DRB3", "DRB3", null),
 	HLA_DRB4 ("HLA-DRB4", "DRB4", null),
 	HLA_DRB5 ("HLA-DRB5", "DRB5", null),
 	HLA_DRB345 ("HLA-DRB345", "DRB345", "DRB3-4-5"),
 	HLA_DRBX ("HLA-DRBX", "DRBX", null),
+	HLA_DRB1 ("HLA-DRB1", "DRB1", "DRB1"),
 	HLA_DQB1 ("HLA-DQB1", "DQB1", "DQB1"),
 	HLA_DQA1 ("HLA-DQA1", "DQA1", null),
 	HLA_DPB1 ("HLA-DPB1", "DPB1", null),
@@ -45,14 +45,15 @@ public enum Locus {
 	String shortName;
 	String freqName;
 	
-	public static final EnumSet<Locus> A_B_C_LOCI = EnumSet.of(Locus.HLA_A, Locus.HLA_B, Locus.HLA_C);
-	public static final EnumSet<Locus> B_C_LOCI = EnumSet.of(Locus.HLA_B, Locus.HLA_C);	
+	public static final EnumSet<Locus> A_C_B_LOCI = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B);
+	public static final EnumSet<Locus> C_B_LOCI = EnumSet.of(Locus.HLA_C, Locus.HLA_B);	
 	public static final EnumSet<Locus> DRB1_DQB1_LOCI = EnumSet.of(Locus.HLA_DRB1, Locus.HLA_DQB1);
-	public static final EnumSet<Locus> DRB_DQB_LOCI = EnumSet.of(Locus.HLA_DRB1, Locus.HLA_DRB345, Locus.HLA_DQB1);
-	public static final EnumSet<Locus> DRB_DQ_LOCI = EnumSet.of(Locus.HLA_DRB1, Locus.HLA_DRB345, Locus.HLA_DQB1, Locus.HLA_DQA1);
-	public static final EnumSet<Locus> FIVE_LOCUS = EnumSet.of(Locus.HLA_A, Locus.HLA_B, Locus.HLA_C, Locus.HLA_DRB1, Locus.HLA_DQB1);
+	public static final EnumSet<Locus> DRB_DQB_LOCI = EnumSet.of(Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1);
+	public static final EnumSet<Locus> DRB_DQ_LOCI = EnumSet.of(Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1, Locus.HLA_DQA1);
+	public static final EnumSet<Locus> FIVE_LOCUS = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB1, Locus.HLA_DQB1);
+	public static final EnumSet<Locus> SIX_LOCUS = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1);
 	
-	private static final EnumSet<?>[] LOCI_ARRAY = new EnumSet<?>[] {A_B_C_LOCI, B_C_LOCI, DRB1_DQB1_LOCI, DRB_DQB_LOCI, DRB_DQ_LOCI, FIVE_LOCUS};
+	private static final EnumSet<?>[] LOCI_ARRAY = new EnumSet<?>[] {A_C_B_LOCI, C_B_LOCI, DRB1_DQB1_LOCI, DRB_DQB_LOCI, DRB_DQ_LOCI, FIVE_LOCUS, SIX_LOCUS};
 	
 	private static final Logger LOGGER = Logger.getLogger(Locus.class.getName());
 	
