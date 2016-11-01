@@ -31,11 +31,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.gl.GLStringConstants;
 
 public class CommonWellDocumentedLoader {
+    private static final Logger LOGGER = Logger.getLogger(CommonWellDocumentedLoader.class.getName());
+
 	private static final String NOT_APPLICABLE = "NA";
 	private static CommonWellDocumentedLoader instance = null;
 	
@@ -110,7 +113,13 @@ public class CommonWellDocumentedLoader {
 			if (idx < 1) {
 				headers = Arrays.asList(columns);
 
-				hladbIdx = headers.indexOf(hladb.getCwdName());			}
+				hladbIdx = headers.indexOf(hladb.getCwdName());	
+				
+				if (hladbIdx == -1) {
+					hladbIdx = 1;
+					LOGGER.warning("CWD reference file is not updated with the specified HLADB.  Defaulting to the latest HLADB specified in the reference file: " + columns[hladbIdx]);
+				}
+			}
 			else {
 				cwdSet.add(GLStringConstants.HLA_DASH + columns[hladbIdx]);
 			}

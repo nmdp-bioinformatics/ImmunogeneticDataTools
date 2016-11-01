@@ -91,11 +91,11 @@ public class LinkageDisequilibriumGenotypeList {
 			setPossibleHaplotypes(linkage.getLoci());
 		}
 	}
-
-	public LinkageDisequilibriumGenotypeList(MultilocusUnphasedGenotype mug) {
+	
+	public LinkageDisequilibriumGenotypeList(String id, MultilocusUnphasedGenotype mug) {
 		this.mug = mug;
 		this.glString = mug.getGlstring();
-		this.id = mug.getId();
+		this.id = id;
 		decomposeMug();
 		postParseInit();
 

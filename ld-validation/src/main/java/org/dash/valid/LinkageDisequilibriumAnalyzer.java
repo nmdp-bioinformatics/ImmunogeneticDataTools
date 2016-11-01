@@ -116,7 +116,10 @@ public class LinkageDisequilibriumAnalyzer {
 				glString = GLStringUtilities.fullyQualifyGLString(glString);
 			}
 			
-			linkedGLString = new LinkageDisequilibriumGenotypeList(key, glString);
+			//linkedGLString = new LinkageDisequilibriumGenotypeList(key, glString);
+			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
+			linkedGLString = new LinkageDisequilibriumGenotypeList(key, mug);
+			
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
 			idx++;
 			
@@ -139,7 +142,7 @@ public class LinkageDisequilibriumAnalyzer {
 	}
 	
 	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) throws IOException {
-		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug);
+		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug.getId(), mug);
 		DetectedLinkageFindings findings = detectLinkages(linkedGLString);
 
 		return findings;

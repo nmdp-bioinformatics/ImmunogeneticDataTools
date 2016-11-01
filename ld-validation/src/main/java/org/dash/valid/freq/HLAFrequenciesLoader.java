@@ -64,6 +64,7 @@ public class HLAFrequenciesLoader {
 	private static final String NMDP_BC_FREQUENCIES = "frequencies/nmdp/C~B.xlsx";
 	private static final String NMDP_DRDQ_FREQUENCIES = "frequencies/nmdp/DRB3-4-5~DRB1~DQB1.xlsx";
 	private static final String NMDP_FIVE_LOCUS_FREQUENCIES = "frequencies/nmdp/A~C~B~DRB1~DQB1.xlsx";
+	private static final String NMDP_SIX_LOCUS_FREQUENCIES = "frequencies/nmdp/A~C~B~DRB3-4-5~DRB1~DQB1.xlsx";
 	
 	private static final String NMDP_2007_ABC_FREQUENCIES = "frequencies/nmdp-2007/ACB.xls";
 	private static final String NMDP_2007_BC_FREQUENCIES = "frequencies/nmdp-2007/CB.xls";
@@ -79,6 +80,7 @@ public class HLAFrequenciesLoader {
 	private static final Locus[] NMDP_DRB1DQB1_LOCI_POS = new Locus[] {Locus.HLA_DRB1, Locus.HLA_DQB1};
 	private static final Locus[] NMDP_DRDQB1_LOCI_POS = new Locus[] {Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1};
 	private static final Locus[] NMDP_FIVE_LOCUS_POS = new Locus[] {Locus.HLA_A, Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB1, Locus.HLA_DQB1};
+	private static final Locus[] NMDP_SIX_LOCUS_POS = new Locus[] {Locus.HLA_A, Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1};
 	
 	private static HLAFrequenciesLoader instance = null;
 		
@@ -140,9 +142,9 @@ public class HLAFrequenciesLoader {
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 					switch (linkage) {
 					case A_B_C:
-						this.disequilibriumElementsMap.put(Locus.A_B_C_LOCI, loadNMDPLinkageReferenceData(NMDP_2007_ABC_FREQUENCIES, NMDP_ABC_LOCI_POS));
+						this.disequilibriumElementsMap.put(Locus.A_C_B_LOCI, loadNMDPLinkageReferenceData(NMDP_2007_ABC_FREQUENCIES, NMDP_ABC_LOCI_POS));
 					case B_C:
-						this.disequilibriumElementsMap.put(Locus.B_C_LOCI, loadNMDPLinkageReferenceData(NMDP_2007_BC_FREQUENCIES, NMDP_BC_LOCI_POS));
+						this.disequilibriumElementsMap.put(Locus.C_B_LOCI, loadNMDPLinkageReferenceData(NMDP_2007_BC_FREQUENCIES, NMDP_BC_LOCI_POS));
 					case DRB1_DQB1:
 						this.disequilibriumElementsMap.put(Locus.DRB1_DQB1_LOCI, loadNMDPLinkageReferenceData(NMDP_2007_DRB1DQB1_FREQUENCIES, NMDP_DRB1DQB1_LOCI_POS));
 					case FIVE_LOCUS:
@@ -157,13 +159,15 @@ public class HLAFrequenciesLoader {
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 					switch (linkage) {
 					case A_B_C:
-						this.disequilibriumElementsMap.put(Locus.A_B_C_LOCI, loadNMDPLinkageReferenceData(NMDP_ABC_FREQUENCIES, NMDP_ABC_LOCI_POS));
+						this.disequilibriumElementsMap.put(Locus.A_C_B_LOCI, loadNMDPLinkageReferenceData(NMDP_ABC_FREQUENCIES, NMDP_ABC_LOCI_POS));
 					case B_C:
-						this.disequilibriumElementsMap.put(Locus.B_C_LOCI, loadNMDPLinkageReferenceData(NMDP_BC_FREQUENCIES, NMDP_BC_LOCI_POS));
+						this.disequilibriumElementsMap.put(Locus.C_B_LOCI, loadNMDPLinkageReferenceData(NMDP_BC_FREQUENCIES, NMDP_BC_LOCI_POS));
 					case DRB_DQB:
 						this.disequilibriumElementsMap.put(Locus.DRB_DQB_LOCI, loadNMDPLinkageReferenceData(NMDP_DRDQ_FREQUENCIES, NMDP_DRDQB1_LOCI_POS));
 					case FIVE_LOCUS:
 						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS,  loadNMDPLinkageReferenceData(NMDP_FIVE_LOCUS_FREQUENCIES, NMDP_FIVE_LOCUS_POS));
+					case SIX_LOCUS:
+						this.disequilibriumElementsMap.put(Locus.SIX_LOCUS, loadNMDPLinkageReferenceData(NMDP_SIX_LOCUS_FREQUENCIES, NMDP_SIX_LOCUS_POS));
 					default:
 						break;
 					}
@@ -185,7 +189,7 @@ public class HLAFrequenciesLoader {
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 					switch (linkage) {
 					case B_C:
-						this.disequilibriumElementsMap.put(Locus.B_C_LOCI, loadLinkageReferenceData(WIKIVERSITY_BC_FREQUENCIES, BASE_BC_LOCI_POS));
+						this.disequilibriumElementsMap.put(Locus.C_B_LOCI, loadLinkageReferenceData(WIKIVERSITY_BC_FREQUENCIES, BASE_BC_LOCI_POS));
 					case DRB_DQ:
 						this.disequilibriumElementsMap.put(Locus.DRB_DQ_LOCI, loadLinkageReferenceData(WIKIVERSITY_DRDQ_FREQUENCIES, BASE_DRDQ_LOCI_POS));
 					default:

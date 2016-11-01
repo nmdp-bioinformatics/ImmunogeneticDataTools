@@ -24,6 +24,11 @@ package org.dash.valid.ars;
 import java.util.logging.Logger;
 
 public enum HLADatabaseVersion {
+	HLAD3250 ("3.25.0", "3250"),
+	HLAD3240 ("3.24.0", "3240"),
+	HLAD3230 ("3.23.0", "3230"),
+	HLAD3220 ("3.22.0", "3220"),
+	HLAD3210 ("3.21.0", "3210"),
 	HLAD3200 ("3.20.0", "3200"),
 	HLAD3190 ("3.19.0", "3190"),
 	HLADB3180 ("3.18.0", "3180"), 
@@ -66,7 +71,7 @@ public enum HLADatabaseVersion {
 	}
 	
 	public static HLADatabaseVersion getLatest() {
-		return HLADatabaseVersion.HLAD3200;
+		return HLADatabaseVersion.HLAD3250;
 	}
 	
 	public static HLADatabaseVersion lookup(String arsName) {
