@@ -217,16 +217,16 @@ public class HLAFrequenciesLoader {
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 					switch (linkage) {
 					case A_B_C:
-						this.disequilibriumElementsMap.put(Locus.A_C_B_LOCI, loadStandardReferenceData(NMDP_STD_ABC_FREQUENCIES));
+						this.disequilibriumElementsMap.put(Locus.A_C_B_LOCI, loadStandardReferenceData(NMDP_2007_STD_ABC_FREQUENCIES));
 						break;
 					case B_C:
-						this.disequilibriumElementsMap.put(Locus.C_B_LOCI, loadStandardReferenceData(NMDP_STD_BC_FREQUENCIES));
+						this.disequilibriumElementsMap.put(Locus.C_B_LOCI, loadStandardReferenceData(NMDP_2007_STD_BC_FREQUENCIES));
 						break;
 					case DRB_DQB:
-						this.disequilibriumElementsMap.put(Locus.DRB_DQB_LOCI, loadStandardReferenceData(NMDP_STD_DRB1DQB1_FREQUENCIES));
+						this.disequilibriumElementsMap.put(Locus.DRB_DQB_LOCI, loadStandardReferenceData(NMDP_2007_STD_DRB1DQB1_FREQUENCIES));
 						break;
 					case FIVE_LOCUS:
-						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadStandardReferenceData(NMDP_STD_FIVELOCUS_FREQUENCIES));
+						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadStandardReferenceData(NMDP_2007_STD_FIVELOCUS_FREQUENCIES));
 						break;
 					default:
 						break;
