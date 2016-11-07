@@ -30,7 +30,6 @@ import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
-import org.dash.valid.freq.Frequencies;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;

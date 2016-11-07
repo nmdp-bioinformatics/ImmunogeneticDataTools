@@ -138,8 +138,8 @@ public class HLAFrequenciesLoader {
 		}
 		
 		for (String alleleWithFrequency : individualFrequencies.get(locus)) {
-			if (GLStringUtilities.fieldLevelComparison(allele, alleleWithFrequency) != null || 
-					GLStringUtilities.checkAntigenRecognitionSite(allele, alleleWithFrequency) != null) {
+			if (GLStringUtilities.fieldLevelComparison(allele, alleleWithFrequency) || 
+					GLStringUtilities.checkAntigenRecognitionSite(allele, alleleWithFrequency)) {
 				return alleleWithFrequency;
 			}
 		}
@@ -213,7 +213,7 @@ public class HLAFrequenciesLoader {
 				}
 				loadIndividualLocusFrequencies(freq);
 				break;
-			case NMDP_STD:
+			case NMDP_2007_STD:
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 					switch (linkage) {
 					case A_B_C:
@@ -227,6 +227,27 @@ public class HLAFrequenciesLoader {
 						break;
 					case FIVE_LOCUS:
 						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadStandardReferenceData(NMDP_2007_STD_FIVELOCUS_FREQUENCIES));
+						break;
+					default:
+						break;
+					}
+				}
+				loadIndividualLocusFrequencies(freq);
+				break;
+			case NMDP_STD:
+				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
+					switch (linkage) {
+					case A_B_C:
+						this.disequilibriumElementsMap.put(Locus.A_C_B_LOCI, loadStandardReferenceData(NMDP_STD_ABC_FREQUENCIES));
+						break;
+					case B_C:
+						this.disequilibriumElementsMap.put(Locus.C_B_LOCI, loadStandardReferenceData(NMDP_STD_BC_FREQUENCIES));
+						break;
+					case DRB_DQB:
+						this.disequilibriumElementsMap.put(Locus.DRB_DQB_LOCI, loadStandardReferenceData(NMDP_STD_DRB1DQB1_FREQUENCIES));
+						break;
+					case FIVE_LOCUS:
+						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadStandardReferenceData(NMDP_STD_FIVELOCUS_FREQUENCIES));
 						break;
 					default:
 						break;
@@ -280,9 +301,13 @@ public class HLAFrequenciesLoader {
 	}
 	
 	private List<DisequilibriumElement> loadStandardReferenceData(String filename) throws IOException, InvalidFormatException {
-		System.out.println(filename);
-		InputStream is = HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename);
-		InputStreamReader isr = new InputStreamReader(is);
+		InputStream inStream = HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename);
+		
+		if (inStream == null) {
+			throw new FileNotFoundException();
+		}
+		
+		InputStreamReader isr = new InputStreamReader(inStream);
 		BufferedReader reader = new BufferedReader(isr);
 
 		return loadStandardReferenceData(reader);

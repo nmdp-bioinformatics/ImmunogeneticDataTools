@@ -41,7 +41,6 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
-import org.dash.valid.report.LinkageHitDegree;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.nmdp.gl.client.GlClient;
 import org.nmdp.gl.client.GlClientException;
@@ -133,10 +132,10 @@ public class GLStringUtilities {
 		return false;
 	}
 
-	public static LinkageHitDegree fieldLevelComparison(String allele,
+	public static boolean fieldLevelComparison(String allele,
 			String referenceAllele) {
 		if (allele == null || referenceAllele == null) {
-			return null;
+			return false;
 		}
 		
 		String[] alleleParts = allele.split(COLON);
@@ -160,12 +159,7 @@ public class GLStringUtilities {
 		boolean match = alleleBuffer.toString().equals(
 				referenceAlleleBuffer.toString());
 
-		if (match) {
-			return new LinkageHitDegree(comparisonLength, alleleParts.length, allele,
-					alleleBuffer.toString());
-		}
-
-		return null;
+		return match;
 	}
 
 	/**
@@ -175,7 +169,7 @@ public class GLStringUtilities {
 	 * @return
 	 * @throws UnexpectedAlleleException
 	 */
-	public static LinkageHitDegree checkAntigenRecognitionSite(String allele,
+	public static boolean checkAntigenRecognitionSite(String allele,
 			String referenceAllele) {
 		String matchedValue = convertToProteinLevel(allele);
 				
@@ -194,22 +188,19 @@ public class GLStringUtilities {
 		
 		arsMap = instance.getArsMap();
 
-		LinkageHitDegree hitDegree;
 		for (String arsCode : arsMap.keySet()) {
 			if (arsCode.equals(referenceAllele)
 					&& arsMap.get(arsCode).contains(matchedValue)) {
-				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode);
-				return hitDegree;
+				return true;
 			}
 			else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
 					&& arsMap.get(arsCode).contains(matchedValue)) {
 				// TODO:  Revisit for proper handling / stripping of little g
-				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode.substring(0, arsCode.length() - 1));
-				return hitDegree;
+				return true;
 			}
 		}
 
-		return null;
+		return false;
 	}
 
 	public static String convertToProteinLevel(String allele) {

@@ -24,7 +24,7 @@ package org.dash.valid.freq;
 import java.util.logging.Logger;
 
 public enum Frequencies {
-	NMDP ("nmdp"), NMDP_STD ("nmdp-std"), NMDP_2007 ("nmdp-2007"), WIKIVERSITY ("wiki");
+	NMDP ("nmdp"), NMDP_2007_STD ("nmdp-2007-std"), NMDP_STD ("nmdp-std"), NMDP_2007 ("nmdp-2007"), WIKIVERSITY ("wiki");
 	
 	private String shortName;
 	public static final String FREQUENCIES_PROPERTY = "org.dash.frequencies";
@@ -40,7 +40,7 @@ public enum Frequencies {
 	}
 	
 	private static Frequencies getDefault() {
-		return NMDP_STD;
+		return NMDP_2007_STD;
 	}
 	
 	public static Frequencies lookup(String shortName) {

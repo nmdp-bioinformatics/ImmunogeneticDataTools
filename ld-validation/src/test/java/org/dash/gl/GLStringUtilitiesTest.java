@@ -103,13 +103,13 @@ public class GLStringUtilitiesTest extends TestCase {
 	
 	@Test
 	public void testFieldLevelComparison() {		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A010101) != null);
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A010101));
 		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0101) != null);
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0101));
 		
-		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A010101, HLA_A01010101) != null);
+		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A010101, HLA_A01010101));
 		
-		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102) != null);	
+		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102));	
 	}
 
 	@Test

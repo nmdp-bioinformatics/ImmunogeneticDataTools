@@ -83,20 +83,20 @@ public abstract class DisequilibriumElement {
 		}
 		
 		for (Locus locus : getLoci()) {
-			if (GLStringUtilities.fieldLevelComparison(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus)) != null) {
+			if (GLStringUtilities.fieldLevelComparison(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus))) {
 				continue;
 			}
 			
-			if (GLStringUtilities.checkAntigenRecognitionSite(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus)) != null) {
+			if (GLStringUtilities.checkAntigenRecognitionSite(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus))) {
 				continue;
 			}
 				
 			if (Locus.isDRB345(locus) &&
+					(((DisequilibriumElement) element1).getHaplotype() != null &&
+					((DisequilibriumElement) element1).getHaplotype().getDrb345Homozygous() &&  
+					(getHlaElement(locus).equals(GLStringConstants.DASH) || getHlaElement(locus).equals(GLStringConstants.NNNN))) ||
 					(getHaplotype() != null &&
 					getHaplotype().getDrb345Homozygous() && 
-					(getHlaElement(locus).equals(GLStringConstants.DASH) || getHlaElement(locus).equals(GLStringConstants.NNNN))) ||
-					(((DisequilibriumElement) element1).getHaplotype() != null &&
-					((DisequilibriumElement) element1).getHaplotype().getDrb345Homozygous() && 
 					(((DisequilibriumElement) element1).getHlaElement(locus).equals(GLStringConstants.DASH) || 
 					((DisequilibriumElement) element1).getHlaElement(locus).equals(GLStringConstants.NNNN))))
 			{

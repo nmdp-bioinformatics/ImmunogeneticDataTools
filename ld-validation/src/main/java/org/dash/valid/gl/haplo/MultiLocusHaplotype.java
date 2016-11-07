@@ -25,17 +25,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.dash.valid.Locus;
 import org.dash.valid.LocusComparator;
 import org.dash.valid.LocusSet;
 import org.dash.valid.gl.GLStringConstants;
-import org.dash.valid.report.DetectedDisequilibriumElement;
 
 public class MultiLocusHaplotype extends Haplotype {
-	private static final Logger LOGGER = Logger.getLogger(MultiLocusHaplotype.class.getName());
-	
 	private HashMap<Locus, List<String>> alleleMap = new HashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
 	
@@ -102,25 +98,6 @@ public class MultiLocusHaplotype extends Haplotype {
 		setDRB345Homozygous(drb345Homozygous);
 	}
 	
-	public MultiLocusHaplotype(DetectedDisequilibriumElement foundElement, MultiLocusHaplotype haplotype) {
-		this.haplotypeInstanceMap = haplotype.getHaplotypeInstanceMap();
-		Set<Locus> loci = haplotype.getAlleleMap().keySet();
-		
-		List<String> alleleSet;
-		for (Locus locus : loci) {
-			alleleSet = new ArrayList<String>();
-			if (foundElement != null && foundElement.getHitDegree(locus) != null) {
-				alleleSet.add(foundElement.getHitDegree(locus).getAllele());
-				alleleMap.put(locus, alleleSet);
-			}
-			else {				
-				LOGGER.warning("Either the element or the hit degree for locus: " + locus + " was null");
-			}
-		}
-		
-		setLinkage(foundElement);
-	}
-	
 	@Override
 	public String getHaplotypeString() {
 		StringBuffer sb = new StringBuffer();
@@ -131,8 +108,6 @@ public class MultiLocusHaplotype extends Haplotype {
 
 		if (this.linkage != null) {
 			for (Locus locus : loci) {
-				// TODO:  Consider whether this has a purpose
-				//sb.append(linkage.getHitDegree(locus).getMatchedValue());
 				sb.append(getAlleles(locus));
 				sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
 			}
