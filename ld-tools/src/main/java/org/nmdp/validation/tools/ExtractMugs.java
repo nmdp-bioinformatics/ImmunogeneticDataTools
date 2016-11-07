@@ -21,60 +21,38 @@
 */
 package org.nmdp.validation.tools;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import static org.dishevelled.compress.Readers.reader;
 import static org.dishevelled.compress.Writers.writer;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.concurrent.Callable;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ListMultimap;
-
-import com.google.common.io.CharStreams;
-import com.google.common.io.LineProcessor;
-
-import org.apache.http.util.TextUtils;
 import org.dishevelled.commandline.ArgumentList;
 import org.dishevelled.commandline.CommandLine;
 import org.dishevelled.commandline.CommandLineParseException;
 import org.dishevelled.commandline.CommandLineParser;
 import org.dishevelled.commandline.Switch;
 import org.dishevelled.commandline.Usage;
-
 import org.dishevelled.commandline.argument.FileArgument;
-import org.dishevelled.commandline.argument.IntegerArgument;
 import org.dishevelled.commandline.argument.StringArgument;
-import org.dishevelled.commandline.argument.StringListArgument;
-
-import org.nmdp.gl.Allele;
-import org.nmdp.gl.AlleleList;
-import org.nmdp.gl.Genotype;
-import org.nmdp.gl.Haplotype;
-
 import org.nmdp.gl.client.GlClient;
-import org.nmdp.gl.client.GlClientException;
-
 import org.nmdp.gl.client.local.LocalGlClient;
 import org.nmdp.ngs.hml.HmlReader;
 import org.nmdp.ngs.hml.jaxb.AlleleAssignment;
-import org.nmdp.ngs.hml.jaxb.Glstring;
 import org.nmdp.ngs.hml.jaxb.Haploid;
 import org.nmdp.ngs.hml.jaxb.Hml;
 import org.nmdp.ngs.hml.jaxb.Sample;
 import org.nmdp.ngs.hml.jaxb.Typing;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ListMultimap;
 
 /**
  * Validate interpretation.

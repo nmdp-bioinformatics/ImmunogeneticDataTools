@@ -135,17 +135,25 @@ public class DetectedFindingsWriter {
 		   cell.setCellValue(findings.getMinimumDifference(linkage.getLoci()) + "");
 	   }
 	   
-		printWriter.write(findings.getGenotypeList().getId() + GLStringConstants.COMMA);
-		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_A) + GLStringConstants.COMMA);
-		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_B) + GLStringConstants.COMMA);
-		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_C) + GLStringConstants.COMMA);
-		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB1) + GLStringConstants.COMMA);
-		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB345) + GLStringConstants.COMMA);
-		printWriter.write(findings.getGenotypeList().getAlleleCount(Locus.HLA_DQB1) + GLStringConstants.COMMA);
-		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
-			printWriter.write(findings.getLinkageCount(linkage.getLoci()) + GLStringConstants.COMMA);
-			printWriter.write(findings.getMinimumDifference(linkage.getLoci()) + GLStringConstants.COMMA);
-		}
-		printWriter.write(GLStringConstants.NEWLINE);
+	   String detectedFindings = formatDetectedFindings(findings);
+		
+		printWriter.write(detectedFindings);
+	}
+
+	public String formatDetectedFindings(DetectedLinkageFindings findings) {
+		StringBuffer sb = new StringBuffer();
+			sb.append(findings.getGenotypeList().getId() + GLStringConstants.COMMA);
+			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_A) + GLStringConstants.COMMA);
+			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_B) + GLStringConstants.COMMA);
+			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_C) + GLStringConstants.COMMA);
+			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB1) + GLStringConstants.COMMA);
+			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB345) + GLStringConstants.COMMA);
+			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_DQB1) + GLStringConstants.COMMA);
+			for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
+				sb.append(findings.getLinkageCount(linkage.getLoci()) + GLStringConstants.COMMA);
+				sb.append(findings.getMinimumDifference(linkage.getLoci()) + GLStringConstants.COMMA);
+			}
+			sb.append(GLStringConstants.NEWLINE);
+		return sb.toString();
 	}
 }

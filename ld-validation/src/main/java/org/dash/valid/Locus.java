@@ -22,6 +22,7 @@
 package org.dash.valid;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -65,8 +66,9 @@ public enum Locus {
 	
 	@SuppressWarnings("unchecked")
 	public static EnumSet<Locus> lookup(Set<Locus> loci) {
+		Set<Locus> normalizedLoci = normalizeLoci(loci);
 		for (int i=0;i<LOCI_ARRAY.length;i++) {
-			if (loci.containsAll(LOCI_ARRAY[i]) && LOCI_ARRAY[i].containsAll(loci)) {
+			if (normalizedLoci.containsAll(LOCI_ARRAY[i]) && LOCI_ARRAY[i].containsAll(normalizedLoci)) {
 				return (EnumSet<Locus>) LOCI_ARRAY[i];
 			}
 		}
@@ -86,6 +88,32 @@ public enum Locus {
 		return freqName;
 	}
 	
+	public static Set<Locus> normalizeLoci(Set<Locus> loci) {
+		Set<Locus> normalizedLoci = new HashSet<Locus>();
+		for (Locus locus : loci) {
+			normalizedLoci.add(normalizeLocus(locus));
+		}
+		
+		return normalizedLoci;
+	}
+	
+	public static Locus normalizeLocus(Locus locus) {
+		return isDRB345(locus) ? HLA_DRB345 : locus;
+	}
+	
+	public static boolean isDRB345(Locus locus) {
+		switch (locus) {
+		case HLA_DRB3:
+		case HLA_DRB4:
+		case HLA_DRB5:
+		case HLA_DRBX:
+		case HLA_DRB345:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
 	public boolean hasIndividualFrequencies() {
 		if (freqName != null) {
 			return true;
@@ -96,7 +124,7 @@ public enum Locus {
 	
 	public static Locus lookup(String value) {
 		for (Locus locus : values()) {
-			if (locus.getFullName().equals(value)) {
+			if (locus.getFullName().equals(value) || locus.getShortName().equals(value)) {
 				return locus;
 			}			
 		}

@@ -21,9 +21,10 @@
 */
 package org.dash.valid;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -61,7 +62,6 @@ import org.dash.valid.report.LinkageHitDegree;
  */
 
 public class HLALinkageDisequilibrium {
-	private static final String DASH = "-";
 	private static HLADatabaseVersion hladb;
 	private static Integer LINKED_HAPLOTYPES_THRESHOLD = new Integer(360);
 	
@@ -75,65 +75,30 @@ public class HLALinkageDisequilibrium {
 		}
 	}
 			
-	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) throws IOException {		
+	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
-		List<Haplotype> linkedHaplotypes = new ArrayList<Haplotype>();
-		Set<DetectedDisequilibriumElement> linkageElementsFound = new LinkageElementsSet(new DisequilibriumElementComparator());
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
-		
-		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
-		
+				
 		DetectedLinkageFindings findings = new DetectedLinkageFindings();
 
+		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {
 			return findings;
 		}
-		
-		List<DisequilibriumElement> disequilibriumElements;
-				
+						
 		for (Linkages linkage : linkages) {
-			findings.addFindingSought(linkage.getLoci());
+			EnumSet<Locus> loci = linkage.getLoci();
+			findings.addFindingSought(loci);
+			List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.getInstance().getDisequilibriumElements(loci);
 			
-			disequilibriumElements = HLAFrequenciesLoader.getInstance().getDisequilibriumElements(linkage.getLoci());
-			for (DisequilibriumElement disElement : disequilibriumElements) {
-				linkedHaplotypes.addAll(detectLinkages(glString, disElement, linkage.getLoci()));
-			}
-			
-			// create the pairs
-			
-			LOGGER.info(linkedHaplotypes.size() + " linked " + linkage.getLoci() + " haplotypes");
-			if (linkedHaplotypes.size() > LINKED_HAPLOTYPES_THRESHOLD) {
-				LOGGER.warning("Linked " + linkage.getLoci() + " haplotype count: " + linkedHaplotypes.size() + " exceeds configured threshold: " + LINKED_HAPLOTYPES_THRESHOLD + ".  Not calculating relative frequencies.");
-			}
-			else {	
-				for (Haplotype haplotype1 : linkedHaplotypes) {	
-					linkageElementsFound.add(haplotype1.getLinkage());
-					for (Haplotype haplotype2 : linkedHaplotypes) {
-						int idx = 0;
-						for (Locus locus : linkage.getLoci()) {
-							if ((!glString.hasHomozygous(locus) && haplotype1.getHaplotypeInstance(locus) == haplotype2.getHaplotypeInstance(locus))) {
-								// move on to next haplotype2
-								break;
-							}
-							
-							if (idx == linkage.getLoci().size() - 1) {
-								linkedPairs.add(new HaplotypePair(haplotype1, haplotype2));
-								findings.setLinkedPairs(linkage.getLoci(), true);
-							}
-							
-							idx++;
-						}
-					}
-				}
-			}	
-			linkedHaplotypes.clear();
+			//linkedPairs.addAll(findLinkedPairsFast(glString, loci, disequilibriumElements));	
+			linkedPairs.addAll(findLinkedPairs(glString, loci, disequilibriumElements));
 		}		
 		
 		LOGGER.info(linkedPairs.size() + " linkedPairs");
 		
 		findings.setGenotypeList(glString);
-		findings.addLinkages(linkageElementsFound);
 		findings.setLinkedPairs(linkedPairs);
 		findings.setNonCWDAlleles(notCommon);
 		findings.setHladb(hladb);
@@ -141,7 +106,101 @@ public class HLALinkageDisequilibrium {
 		return findings;
 	}
 	
-	private static Set<Haplotype> detectLinkages(LinkageDisequilibriumGenotypeList glString, DisequilibriumElement disElement, EnumSet<Locus> loci) {
+	private static Set<HaplotypePair> findLinkedPairsFast(
+			LinkageDisequilibriumGenotypeList glString,
+			EnumSet<Locus> loci,
+			List<DisequilibriumElement> disequilibriumElements) {
+		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
+
+		Set<MultiLocusHaplotype> linkedHaplotypes = new HashSet<MultiLocusHaplotype>();
+		
+		for (MultiLocusHaplotype possibleHaplotype : glString.getPossibleHaplotypes(loci)) {
+			HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
+
+			for (Locus locus : possibleHaplotype.getLoci()) {
+				if (loci.contains(locus)) {
+					hlaElementMap.put(locus, possibleHaplotype.getAlleles(locus).get(0));
+				}
+			}
+			
+			DisequilibriumElement element = new CoreDisequilibriumElement(hlaElementMap, possibleHaplotype);
+			
+			if (disequilibriumElements.contains(element)) {
+				int index = disequilibriumElements.indexOf(element);
+				possibleHaplotype.setLinkage(new DetectedDisequilibriumElement(disequilibriumElements.get(index)));
+				linkedHaplotypes.add(possibleHaplotype);
+			}
+		}
+		
+		for (Haplotype haplotype1 : linkedHaplotypes) {	
+			for (Haplotype haplotype2 : linkedHaplotypes) {
+				int idx = 0;
+				for (Locus locus : loci) {
+					if ((!glString.hasHomozygous(locus) && haplotype1.getHaplotypeInstance(locus) == haplotype2.getHaplotypeInstance(locus))) {
+						// move on to next haplotype2
+						break;
+					}
+					
+					if (idx == loci.size() - 1) {
+						linkedPairs.add(new HaplotypePair(haplotype1, haplotype2));
+					}
+					
+					idx++;
+				}
+			}
+		}
+		
+		return linkedPairs;
+	}
+
+	private static Set<HaplotypePair> findLinkedPairs(
+			LinkageDisequilibriumGenotypeList glString,
+			EnumSet<Locus> loci,
+			List<DisequilibriumElement> disequilibriumElements) {
+		List<Haplotype> linkedHaplotypes = findLinkedHaplotypes(disequilibriumElements, glString, loci);
+		
+		// create the pairs
+		
+		Set<HaplotypePair> linkedPairs = new HashSet<HaplotypePair>();
+		
+		LOGGER.info(linkedHaplotypes.size() + " linked " + loci + " haplotypes");
+		if (linkedHaplotypes.size() > LINKED_HAPLOTYPES_THRESHOLD) {
+			LOGGER.warning("Linked " + loci + " haplotype count: " + linkedHaplotypes.size() + " exceeds configured threshold: " + LINKED_HAPLOTYPES_THRESHOLD + ".  Not calculating relative frequencies.");
+		}
+		else {	
+			for (Haplotype haplotype1 : linkedHaplotypes) {	
+				for (Haplotype haplotype2 : linkedHaplotypes) {
+					int idx = 0;
+					for (Locus locus : loci) {
+						if ((!glString.hasHomozygous(locus) && haplotype1.getHaplotypeInstance(locus) == haplotype2.getHaplotypeInstance(locus))) {
+							// move on to next haplotype2
+							break;
+						}
+						
+						if (idx == loci.size() - 1) {
+							linkedPairs.add(new HaplotypePair(haplotype1, haplotype2));
+						}
+						
+						idx++;
+					}
+				}
+			}
+		}
+		
+		return linkedPairs;
+	}
+
+	private static List<Haplotype> findLinkedHaplotypes(List<DisequilibriumElement> disequilibriumElements, LinkageDisequilibriumGenotypeList glString,
+			EnumSet<Locus> loci) {
+		List<Haplotype> linkedHaplotypes = new ArrayList<Haplotype>();
+		for (DisequilibriumElement disElement : disequilibriumElements) {
+			linkedHaplotypes.addAll(detectLinkages(glString, disElement, loci));
+		}
+		
+		return linkedHaplotypes;
+	}
+	
+	public static Set<Haplotype> detectLinkages(LinkageDisequilibriumGenotypeList glString, DisequilibriumElement disElement, EnumSet<Locus> loci) {
 		Set<MultiLocusHaplotype> possibleHaplotypes = glString.getPossibleHaplotypes(loci);
 		
 		Set<Haplotype> linkedHaplotypes = new HaplotypeSet(new HaplotypeComparator());
@@ -173,7 +232,7 @@ public class HLALinkageDisequilibrium {
 			for (String allele : haplotype.getAlleles(locus)) {
 				hitDegree = GLStringUtilities.fieldLevelComparison(allele, disElement.getHlaElement(locus));
 				
-				if (Locus.HLA_DRB345.equals(locus) && glString.hasHomozygous(Locus.HLA_DRB345) && (disElement.getHlaElement(Locus.HLA_DRB345).equals(DASH) || disElement.getHlaElement(Locus.HLA_DRB345).equals(GLStringConstants.NNNN))) {
+				if (Locus.HLA_DRB345.equals(locus) && glString.hasHomozygous(Locus.HLA_DRB345) && (disElement.getHlaElement(Locus.HLA_DRB345).equals(GLStringConstants.DASH) || disElement.getHlaElement(Locus.HLA_DRB345).equals(GLStringConstants.NNNN))) {
 					hitDegree = new LinkageHitDegree(GLStringUtilities.P_GROUP_LEVEL, GLStringUtilities.P_GROUP_LEVEL, GLStringConstants.NNNN, GLStringConstants.NNNN);
 					foundElement = buildFoundElement(foundElement, disElement, Locus.HLA_DRB345, hitDegree);
 					noHits = false;

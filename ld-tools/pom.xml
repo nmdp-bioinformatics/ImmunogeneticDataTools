@@ -125,6 +125,10 @@
               <id>extract-mugs</id>
               <mainClass>org.nmdp.validation.tools.ExtractMugs</mainClass>
             </program>
+            <program>
+            	<id>analyze-gl-strings</id>
+            	<mainClass>org.nmdp.validation.tools.AnalyzeGLStrings</mainClass>
+            </program>
           </programs>
         </configuration>
         <executions>

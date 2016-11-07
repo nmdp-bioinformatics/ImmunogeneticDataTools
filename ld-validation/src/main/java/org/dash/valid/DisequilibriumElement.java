@@ -21,14 +21,39 @@
 */
 package org.dash.valid;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
-public abstract class DisequilibriumElement {
-	HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
-	
+import org.dash.valid.gl.GLStringConstants;
+import org.dash.valid.gl.GLStringUtilities;
+import org.dash.valid.gl.haplo.Haplotype;
+
+
+public abstract class DisequilibriumElement {	
+	private Haplotype haplotype;
 	public DisequilibriumElement() {
+		super();
+	}
+	
+	public Haplotype getHaplotype() {
+		return this.haplotype;
+	}
+	
+	public void setHaplotype(Haplotype haplotype) {
+		this.haplotype = haplotype;
+	}
+
+	public abstract String getFrequencyInfo();
 		
+	private HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
+
+	public Collection<String> getHlaElements() {
+		return hlaElementMap.values();
+	}
+	
+	public void setHlaElementMap(HashMap<Locus, String> hlaElementMap) {
+		this.hlaElementMap = hlaElementMap;
 	}
 	
 	public void setHlaElement(Locus locus, String hlaElement) {
@@ -44,9 +69,43 @@ public abstract class DisequilibriumElement {
 	}
 	
 	public Set<Locus> getLoci() {
-		return hlaElementMap.keySet();
+		Set<Locus> loci = hlaElementMap.keySet();
+		
+		return loci;
 	}
 	
-	public abstract String getFrequencyInfo();
-	
+	@Override
+	public boolean equals(Object element1) {
+		if (getLoci().equals(((DisequilibriumElement) element1).getLoci())) {
+			if (getHlaElements().containsAll(((DisequilibriumElement) element1).getHlaElements())) {
+				return true;
+			}
+		}
+		
+		for (Locus locus : getLoci()) {
+			if (GLStringUtilities.fieldLevelComparison(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus)) != null) {
+				continue;
+			}
+			
+			if (GLStringUtilities.checkAntigenRecognitionSite(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus)) != null) {
+				continue;
+			}
+				
+			if (Locus.isDRB345(locus) &&
+					(getHaplotype() != null &&
+					getHaplotype().getDrb345Homozygous() && 
+					(getHlaElement(locus).equals(GLStringConstants.DASH) || getHlaElement(locus).equals(GLStringConstants.NNNN))) ||
+					(((DisequilibriumElement) element1).getHaplotype() != null &&
+					((DisequilibriumElement) element1).getHaplotype().getDrb345Homozygous() && 
+					(((DisequilibriumElement) element1).getHlaElement(locus).equals(GLStringConstants.DASH) || 
+					((DisequilibriumElement) element1).getHlaElement(locus).equals(GLStringConstants.NNNN))))
+			{
+				continue;
+			}
+				
+			return false;
+		}
+		
+		return true;
+	}
 }

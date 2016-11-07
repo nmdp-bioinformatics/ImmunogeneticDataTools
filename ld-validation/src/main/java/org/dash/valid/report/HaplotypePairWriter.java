@@ -58,11 +58,20 @@ public class HaplotypePairWriter {
 		return instance;
 	}
 	/**
-	 * @param linkagesFound
-	 * @throws IOException 
-	 * @throws SecurityException 
+	 * @param linkagesFound 
 	 */
-	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) throws SecurityException, IOException {				
+	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) {				
+		String linkages = formatDetectedLinkages(findings);
+	
+		if (findings.hasAnomalies()) {
+			FILE_LOGGER.warning(linkages);
+		}
+		else {
+			FILE_LOGGER.info(linkages);
+		}
+	}
+
+	public String formatDetectedLinkages(DetectedLinkageFindings findings) {
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGenotypeList().getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
@@ -88,12 +97,6 @@ public class HaplotypePairWriter {
 		}
 		
 		sb.append(GLStringConstants.NEWLINE + "***************************************" + GLStringConstants.NEWLINE);
-	
-		if (findings.hasAnomalies()) {
-			FILE_LOGGER.warning(sb.toString());
-		}
-		else {
-			FILE_LOGGER.info(sb.toString());
-		}
+		return sb.toString();
 	}
 }

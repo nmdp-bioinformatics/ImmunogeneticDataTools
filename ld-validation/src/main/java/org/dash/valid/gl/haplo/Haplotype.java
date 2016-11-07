@@ -29,6 +29,7 @@ import org.dash.valid.report.DetectedDisequilibriumElement;
 
 public abstract class Haplotype {	
 	DetectedDisequilibriumElement linkage;
+	private boolean drb345Homozygous;
 
 	public DetectedDisequilibriumElement getLinkage() {
 		return linkage;
@@ -36,6 +37,14 @@ public abstract class Haplotype {
 
 	public void setLinkage(DetectedDisequilibriumElement linkage) {
 		this.linkage = linkage;
+	}
+	
+	public void setDRB345Homozygous(boolean drb345Homozygous) {
+		this.drb345Homozygous = drb345Homozygous;
+	}
+	
+	public boolean getDrb345Homozygous() {
+		return this.drb345Homozygous;
 	}
 	
 	public abstract String getHaplotypeString();

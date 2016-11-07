@@ -46,9 +46,21 @@ public class LinkagesLoader {
 		setLinkages(Linkages.lookup(linkageNames));
 	}
 	
+	private LinkagesLoader(Set<Linkages> linkages) {
+		setLinkages(linkages);
+	}
+	
 	public static LinkagesLoader getInstance() {
 		if (instance == null) {
 			instance = new LinkagesLoader();
+		}
+		
+		return instance;
+	}
+	
+	public static LinkagesLoader getInstance(Set<Linkages> linkages) {
+		if (instance == null) {
+			instance = new LinkagesLoader(linkages);
 		}
 		
 		return instance;

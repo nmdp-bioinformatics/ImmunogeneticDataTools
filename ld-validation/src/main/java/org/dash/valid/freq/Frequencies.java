@@ -40,7 +40,7 @@ public enum Frequencies {
 	}
 	
 	private static Frequencies getDefault() {
-		return NMDP_2007;
+		return NMDP_STD;
 	}
 	
 	public static Frequencies lookup(String shortName) {

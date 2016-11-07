@@ -135,6 +135,10 @@ public class GLStringUtilities {
 
 	public static LinkageHitDegree fieldLevelComparison(String allele,
 			String referenceAllele) {
+		if (allele == null || referenceAllele == null) {
+			return null;
+		}
+		
 		String[] alleleParts = allele.split(COLON);
 		String[] referenceAlleleParts = referenceAllele.split(COLON);
 
@@ -290,39 +294,35 @@ public class GLStringUtilities {
 		}
 		return segment;
 	}
+	
+	public static LinkedHashMap<String, String> readGLStringFile(String name, BufferedReader reader) {
+		LinkedHashMap<String, String> glStrings = null;
+		
+		try {
+			glStrings = parseGLStringFile(name, reader);
+		} catch (IOException e) {
+			LOGGER.severe("Problem reading GL String file: " + name);
+			e.printStackTrace();
+		}
+		
+		return glStrings;
+	}
 
 	public static LinkedHashMap<String, String> readGLStringFile(String filename) {
 		BufferedReader reader = null;
-		String line;
-		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
+		LinkedHashMap<String, String> glStrings = null;
 
 		try {
 			InputStream stream = GLStringUtilities.class.getClassLoader()
 					.getResourceAsStream(filename);
 			if (stream == null) {
 				stream = new FileInputStream(filename);
-				reader = new BufferedReader(new InputStreamReader(stream));
-			} else {
-				reader = new BufferedReader(new InputStreamReader(
-						GLStringUtilities.class.getClassLoader()
-								.getResourceAsStream(filename)));
 			}
+			
+			reader = new BufferedReader(new InputStreamReader(stream));
 
-			String[] parts = null;
-			int lineNumber = 0;
-			while ((line = reader.readLine()) != null) {
-				parts = line.split(FILE_DELIMITER_REGEX);
-				if (parts.length == 1) {
-					glStrings.put(filename + "-" + lineNumber, parts[0]);
-				} else if (parts.length == 2) {
-					glStrings.put(parts[0], parts[1]);
-				} else {
-					LOGGER.warning("Unexpected line format at line "
-							+ lineNumber + ": " + filename);
-				}
-
-				lineNumber++;
-			}
+			glStrings = parseGLStringFile(filename, reader);
+			
 		} catch (FileNotFoundException e) {
 			LOGGER.severe("Couldn't find GL String file: " + filename);
 			e.printStackTrace();
@@ -338,6 +338,30 @@ public class GLStringUtilities {
 			}
 		}
 
+		return glStrings;
+	}
+
+	private static LinkedHashMap<String, String> parseGLStringFile(String filename,
+			BufferedReader reader)
+			throws IOException {
+		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
+		String line;
+		String[] parts = null;
+		int lineNumber = 0;
+		while ((line = reader.readLine()) != null) {
+			parts = line.split(FILE_DELIMITER_REGEX);
+			if (parts.length == 1) {
+				glStrings.put(filename + "-" + lineNumber, parts[0]);
+			} else if (parts.length == 2) {
+				glStrings.put(parts[0], parts[1]);
+			} else {
+				LOGGER.warning("Unexpected line format at line "
+						+ lineNumber + ": " + filename);
+			}
+
+			lineNumber++;
+		}
+		
 		return glStrings;
 	}
 

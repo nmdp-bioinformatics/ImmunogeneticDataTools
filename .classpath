@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="ld-validation/src/main/java"/>
+	<classpathentry kind="src" path="ld-tools/src/main/java-templates"/>
 	<classpathentry kind="src" path="ld-validation/src/test/java"/>
 	<classpathentry kind="src" path="ld-validation/src/main/resources"/>
 	<classpathentry kind="src" path="ld-validation/src/test/resources"/>
+	<classpathentry kind="src" path="ld-tools/src/main/java"/>
+	<classpathentry kind="src" path="ld-tools/src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>

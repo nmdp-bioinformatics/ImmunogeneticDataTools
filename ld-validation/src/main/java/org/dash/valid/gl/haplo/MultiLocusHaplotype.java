@@ -94,11 +94,12 @@ public class MultiLocusHaplotype extends Haplotype {
 		return alleleSet;
 	}
 	
-	public MultiLocusHaplotype(HashMap<Locus, SingleLocusHaplotype> singleLocusHaplotypes) {
+	public MultiLocusHaplotype(HashMap<Locus, SingleLocusHaplotype> singleLocusHaplotypes, boolean drb345Homozygous) {
 		for (SingleLocusHaplotype singleLocusHaplotype : singleLocusHaplotypes.values()) {
 			alleleMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getAlleles());	
 			haplotypeInstanceMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getHaplotypeInstance());
 		}
+		setDRB345Homozygous(drb345Homozygous);
 	}
 	
 	public MultiLocusHaplotype(DetectedDisequilibriumElement foundElement, MultiLocusHaplotype haplotype) {
@@ -130,7 +131,9 @@ public class MultiLocusHaplotype extends Haplotype {
 
 		if (this.linkage != null) {
 			for (Locus locus : loci) {
-				sb.append(linkage.getHitDegree(locus).getMatchedValue());
+				// TODO:  Consider whether this has a purpose
+				//sb.append(linkage.getHitDegree(locus).getMatchedValue());
+				sb.append(getAlleles(locus));
 				sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
 			}
 		}

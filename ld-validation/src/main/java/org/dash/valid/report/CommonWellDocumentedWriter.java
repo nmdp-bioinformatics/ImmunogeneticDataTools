@@ -53,8 +53,15 @@ public class CommonWellDocumentedWriter {
 		return instance;
 	}
 	public synchronized void reportCommonWellDocumented(DetectedLinkageFindings findings) {
+		String cwd = formatCommonWellDocumented(findings);
+		
+		FILE_LOGGER.warning(cwd);
+	}
+
+	public String formatCommonWellDocumented(
+			DetectedLinkageFindings findings) {
 		if (findings.getNonCWDAlleles() == null || findings.getNonCWDAlleles().size() == 0) {
-			return;
+			return GLStringConstants.EMPTY_STRING;
 		}
 		
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGenotypeList().getGLString());
@@ -72,7 +79,6 @@ public class CommonWellDocumentedWriter {
 			}
 			sb.append(GLStringConstants.NEWLINE);
 		}
-		
-		FILE_LOGGER.warning(sb.toString());
+		return sb.toString();
 	}
 }
