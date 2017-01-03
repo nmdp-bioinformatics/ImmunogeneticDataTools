@@ -21,7 +21,6 @@
 */
 package org.dash.valid.gl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -111,21 +110,9 @@ public class LinkageDisequilibriumGenotypeList {
 			setAlleles(Locus.HLA_DRB345, drb345Set);
 		}
 	}
-	
-	public static Locus normalizeLocus(Locus locus) {
-		switch (locus) {
-		case HLA_DRB3:
-		case HLA_DRB4:
-		case HLA_DRB5:
-		case HLA_DRBX:
-			return Locus.HLA_DRB345;
-		default:
-			return locus;
-		}
-	}
 
 	public boolean hasHomozygous(Locus locus) {
-		locus = normalizeLocus(locus);
+		locus = Locus.normalizeLocus(locus);
 		return GLStringUtilities.checkHomozygous(getAlleles(locus));
 	}
 	
@@ -170,7 +157,7 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 
 	// TODO: Write unit tests
-	public boolean checkAmbiguitiesThresholds() throws IOException {
+	public boolean checkAmbiguitiesThresholds() {
 		for (Linkages linkages : LinkagesLoader.getInstance().getLinkages()) {
 			for (Locus locus : linkages.getLoci()) {
 				if (getAlleleCount(locus) > ALLELE_AMBIGUITY_THRESHOLD) {
@@ -235,7 +222,7 @@ public class LinkageDisequilibriumGenotypeList {
 						List<String> alleleAmbiguities = GLStringUtilities
 								.parse(genePhase,
 										GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
-						setAlleles(normalizeLocus(Locus.lookup(locus)), alleleAmbiguities);
+						setAlleles(Locus.normalizeLocus(Locus.lookup(locus)), alleleAmbiguities);
 					}
 				}
 			}
@@ -259,7 +246,7 @@ public class LinkageDisequilibriumGenotypeList {
 							alleleStrings.add(allele.getGlstring());
 							locus = allele.getLocus().toString();
 						}
-						setAlleles(normalizeLocus(Locus.lookup(locus)), alleleStrings);
+						setAlleles(Locus.normalizeLocus(Locus.lookup(locus)), alleleStrings);
 					}
 				}
 			}
@@ -267,36 +254,31 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 
 	private void setAlleles(Locus locus, List<String> alleleAmbiguities) {
-		try {
-			HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
-			List<String> replacementAlleles = new ArrayList<String>();
-			
-			if (freqLoader.hasIndividualFrequency(locus)) {
-				String alleleWithFrequency;
-				for (String allele : alleleAmbiguities) {
-					alleleWithFrequency = freqLoader.hasFrequency(locus, allele);
-					if (alleleWithFrequency == null) {
-						LOGGER.finest("Removing allele with no frequency: " + allele);
-					}
-					else {
-						if (!replacementAlleles.contains(alleleWithFrequency)) {
-							LOGGER.finest("Swapping in allele with frequency: " + alleleWithFrequency);
-							replacementAlleles.add(alleleWithFrequency);
-						}
-					}	
-				}	
-				
-				if (replacementAlleles.size() == 0) {
-					LOGGER.finest("Couldn't find frequencies for entire haploid.  Leaving originals in place.");
+		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
+		List<String> replacementAlleles = new ArrayList<String>();
+		
+		if (freqLoader.hasIndividualFrequency(locus)) {
+			String alleleWithFrequency;
+			for (String allele : alleleAmbiguities) {
+				alleleWithFrequency = freqLoader.hasFrequency(locus, allele);
+				if (alleleWithFrequency == null) {
+					LOGGER.finest("Removing allele with no frequency: " + allele);
 				}
 				else {
-					alleleAmbiguities = replacementAlleles;
-				}
-			}			
-		}
-		catch (IOException e) {
-			LOGGER.warning("Unable to check against single locus frequencies");
-		}
+					if (!replacementAlleles.contains(alleleWithFrequency)) {
+						LOGGER.finest("Swapping in allele with frequency: " + alleleWithFrequency);
+						replacementAlleles.add(alleleWithFrequency);
+					}
+				}	
+			}	
+			
+			if (replacementAlleles.size() == 0) {
+				LOGGER.finest("Couldn't find frequencies for entire haploid.  Leaving originals in place.");
+			}
+			else {
+				alleleAmbiguities = replacementAlleles;
+			}
+		}			
 		
 		if (alleleAmbiguities.size() == 0) {
 			LOGGER.warning("Unexpected formatting of LinkageDisequilibriumGenotypeList.  No alleles found or no alleles w/ haplotype frequencies found.");
@@ -352,19 +334,24 @@ public class LinkageDisequilibriumGenotypeList {
 		Locus locus;
 
 		for (List<Object> haplotypeCombo : haplotypeCombinations) {
+			boolean drb345Homozygous = false;
 			for (Object haplotypePart : haplotypeCombo) {
 				List<String> alleles = (List<String>) haplotypePart;
 				alleleParts = alleles.iterator().next()
 						.split(GLStringUtilities.ESCAPED_ASTERISK);
 				locus = Locus.lookup(alleleParts[0]);
 
-				locus = normalizeLocus(locus);
+				locus = Locus.normalizeLocus(locus);
+				
+				if (Locus.HLA_DRB345.equals(locus) && hasHomozygous(locus)) {
+					drb345Homozygous = true;
+				}
 				
 				singleLocusHaplotypes.put(locus, new SingleLocusHaplotype(
 						locus, (List<String>) haplotypePart, getHaplotypeIndex(locus, (List<String>) haplotypePart)));
 			}
 			possibleHaplotypes.add(new MultiLocusHaplotype(
-					singleLocusHaplotypes));
+					singleLocusHaplotypes, drb345Homozygous));
 		}
 
 		return possibleHaplotypes;

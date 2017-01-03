@@ -23,16 +23,16 @@ package org.dash.valid.base;
 
 import java.util.HashMap;
 
-import org.dash.valid.DisequilibriumElement;
+import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 
-public class BaseDisequilibriumElement extends DisequilibriumElement {
+public class BaseDisequilibriumElement extends CoreDisequilibriumElement {
 	private String frequency;
 	private String note;
 	
 	public BaseDisequilibriumElement(HashMap<Locus, String> hlaElementMap, String frequency, String note) {
-		super(hlaElementMap);
+		setHlaElementMap(hlaElementMap);
 		setFrequency(frequency);
 		setNote(note);
 	}

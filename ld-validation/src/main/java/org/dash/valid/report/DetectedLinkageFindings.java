@@ -176,6 +176,8 @@ public class DetectedLinkageFindings {
 
 			for (HaplotypePair pair : linkedPairs) {
 				loci = Locus.lookup(pair.getLoci());
+				setLinkedPairs(loci, true);
+
 				minimumDifferenceMap = minimumDifferenceMapOfMaps.get(loci) != null ? minimumDifferenceMapOfMaps.get(loci) : new HashMap<String, List<Float>>();
 				
 				Set<RelativeFrequencyByRace> freqsByRace = new RelativeFrequencyByRaceSet(new RelativeFrequencyByRaceComparator());
@@ -204,6 +206,10 @@ public class DetectedLinkageFindings {
 		}
 		else {
 			this.linkedPairs = linkedPairs;
+		}
+		
+		for (HaplotypePair pair : this.linkedPairs) {
+			addLinkage(pair.getHaplotype1().getLinkage());
 		}
 		
 		Set<EnumSet<Locus>> lociSet = this.linkedPairsMap.keySet();
@@ -278,15 +284,23 @@ public class DetectedLinkageFindings {
 		return linkages;
 	}
 	
+	public void addLinkage(DetectedDisequilibriumElement linkage) {
+		this.linkages.add(linkage);
+		incrementLinkageCount(linkage);
+	}
+	
 	public void addLinkages(Set<DetectedDisequilibriumElement> linkages) {
 		this.linkages.addAll(linkages);
 		
-		int linkageCount = 0;
 		for (DetectedDisequilibriumElement linkage : this.linkages) {
-			linkageCount = getLinkageCount(Locus.lookup(linkage.getDisequilibriumElement().getLoci()));
-			linkageCount++;
-			this.linkageCountsMap.put(linkage.getDisequilibriumElement().getLoci(), linkageCount);
+			incrementLinkageCount(linkage);
 		}
+	}
+
+	private void incrementLinkageCount(DetectedDisequilibriumElement linkage) {
+		int linkageCount = getLinkageCount(Locus.lookup(linkage.getDisequilibriumElement().getLoci()));
+		linkageCount++;
+		this.linkageCountsMap.put(linkage.getDisequilibriumElement().getLoci(), linkageCount);
 	}
 	
 	public boolean hasLinkages() {

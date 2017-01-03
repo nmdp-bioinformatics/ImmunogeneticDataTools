@@ -88,4 +88,15 @@ public enum Linkages {
 		
 		return set;
 	}
+	
+	public static Set<Linkages> lookup(EnumSet<Locus> loci) {
+		Set<Linkages> set = new HashSet<Linkages>();
+		for (Linkages linkages : values()) {
+			if (loci.containsAll(linkages.getLoci()) && linkages.getLoci().containsAll(loci)) {
+				set.add(linkages);
+			}
+		}
+		
+		return set;
+	}
 }

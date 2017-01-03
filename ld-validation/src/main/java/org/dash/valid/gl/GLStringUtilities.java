@@ -41,7 +41,6 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
-import org.dash.valid.report.LinkageHitDegree;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.nmdp.gl.client.GlClient;
 import org.nmdp.gl.client.GlClientException;
@@ -133,8 +132,12 @@ public class GLStringUtilities {
 		return false;
 	}
 
-	public static LinkageHitDegree fieldLevelComparison(String allele,
+	public static boolean fieldLevelComparison(String allele,
 			String referenceAllele) {
+		if (allele == null || referenceAllele == null) {
+			return false;
+		}
+		
 		String[] alleleParts = allele.split(COLON);
 		String[] referenceAlleleParts = referenceAllele.split(COLON);
 
@@ -156,12 +159,7 @@ public class GLStringUtilities {
 		boolean match = alleleBuffer.toString().equals(
 				referenceAlleleBuffer.toString());
 
-		if (match) {
-			return new LinkageHitDegree(comparisonLength, alleleParts.length, allele,
-					alleleBuffer.toString());
-		}
-
-		return null;
+		return match;
 	}
 
 	/**
@@ -171,7 +169,7 @@ public class GLStringUtilities {
 	 * @return
 	 * @throws UnexpectedAlleleException
 	 */
-	public static LinkageHitDegree checkAntigenRecognitionSite(String allele,
+	public static boolean checkAntigenRecognitionSite(String allele,
 			String referenceAllele) {
 		String matchedValue = convertToProteinLevel(allele);
 				
@@ -190,22 +188,19 @@ public class GLStringUtilities {
 		
 		arsMap = instance.getArsMap();
 
-		LinkageHitDegree hitDegree;
 		for (String arsCode : arsMap.keySet()) {
 			if (arsCode.equals(referenceAllele)
 					&& arsMap.get(arsCode).contains(matchedValue)) {
-				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode);
-				return hitDegree;
+				return true;
 			}
 			else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
 					&& arsMap.get(arsCode).contains(matchedValue)) {
 				// TODO:  Revisit for proper handling / stripping of little g
-				hitDegree = new LinkageHitDegree(P_GROUP_LEVEL, partLength, allele, arsCode.substring(0, arsCode.length() - 1));
-				return hitDegree;
+				return true;
 			}
 		}
 
-		return null;
+		return false;
 	}
 
 	public static String convertToProteinLevel(String allele) {
@@ -290,39 +285,35 @@ public class GLStringUtilities {
 		}
 		return segment;
 	}
+	
+	public static LinkedHashMap<String, String> readGLStringFile(String name, BufferedReader reader) {
+		LinkedHashMap<String, String> glStrings = null;
+		
+		try {
+			glStrings = parseGLStringFile(name, reader);
+		} catch (IOException e) {
+			LOGGER.severe("Problem reading GL String file: " + name);
+			e.printStackTrace();
+		}
+		
+		return glStrings;
+	}
 
 	public static LinkedHashMap<String, String> readGLStringFile(String filename) {
 		BufferedReader reader = null;
-		String line;
-		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
+		LinkedHashMap<String, String> glStrings = null;
 
 		try {
 			InputStream stream = GLStringUtilities.class.getClassLoader()
 					.getResourceAsStream(filename);
 			if (stream == null) {
 				stream = new FileInputStream(filename);
-				reader = new BufferedReader(new InputStreamReader(stream));
-			} else {
-				reader = new BufferedReader(new InputStreamReader(
-						GLStringUtilities.class.getClassLoader()
-								.getResourceAsStream(filename)));
 			}
+			
+			reader = new BufferedReader(new InputStreamReader(stream));
 
-			String[] parts = null;
-			int lineNumber = 0;
-			while ((line = reader.readLine()) != null) {
-				parts = line.split(FILE_DELIMITER_REGEX);
-				if (parts.length == 1) {
-					glStrings.put(filename + "-" + lineNumber, parts[0]);
-				} else if (parts.length == 2) {
-					glStrings.put(parts[0], parts[1]);
-				} else {
-					LOGGER.warning("Unexpected line format at line "
-							+ lineNumber + ": " + filename);
-				}
-
-				lineNumber++;
-			}
+			glStrings = parseGLStringFile(filename, reader);
+			
 		} catch (FileNotFoundException e) {
 			LOGGER.severe("Couldn't find GL String file: " + filename);
 			e.printStackTrace();
@@ -338,6 +329,30 @@ public class GLStringUtilities {
 			}
 		}
 
+		return glStrings;
+	}
+
+	private static LinkedHashMap<String, String> parseGLStringFile(String filename,
+			BufferedReader reader)
+			throws IOException {
+		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
+		String line;
+		String[] parts = null;
+		int lineNumber = 0;
+		while ((line = reader.readLine()) != null) {
+			parts = line.split(FILE_DELIMITER_REGEX);
+			if (parts.length == 1) {
+				glStrings.put(filename + "-" + lineNumber, parts[0]);
+			} else if (parts.length == 2) {
+				glStrings.put(parts[0], parts[1]);
+			} else {
+				LOGGER.warning("Unexpected line format at line "
+						+ lineNumber + ": " + filename);
+			}
+
+			lineNumber++;
+		}
+		
 		return glStrings;
 	}
 

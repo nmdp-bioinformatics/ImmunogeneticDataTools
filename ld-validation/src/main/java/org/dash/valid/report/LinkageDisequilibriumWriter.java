@@ -56,10 +56,8 @@ public class LinkageDisequilibriumWriter {
 	}
 	/**
 	 * @param linkagesFound
-	 * @throws IOException 
-	 * @throws SecurityException 
 	 */
-	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) throws SecurityException, IOException {				
+	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) {				
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGenotypeList().getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		

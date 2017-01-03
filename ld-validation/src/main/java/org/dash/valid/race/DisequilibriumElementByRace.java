@@ -25,19 +25,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.dash.valid.DisequilibriumElement;
+import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 
-public class DisequilibriumElementByRace extends DisequilibriumElement {
+public class DisequilibriumElementByRace extends CoreDisequilibriumElement {
 	private List<FrequencyByRace> frequenciesByRace = new ArrayList<FrequencyByRace>();
 	
 	public DisequilibriumElementByRace() {
-		
+		super();
 	}
 	
 	public DisequilibriumElementByRace (HashMap<Locus, String> hlaElementMap, List<FrequencyByRace> frequenciesByRace) {
-		super(hlaElementMap);
+		setHlaElementMap(hlaElementMap);
 		setFrequenciesByRace(frequenciesByRace);
 	}
 	

@@ -21,6 +21,7 @@
 */
 package org.dash.valid;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -81,6 +82,14 @@ public class LinkageDisequilibriumAnalyzer {
 			analyzeGLStringFile(filenames[i]);		
 		}		
 	}
+	
+	public static List<DetectedLinkageFindings> analyzeGLStringFile(String name, BufferedReader reader) throws IOException {
+		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(name, reader);
+		
+		List<DetectedLinkageFindings> findingsList = detectLinkages(glStrings);
+		
+		return findingsList;
+	}
 
 	/**
 	 * @param filename
@@ -88,6 +97,8 @@ public class LinkageDisequilibriumAnalyzer {
 	public static void analyzeGLStringFile(String filename) throws IOException {				
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(filename);
 		List<DetectedLinkageFindings> findingsList = null;
+		
+		
 		
 		findingsList = detectLinkages(glStrings);
 		
@@ -104,7 +115,7 @@ public class LinkageDisequilibriumAnalyzer {
 	 * @throws IOException 
 	 * @throws SecurityException 
 	 */
-	private static List<DetectedLinkageFindings> detectLinkages(Map<String, String> glStrings) throws SecurityException, IOException {
+	private static List<DetectedLinkageFindings> detectLinkages(Map<String, String> glStrings) {
 		LinkageDisequilibriumGenotypeList linkedGLString;
 		String glString;
 		List<DetectedLinkageFindings> findingsList = new ArrayList<DetectedLinkageFindings>();
@@ -116,7 +127,6 @@ public class LinkageDisequilibriumAnalyzer {
 				glString = GLStringUtilities.fullyQualifyGLString(glString);
 			}
 			
-			//linkedGLString = new LinkageDisequilibriumGenotypeList(key, glString);
 			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
 			linkedGLString = new LinkageDisequilibriumGenotypeList(key, mug);
 			
@@ -141,14 +151,14 @@ public class LinkageDisequilibriumAnalyzer {
 		return findingsList;
 	}
 	
-	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) throws IOException {
+	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) {
 		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug.getId(), mug);
 		DetectedLinkageFindings findings = detectLinkages(linkedGLString);
 
 		return findings;
 	}
 
-	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) throws IOException {
+	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
 		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString);
 				
 		return findings;
