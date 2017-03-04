@@ -50,7 +50,7 @@ public class ValidateLdGlstringsTest
     }
 
     /**
-     * Rigourous Test :-)
+     * Rigorous Test :-)
      */
     public void testApp()
     {

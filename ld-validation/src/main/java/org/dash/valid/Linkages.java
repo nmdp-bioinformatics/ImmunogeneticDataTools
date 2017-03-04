@@ -72,6 +72,18 @@ public enum Linkages {
 		}
 	}
 	
+	public static Linkages lookup(String shortName) {
+		for (Linkages linkages : values()) {
+			if (linkages.getShortName().equals(shortName)) {
+				return linkages;
+			}
+		}
+		
+		LOGGER.warning("None of the specified linkages: " + shortName + " are supported.  Defaulting to : " + Linkages.FIVE_LOCUS);
+		
+		return Linkages.FIVE_LOCUS;
+	}
+	
 	public static Set<Linkages> lookup(Set<String> shortNames) {
 		Set<Linkages> set = new HashSet<Linkages>();
 		for (Linkages linkages : values()) {

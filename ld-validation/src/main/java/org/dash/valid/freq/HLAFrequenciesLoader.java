@@ -249,6 +249,9 @@ public class HLAFrequenciesLoader {
 					case FIVE_LOCUS:
 						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadStandardReferenceData(NMDP_STD_FIVELOCUS_FREQUENCIES));
 						break;
+					case SIX_LOCUS:
+						this.disequilibriumElementsMap.put(Locus.SIX_LOCUS, loadStandardReferenceData(NMDP_STD_SIXLOCUS_FREQUENCIES));
+						break;
 					default:
 						break;
 					}
@@ -362,8 +365,6 @@ public class HLAFrequenciesLoader {
 	}
 	
 	public List<DisequilibriumElement> loadNMDPLinkageReferenceData(String filename, Locus[] locusPositions) throws IOException, InvalidFormatException {  
-		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
-		
         // Finds the workbook instance for XLSX file
 		InputStream inStream = HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename);
 		
@@ -371,7 +372,15 @@ public class HLAFrequenciesLoader {
 			throw new FileNotFoundException();
 		}
 		
-        Workbook workbook = WorkbookFactory.create(inStream);
+        return loadNMDPLinkageReferenceData(inStream, locusPositions);
+	}
+
+	public List<DisequilibriumElement> loadNMDPLinkageReferenceData(
+			InputStream inStream,
+			Locus[] locusPositions) throws IOException, InvalidFormatException {
+		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
+
+		Workbook workbook = WorkbookFactory.create(inStream);
        
         // Return first sheet from the XLSX workbook
         Sheet mySheet = workbook.getSheetAt(0);
