@@ -29,7 +29,17 @@ The results of the software should be used for supporting the evidence, but not 
 
  * Support [HML 1.0](https://bioinformatics.bethematchclinical.org/HLA-Resources/HML/) as input
  
-*Basic Installation Process:*
+*Using the software:*
+
+As of release .7, the ability to download the software package and make use of command line tools is available.
+
+From the Releases section of GitHub you may grab the snapshot of the latest release.  E.g:  ld-tools-0.0.1-SNAPSHOT-bin.zip from release .7 at [Releases](https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools/releases)
+
+After un-zipping the software, you may run ./ld-tools-0.0.1-SNAPSHOT/bin/analyze-gl-strings -h for instructions on how to run the software.
+
+*Basic Installation Process from source code:*
+
+If you prefer to compile / package the software from source, follow these instructions...
 
 * Install Git
 * Clone the repository (git clone https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools.git)
@@ -81,5 +91,12 @@ The results of the software should be used for supporting the evidence, but not 
 + Carefully read and accept the license agreement
 + Grab the following files and install at src/main/resources/frequencies/nmdp
 + *A.xlsx, A~C~B.xlsx, C.xlsx, B.xlsx, C~B.xlsx, DRB3-4-5.xlsx, DRB1.xlsx, DQB1.xlsx, DRB3-4-5~DRB1~DQB1.xlsx*
+
+*2011 NMDP Frequency Re-Formatting Instructions:*
+
++ The command line feature of the software (analyze-gl-strings) accepts frequencies in a standard format
++ To turn the 2011 NMDP Frequencies into that format, a command line tool called normalize-frequency-file has been created
++ After using the tool to convert the frequency files, the newly formatted files may be passed into analyze-gl-strings as a command line argument
++ If preferring to run using mvn (w/o command line tools), the newly formatted frequency files can be dropped into resources/frequencies/std and invoked by specifying nmdp-std as the frequency type
 
  

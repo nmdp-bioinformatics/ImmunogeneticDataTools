@@ -129,6 +129,10 @@
             	<id>analyze-gl-strings</id>
             	<mainClass>org.nmdp.validation.tools.AnalyzeGLStrings</mainClass>
             </program>
+            <program>
+            	<id>normalize-frequency-file</id>
+            	<mainClass>org.nmdp.validation.tools.NormalizeFrequencyFile</mainClass>
+            </program>
           </programs>
         </configuration>
         <executions>
