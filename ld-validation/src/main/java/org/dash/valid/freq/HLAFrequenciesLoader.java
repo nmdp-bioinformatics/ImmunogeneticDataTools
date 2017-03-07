@@ -375,7 +375,7 @@ public class HLAFrequenciesLoader {
         return loadNMDPLinkageReferenceData(inStream, locusPositions);
 	}
 
-	public List<DisequilibriumElement> loadNMDPLinkageReferenceData(
+	public static List<DisequilibriumElement> loadNMDPLinkageReferenceData(
 			InputStream inStream,
 			Locus[] locusPositions) throws IOException, InvalidFormatException {
 		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
@@ -460,7 +460,7 @@ public class HLAFrequenciesLoader {
 		workbook.close();
 	}
 	
-	private List<String> readHeaderElementsByRace(Row row) {		
+	private static List<String> readHeaderElementsByRace(Row row) {		
 		List<String> raceHeaders = new ArrayList<String>();
 		
 		Iterator<Cell> cellIterator = row.cellIterator();
@@ -478,7 +478,7 @@ public class HLAFrequenciesLoader {
 	/**
 	 * @param row
 	 */
-	private DisequilibriumElement readDiseqilibriumElementsByRace(Row row, List<String> raceHeaders, Locus[] locusPositions) {		
+	private static DisequilibriumElement readDiseqilibriumElementsByRace(Row row, List<String> raceHeaders, Locus[] locusPositions) {		
 		// For each row, iterate through each columns
 		Iterator<Cell> cellIterator = row.cellIterator();
 		
@@ -516,7 +516,7 @@ public class HLAFrequenciesLoader {
 	 * @param cell
 	 * @param idx
 	 */
-	private List<FrequencyByRace> loadFrequencyAndRank(Row row, Cell cell, 
+	private static List<FrequencyByRace> loadFrequencyAndRank(Row row, Cell cell, 
 			List<FrequencyByRace> frequenciesByRace, List<String> raceHeaders) {
 		Double freq = cell.getNumericCellValue();
 		

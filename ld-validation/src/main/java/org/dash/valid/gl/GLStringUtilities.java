@@ -173,7 +173,6 @@ public class GLStringUtilities {
 			String referenceAllele) {
 		String matchedValue = convertToProteinLevel(allele);
 				
-		int partLength = allele.split(COLON).length;
 		AntigenRecognitionSiteLoader instance = null;
 		
 		try {
@@ -195,7 +194,6 @@ public class GLStringUtilities {
 			}
 			else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
 					&& arsMap.get(arsCode).contains(matchedValue)) {
-				// TODO:  Revisit for proper handling / stripping of little g
 				return true;
 			}
 		}

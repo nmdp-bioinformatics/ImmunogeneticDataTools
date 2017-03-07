@@ -36,7 +36,6 @@ import org.dash.valid.DisequilibriumElement;
 import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
-import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.race.DisequilibriumElementByRace;
@@ -87,15 +86,12 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
     
     @Override
     public Integer call() throws Exception {
-		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP.getShortName());
 		HashSet<String> linkageNames = new HashSet<String>();
 		linkageNames.add(linkages);
 		Set<Linkages> linkagesSet = Linkages.lookup(linkageNames);
 		LinkagesLoader.getInstance(linkagesSet);
-		
-		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
-						
-		List<DisequilibriumElement> disequilibriumElements = freqLoader.loadNMDPLinkageReferenceData(new FileInputStream(inputFile), LOCUS_POSITION_MAP.get(Linkages.lookup(linkages).getLoci()));
+								
+		List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.loadNMDPLinkageReferenceData(new FileInputStream(inputFile), LOCUS_POSITION_MAP.get(Linkages.lookup(linkages).getLoci()));
 		
 		PrintWriter writer = new PrintWriter(outputFile);
 		
