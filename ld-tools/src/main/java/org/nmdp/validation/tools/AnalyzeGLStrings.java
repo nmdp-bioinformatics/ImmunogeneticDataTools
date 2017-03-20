@@ -26,6 +26,7 @@ import static org.dishevelled.compress.Writers.writer;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.EnumSet;
 import java.util.List;
@@ -84,43 +85,54 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     
     @Override
     public Integer call() throws Exception {
-    	List<DetectedLinkageFindings> findingsList;
+    	BufferedReader reader = reader(inputFile);
+    	
+    	runAnalysis(reader);
+    	return 0;
+    }
+
+	public void runAnalysis(BufferedReader reader) throws IOException {
+		List<DetectedLinkageFindings> findingsList;
     	System.setProperty(HLADatabaseVersion.HLADB_PROPERTY, hladb != null ? hladb : GLStringConstants.EMPTY_STRING);
     	System.setProperty(Frequencies.FREQUENCIES_PROPERTY, freq != null ? freq : GLStringConstants.EMPTY_STRING);
-    	
-    	BufferedReader reader = reader(inputFile);
     	
     	Set<Linkages> linkages = null;
     	
     	if (frequencyFile !=  null) {
-    		System.out.println("I got a frequencyFile: " + frequencyFile);
     		HLAFrequenciesLoader hlaFreqLoader = HLAFrequenciesLoader.getInstance(frequencyFile);
     		Set<EnumSet<Locus>> lociSet = hlaFreqLoader.getLoci();
     		
     		System.out.println(lociSet);
     		// TODO:  Handle multiple linkages here
     		linkages = Linkages.lookup(lociSet.iterator().next());
-    		
-    		System.out.println(linkages);
-    		
+    		    		
     		// TODO:  initialize this differently
     		LinkagesLoader.getInstance(linkages);
     	}
     	    	
     	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
     	
-    	PrintWriter writer = writer(outputFile);
+    	PrintWriter writer = null;
+    	
+//    	if (outputFile != null && outputFile.isDirectory()) {
+//    		writer = writer(new File(outputFile.getPath() + "/summary.log"));
+//    	}
+//    	else {
+//    		writer = writer(outputFile);
+//    	}
+    	
+    	writer = writer(outputFile);
     	
     	for (DetectedLinkageFindings findings : findingsList) {
     		if (warnings != null && warnings == Boolean.TRUE && !findings.hasAnomalies()) {
     			continue;
     		}
+    		//writer.write(SummaryWriter.getInstance().formatDetectedLinkages(findings));
     		writer.write(HaplotypePairWriter.getInstance().formatDetectedLinkages(findings));
     	}
     	
     	writer.close();
-    	return 0;
-    }
+	}
 
     /**
      * Main.

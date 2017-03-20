@@ -31,6 +31,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
+
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.LinkageElementsSet;
 import org.dash.valid.Locus;
@@ -43,6 +49,9 @@ import org.dash.valid.race.RelativeFrequencyByRace;
 import org.dash.valid.race.RelativeFrequencyByRaceComparator;
 import org.dash.valid.race.RelativeFrequencyByRaceSet;
 
+
+@XmlRootElement(name="gl-freq")
+@XmlType(propOrder={"GLId", "GLString", "nonCWDAlleles", "linkedPairs"})
 public class DetectedLinkageFindings {
 	public static final int EXPECTED_LINKAGES = 2;
 
@@ -51,6 +60,7 @@ public class DetectedLinkageFindings {
 	private Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 	private Set<String> nonCWDAlleles;
 	private HLADatabaseVersion hladb;
+	private String frequencies;
 	
 	private HashMap<Set<Locus>, Integer> linkageCountsMap = new HashMap<Set<Locus>, Integer>();
 	private HashMap<EnumSet<Locus>, Boolean> linkedPairsMap = new HashMap<EnumSet<Locus>, Boolean>();
@@ -60,8 +70,16 @@ public class DetectedLinkageFindings {
 	
 	private Set<EnumSet<Locus>> findingsSought = new HashSet<EnumSet<Locus>>();
 	
-	HashMap<EnumSet<Locus>, HashMap<String, List<Float>>> minimumDifferenceMapOfMaps = new HashMap<EnumSet<Locus>, HashMap<String, List<Float>>>();
+	private HashMap<EnumSet<Locus>, HashMap<String, List<Float>>> minimumDifferenceMapOfMaps = new HashMap<EnumSet<Locus>, HashMap<String, List<Float>>>();
+	
+	public DetectedLinkageFindings() {
 		
+	}
+	
+	public DetectedLinkageFindings(String frequencies) {
+		this.frequencies = frequencies;
+	}
+	
 	private Float getMinimumDifference(HashMap<String, List<Float>> minimumDifferenceMap) {
 		List<Float> mins = new ArrayList<Float>();
 		
@@ -134,10 +152,12 @@ public class DetectedLinkageFindings {
 		return null;
 	}
 	
+	@XmlTransient
 	public Collection<HaplotypePair> getFirstPairs() {
 		return firstPairsMap.values();
 	}
 	
+	@XmlElement(name="haplo-pair")
 	public Set<HaplotypePair> getLinkedPairs() {
 		return linkedPairs;
 	}
@@ -258,28 +278,56 @@ public class DetectedLinkageFindings {
 	public boolean hasCommonRaceElements() {
 		return getCommonRaceElements().size() > 0;
 	}
+	
 	public List<String> getCommonRaceElements() {
 		return commonRaceElements;
 	}
-
-	public HLADatabaseVersion getHladb() {
-		return hladb;
+	
+	@XmlAttribute(name="frequency-set")
+	public String getFrequencies() {
+		return frequencies;
 	}
+
+	@XmlAttribute(name="hladb")
+	public String getHladb() {
+		return hladb.getArsName();
+	}
+	
 	public void setHladb(HLADatabaseVersion hladb) {
 		this.hladb = hladb;
 	}
+	
+	@XmlElement(name="non-cwd")
 	public Set<String> getNonCWDAlleles() {
 		return nonCWDAlleles;
 	}
 	public void setNonCWDAlleles(Set<String> nonCWDAlleles) {
 		this.nonCWDAlleles = nonCWDAlleles;
 	}
-	public LinkageDisequilibriumGenotypeList getGenotypeList() {
+	
+	@XmlAttribute(name="id")
+	public String getGLId() {
+		return getGenotypeList().getId();
+	}
+	
+	@XmlElement(name="gl-string")
+	public String getGLString() {
+		return getGenotypeList().getGLString();
+	}
+	
+	
+	public int getAlleleCount(Locus locus) {
+		return getGenotypeList().getAlleleCount(locus);
+	}
+	
+	private LinkageDisequilibriumGenotypeList getGenotypeList() {
 		return genotypeList;
 	}
+	
 	public void setGenotypeList(LinkageDisequilibriumGenotypeList genotypeList) {
 		this.genotypeList = genotypeList;
 	}
+	
 	public Set<DetectedDisequilibriumElement> getLinkages() {
 		return linkages;
 	}

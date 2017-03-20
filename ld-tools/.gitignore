@@ -1,2 +1,5 @@
 /target/
 /.DS_Store
+/haplotypePairWarnings.log
+/haplotypePairs.log
+/immuno.log

@@ -108,7 +108,8 @@ public class MultiLocusHaplotype extends Haplotype {
 
 		if (this.linkage != null) {
 			for (Locus locus : loci) {
-				sb.append(getAlleles(locus));
+				sb.append(linkage.getDisequilibriumElement().getHlaElement(locus));
+				//sb.append(getAlleles(locus));
 				sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
 			}
 		}

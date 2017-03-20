@@ -49,7 +49,6 @@ public class DetectedDisequilibriumElement {
 		StringBuffer sb = new StringBuffer();
 		
 		for (Locus locus : getDisequilibriumElement().getLoci()) {
-			//sb.append(locus.getShortName() + " Locus: " + getDisequilibriumElement().getHlaElement(locus) + " (" + getHitDegree(locus) + ")" + GLStringConstants.NEWLINE);
 			sb.append(locus.getShortName() + " Locus: " + getDisequilibriumElement().getHlaElement(locus) + GLStringConstants.NEWLINE);
 		}
 				

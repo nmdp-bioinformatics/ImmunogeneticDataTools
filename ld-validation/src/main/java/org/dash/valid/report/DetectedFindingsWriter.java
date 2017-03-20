@@ -115,19 +115,19 @@ public class DetectedFindingsWriter {
 	   XSSFRow row = spreadsheet.createRow(rowId++);
 	   int cellId = 0;
 	   XSSFCell cell = row.createCell(cellId++);
-	   cell.setCellValue(findings.getGenotypeList().getId());
+	   cell.setCellValue(findings.getGLId());
 	   cell = row.createCell(cellId++);
-	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_A));
+	   cell.setCellValue(findings.getAlleleCount(Locus.HLA_A));
 	   cell = row.createCell(cellId++);
-	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_B));
+	   cell.setCellValue(findings.getAlleleCount(Locus.HLA_B));
 	   cell = row.createCell(cellId++);
-	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_C));
+	   cell.setCellValue(findings.getAlleleCount(Locus.HLA_C));
 	   cell = row.createCell(cellId++);
-	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB1));
+	   cell.setCellValue(findings.getAlleleCount(Locus.HLA_DRB1));
 	   cell = row.createCell(cellId++);
-	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB345));
+	   cell.setCellValue(findings.getAlleleCount(Locus.HLA_DRB345));
 	   cell = row.createCell(cellId++);
-	   cell.setCellValue(findings.getGenotypeList().getAlleleCount(Locus.HLA_DQB1));
+	   cell.setCellValue(findings.getAlleleCount(Locus.HLA_DQB1));
 	   for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 		   cell = row.createCell(cellId++);
 		   cell.setCellValue(findings.getLinkageCount(linkage.getLoci()));
@@ -142,13 +142,13 @@ public class DetectedFindingsWriter {
 
 	public String formatDetectedFindings(DetectedLinkageFindings findings) {
 		StringBuffer sb = new StringBuffer();
-			sb.append(findings.getGenotypeList().getId() + GLStringConstants.COMMA);
-			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_A) + GLStringConstants.COMMA);
-			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_B) + GLStringConstants.COMMA);
-			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_C) + GLStringConstants.COMMA);
-			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB1) + GLStringConstants.COMMA);
-			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_DRB345) + GLStringConstants.COMMA);
-			sb.append(findings.getGenotypeList().getAlleleCount(Locus.HLA_DQB1) + GLStringConstants.COMMA);
+			sb.append(findings.getGLId() + GLStringConstants.COMMA);
+			sb.append(findings.getAlleleCount(Locus.HLA_A) + GLStringConstants.COMMA);
+			sb.append(findings.getAlleleCount(Locus.HLA_B) + GLStringConstants.COMMA);
+			sb.append(findings.getAlleleCount(Locus.HLA_C) + GLStringConstants.COMMA);
+			sb.append(findings.getAlleleCount(Locus.HLA_DRB1) + GLStringConstants.COMMA);
+			sb.append(findings.getAlleleCount(Locus.HLA_DRB345) + GLStringConstants.COMMA);
+			sb.append(findings.getAlleleCount(Locus.HLA_DQB1) + GLStringConstants.COMMA);
 			for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 				sb.append(findings.getLinkageCount(linkage.getLoci()) + GLStringConstants.COMMA);
 				sb.append(findings.getMinimumDifference(linkage.getLoci()) + GLStringConstants.COMMA);

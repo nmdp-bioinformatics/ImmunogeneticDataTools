@@ -64,7 +64,7 @@ public class CommonWellDocumentedWriter {
 			return GLStringConstants.EMPTY_STRING;
 		}
 		
-		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGenotypeList().getGLString());
+		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
 		CommonWellDocumentedLoader loader = CommonWellDocumentedLoader.getInstance();

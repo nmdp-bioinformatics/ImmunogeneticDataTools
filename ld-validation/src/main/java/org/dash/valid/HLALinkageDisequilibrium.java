@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.dash.valid.ars.HLADatabaseVersion;
+import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
@@ -70,7 +71,7 @@ public class HLALinkageDisequilibrium {
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 				
-		DetectedLinkageFindings findings = new DetectedLinkageFindings();
+		DetectedLinkageFindings findings = new DetectedLinkageFindings(Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).toString());
 
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {

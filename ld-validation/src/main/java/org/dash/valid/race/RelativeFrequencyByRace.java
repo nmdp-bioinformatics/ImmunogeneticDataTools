@@ -21,10 +21,18 @@
 */
 package org.dash.valid.race;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
+@XmlRootElement(name="linkage")
+@XmlType(propOrder={"race", "frequency", "relativeFrequency"})
 public class RelativeFrequencyByRace implements RaceFrequency {
-	Double frequency;
 	Float relativeFrequency;
+	Double frequency;
+	String race;
 	
+	@XmlElement(name="relative-frequency")
 	public Float getRelativeFrequency() {
 		return relativeFrequency;
 	}
@@ -37,28 +45,34 @@ public class RelativeFrequencyByRace implements RaceFrequency {
 	public void setRelativeFrequency(Float relativeFrequency) {
 		this.relativeFrequency = relativeFrequency;
 	}
-
-	String race;
 	
-	public RelativeFrequencyByRace(Double frequency, String race) {
-		this.frequency = frequency;
-		this.race = race;
+	public RelativeFrequencyByRace() {
+		
 	}
 	
+	public RelativeFrequencyByRace(Double frequency, String race) {
+		setFrequency(frequency);
+		setRace(race);
+	}
+	
+	@XmlElement(name="frequency")
 	public Double getFrequency() {
 		return frequency;
 	}
 	public void setFrequency(Double frequency) {
 		this.frequency = frequency;
 	}
+	
+	@XmlElement(name="race")
 	public String getRace() {
 		return race;
 	}
 	public void setRace(String race) {
 		this.race = race;
 	}
+
 	public String getRaceType() {
-		return BroadRace.contains(race) ? "Broad" : "Detailed";
+		return BroadRace.contains(getRace()) ? "Broad" : "Detailed";
 	}
 	
 	public String toString() {
