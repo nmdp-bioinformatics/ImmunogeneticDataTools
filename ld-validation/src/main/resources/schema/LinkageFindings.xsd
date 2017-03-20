@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:element name="gl-freq">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="gl-string" type="xs:string"/>
+                <xs:element name="non-cwd" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="haplo-pair" minOccurs="0" maxOccurs="unbounded"/>
+             </xs:sequence>
+             <xs:attribute name="id" type="xs:string"/>
+             <xs:attribute name="hladb" type="xs:string"/>
+             <xs:attribute name="frequency-set" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="haplo-pair">
+    	<xs:complexType>
+    		<xs:sequence>
+    			<xs:element ref="haplotype" maxOccurs="2"/>
+    			<xs:element ref="frequencies" minOccurs="0" maxOccurs="unbounded"/>
+    			<xs:element name="frequency" minOccurs="0" maxOccurs="1"/>
+    		</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    
+    <xs:element name="frequencies">
+    	<xs:complexType>
+    		<xs:sequence>
+    		    <xs:element name="race" type="xs:string"/>
+    			<xs:element name="frequency" type="xs:double"/>
+    			<xs:element name="relative-frequency" type="xs:float"/>
+    		</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    
+    <xs:element name="haplotype">
+    	<xs:complexType>
+    		<xs:attribute name="value" type="xs:string"/>
+    	</xs:complexType>
+    </xs:element>
+    			
+</xs:schema>
