@@ -22,6 +22,7 @@
 package org.dash.valid.base;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.Locus;
@@ -31,7 +32,7 @@ public class BaseDisequilibriumElement extends CoreDisequilibriumElement {
 	private String frequency;
 	private String note;
 	
-	public BaseDisequilibriumElement(HashMap<Locus, String> hlaElementMap, String frequency, String note) {
+	public BaseDisequilibriumElement(HashMap<Locus, List<String>> hlaElementMap, String frequency, String note) {
 		setHlaElementMap(hlaElementMap);
 		setFrequency(frequency);
 		setNote(note);

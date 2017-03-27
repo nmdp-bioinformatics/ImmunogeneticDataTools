@@ -28,21 +28,19 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
-import org.dash.valid.Linkages;
-import org.dash.valid.LinkagesLoader;
-import org.dash.valid.Locus;
 import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
+import org.dash.valid.handler.HaplotypePairFileHandler;
+import org.dash.valid.handler.HaplotypePairWarningFileHandler;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;
+import org.dash.valid.report.SummaryWriter;
 import org.dishevelled.commandline.ArgumentList;
 import org.dishevelled.commandline.CommandLine;
 import org.dishevelled.commandline.CommandLineParseException;
@@ -94,44 +92,63 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 	public void runAnalysis(BufferedReader reader) throws IOException {
 		List<DetectedLinkageFindings> findingsList;
     	System.setProperty(HLADatabaseVersion.HLADB_PROPERTY, hladb != null ? hladb : GLStringConstants.EMPTY_STRING);
+    	
+    	// TODO:  Figure out how to make it stop reporting the default here...
     	System.setProperty(Frequencies.FREQUENCIES_PROPERTY, freq != null ? freq : GLStringConstants.EMPTY_STRING);
-    	
-    	Set<Linkages> linkages = null;
-    	
+    	    	
     	if (frequencyFile !=  null) {
-    		HLAFrequenciesLoader hlaFreqLoader = HLAFrequenciesLoader.getInstance(frequencyFile);
-    		Set<EnumSet<Locus>> lociSet = hlaFreqLoader.getLoci();
-    		
-    		System.out.println(lociSet);
-    		// TODO:  Handle multiple linkages here
-    		linkages = Linkages.lookup(lociSet.iterator().next());
-    		    		
-    		// TODO:  initialize this differently
-    		LinkagesLoader.getInstance(linkages);
+    		HLAFrequenciesLoader.getInstance(frequencyFile);
     	}
     	    	
     	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
     	
     	PrintWriter writer = null;
+    	PrintWriter summaryWriter = null;
+    	PrintWriter pairWriter = null;
+    	PrintWriter pairWarningsWriter = null;
     	
-//    	if (outputFile != null && outputFile.isDirectory()) {
-//    		writer = writer(new File(outputFile.getPath() + "/summary.log"));
-//    	}
-//    	else {
-//    		writer = writer(outputFile);
-//    	}
+    	boolean writeToDir = false;
     	
-    	writer = writer(outputFile);
+    	if (outputFile != null && outputFile.isDirectory()) {
+    		writeToDir = true;
+    		
+    		summaryWriter = writer(new File(outputFile + "/" + SummaryWriter.SUMMARY_XML_FILE), true);
+    		pairWriter = writer(new File(outputFile + "/" + HaplotypePairFileHandler.HAPLOTYPE_PAIRS_LOG), true);
+    		pairWarningsWriter = writer(new File(outputFile + "/" + HaplotypePairWarningFileHandler.HAPLOTYPE_PAIRS_WARNING_LOG), true);
+    	}
+    	else {
+    		writer = writer(outputFile, true);
+    	}
     	
-    	for (DetectedLinkageFindings findings : findingsList) {
+		for (DetectedLinkageFindings findings : findingsList) {
     		if (warnings != null && warnings == Boolean.TRUE && !findings.hasAnomalies()) {
     			continue;
     		}
-    		//writer.write(SummaryWriter.getInstance().formatDetectedLinkages(findings));
-    		writer.write(HaplotypePairWriter.getInstance().formatDetectedLinkages(findings));
-    	}
+    		
+        	if (writeToDir) {
+        		summaryWriter.write(SummaryWriter.getInstance().formatDetectedLinkages(findings));
+        		
+        		if (findings.hasAnomalies()) {
+        			pairWarningsWriter.write(HaplotypePairWriter.getInstance().formatDetectedLinkages(findings));
+        		}
+        		else {
+        			pairWriter.write(HaplotypePairWriter.getInstance().formatDetectedLinkages(findings));
+        		}
+        	}
+        	else {
+        		writer.write(SummaryWriter.getInstance().formatDetectedLinkages(findings));
+        	}
+        		
+		}
     	
-    	writer.close();
+		if (writeToDir) {
+			summaryWriter.close();
+			pairWriter.close();
+			pairWarningsWriter.close();
+		}
+		else {
+			writer.close();
+		}
 	}
 
     /**

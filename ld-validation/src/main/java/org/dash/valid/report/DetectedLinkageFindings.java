@@ -51,7 +51,7 @@ import org.dash.valid.race.RelativeFrequencyByRaceSet;
 
 
 @XmlRootElement(name="gl-freq")
-@XmlType(propOrder={"GLId", "GLString", "nonCWDAlleles", "linkedPairs"})
+@XmlType(propOrder={"GLString", "nonCWDAlleles", "linkedPairs"})
 public class DetectedLinkageFindings {
 	public static final int EXPECTED_LINKAGES = 2;
 
@@ -163,6 +163,8 @@ public class DetectedLinkageFindings {
 	}
 	
 	public void setLinkedPairs(Set<HaplotypePair> linkedPairs) {	
+		EnumSet<Locus> loci = null;
+		
 		if (linkedPairs.iterator().hasNext() && linkedPairs.iterator().next().isByRace()) {
 			HashMap<Set<Locus>, HashMap<String, Double>> raceTotalFreqsMap = new HashMap<Set<Locus>, HashMap<String, Double>>();
 			
@@ -171,7 +173,6 @@ public class DetectedLinkageFindings {
 			RelativeFrequencyByRace relativeRaceFreq;
 			String race;
 			Double totalFreq;
-			EnumSet<Locus> loci = null;
 									
 			for (HaplotypePair pair : linkedPairs) {
 				loci = Locus.lookup(pair.getLoci());
@@ -225,16 +226,17 @@ public class DetectedLinkageFindings {
 			}
 		}
 		else {
+			for (HaplotypePair pair : linkedPairs) {
+				loci = Locus.lookup(pair.getLoci());
+				setLinkedPairs(loci, true);
+			}
+			
 			this.linkedPairs = linkedPairs;
 		}
 		
-		for (HaplotypePair pair : this.linkedPairs) {
-			addLinkage(pair.getHaplotype1().getLinkage());
-		}
-		
 		Set<EnumSet<Locus>> lociSet = this.linkedPairsMap.keySet();
-		for (EnumSet<Locus> loci : lociSet) {
-			getFirstPair(loci);
+		for (EnumSet<Locus> lociInSet : lociSet) {
+			getFirstPair(lociInSet);
 		}
 	}
 	/**

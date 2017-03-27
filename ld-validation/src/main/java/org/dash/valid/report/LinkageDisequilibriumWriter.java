@@ -57,7 +57,18 @@ public class LinkageDisequilibriumWriter {
 	/**
 	 * @param linkagesFound
 	 */
-	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) {				
+	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) {						
+		String output = formatDetectedLinkages(findings);
+	
+		if (findings.hasAnomalies()) {
+			FILE_LOGGER.warning(output);
+		}
+		else {
+			FILE_LOGGER.info(output);
+		}
+	}
+
+	public String formatDetectedLinkages(DetectedLinkageFindings findings) {
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
@@ -74,12 +85,6 @@ public class LinkageDisequilibriumWriter {
 		}
 		
 		sb.append(GLStringConstants.NEWLINE + "***************************************" + GLStringConstants.NEWLINE);
-	
-		if (findings.hasAnomalies()) {
-			FILE_LOGGER.warning(sb.toString());
-		}
-		else {
-			FILE_LOGGER.info(sb.toString());
-		}
+		return sb.toString();
 	}
 }

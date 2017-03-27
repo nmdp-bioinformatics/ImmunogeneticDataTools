@@ -83,21 +83,11 @@ public class HaplotypePair {
 	public EnumSet<Locus> getLoci() {
 		return this.loci;
 	}
-
-//	@XmlElement(name="haplotype")
-//	public String getHaplotype1String() {
-//		return haplotype1.getHaplotypeString();
-//	}
 	
 	@XmlElement(name="haplotype")
 	public Haplotype getHaplotype1() {
 		return haplotype1;
 	}
-
-//	@XmlElement(name="haplotype")
-//	public String getHaplotype2String() {
-//		return haplotype2.getHaplotypeString();
-//	}
 	
 	@XmlElement(name="haplotype")
 	public Haplotype getHaplotype2() {
@@ -141,7 +131,7 @@ public class HaplotypePair {
 				for (FrequencyByRace haplo2Freqs : ((DisequilibriumElementByRace) haplotype2.getLinkage().getDisequilibriumElement()).getFrequenciesByRace()) {
 					if (haplo1Freqs.getRace().equals(haplo2Freqs.getRace())) {
 						pairFrequency = haplo1Freqs.getFrequency() * haplo2Freqs.getFrequency();
-						freqByRace = new RelativeFrequencyByRace(new Double(pairFrequency), haplo1Freqs.getRace());
+						freqByRace = new RelativeFrequencyByRace(new Double(pairFrequency), haplo1Freqs.getRace(), haplo1Freqs, haplo2Freqs);
 								
 						frequenciesByRaceList.add(freqByRace);
 					}

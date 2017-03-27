@@ -21,7 +21,9 @@
 */
 package org.dash.valid.report;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.logging.Logger;
@@ -33,21 +35,25 @@ import javax.xml.bind.Marshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.dash.valid.handler.HaplotypePairFileHandler;
-import org.dash.valid.handler.HaplotypePairWarningFileHandler;
 import org.xml.sax.SAXException;
 
 public class SummaryWriter {	
 	private static SummaryWriter instance = null;
-	private static Logger FILE_LOGGER = Logger.getLogger(SummaryWriter.class.getName());
-
+	
+	private static Logger LOGGER = Logger.getLogger(SummaryWriter.class.getName());
+	
+	public static String SUMMARY_XML_FILE = "summary.xml";
+	public static String LINKAGE_FINDINGS_SCHEMA = "schema/LinkageFindings.xsd";
+	
+	private static FileWriter fileWriter;
+	private static PrintWriter printWriter;
+	
 	static {
-		try {
-			FILE_LOGGER.addHandler(new HaplotypePairFileHandler());
-			FILE_LOGGER.addHandler(new HaplotypePairWarningFileHandler());
-			
+		try {			
+			  fileWriter = new FileWriter("./" + SUMMARY_XML_FILE, true);
+			  printWriter = new PrintWriter(fileWriter); 		
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.warning("Couldn't write to file: " + SUMMARY_XML_FILE);
 		}
 	}
 	
@@ -62,18 +68,21 @@ public class SummaryWriter {
 		
 		return instance;
 	}
-	/**
-	 * @param linkagesFound 
-	 */
-	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) {				
-		String linkages = formatDetectedLinkages(findings);
 	
-		if (findings.hasAnomalies()) {
-			FILE_LOGGER.warning(linkages);
+	public void closeWriters() {
+		try {
+			printWriter.flush();
+			printWriter.close();
+			fileWriter.close();
 		}
-		else {
-			FILE_LOGGER.info(linkages);
+		catch (IOException ioe) {
+			LOGGER.warning("Couldn't close fileWriter after writing to: " + SUMMARY_XML_FILE);
 		}
+	}
+	
+	public void reportDetectedLinkages(DetectedLinkageFindings findings) {
+		String reportedFindings = formatDetectedLinkages(findings);
+		printWriter.write(reportedFindings);
 	}
 
 	public String formatDetectedLinkages(DetectedLinkageFindings findings) {
@@ -83,7 +92,7 @@ public class SummaryWriter {
         SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI); 
         
         try {
-        	URL url = SummaryWriter.class.getClassLoader().getResource("schema/LinkageFindings.xsd");
+        	URL url = SummaryWriter.class.getClassLoader().getResource(LINKAGE_FINDINGS_SCHEMA);
         	Schema schema = sf.newSchema(url);
         	context = JAXBContext.newInstance(DetectedLinkageFindings.class);
 

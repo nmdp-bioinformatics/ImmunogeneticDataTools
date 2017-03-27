@@ -25,10 +25,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 
+@XmlRootElement(name="linkage")
 public class DisequilibriumElementByRace extends CoreDisequilibriumElement {
 	private List<FrequencyByRace> frequenciesByRace = new ArrayList<FrequencyByRace>();
 	
@@ -36,11 +40,12 @@ public class DisequilibriumElementByRace extends CoreDisequilibriumElement {
 		super();
 	}
 	
-	public DisequilibriumElementByRace (HashMap<Locus, String> hlaElementMap, List<FrequencyByRace> frequenciesByRace) {
+	public DisequilibriumElementByRace (HashMap<Locus, List<String>> hlaElementMap, List<FrequencyByRace> frequenciesByRace) {
 		setHlaElementMap(hlaElementMap);
 		setFrequenciesByRace(frequenciesByRace);
 	}
 	
+	@XmlElement(name="hap-frequencies")
 	public List<FrequencyByRace> getFrequenciesByRace() {
 		return frequenciesByRace;
 	}

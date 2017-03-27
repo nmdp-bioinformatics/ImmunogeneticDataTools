@@ -29,8 +29,12 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 public class HaplotypePairFileHandler extends FileHandler implements Filter {
+	public static String HAPLOTYPE_PAIRS_LOG = "haplotypePairs.log";
+	private static String DEFAULT_PATH = ".";
+	private static String FORWARD_SLASH = "/";
+	
 	public HaplotypePairFileHandler() throws IOException, SecurityException {
-		super("./haplotypePairs.log", true);
+		super(DEFAULT_PATH + FORWARD_SLASH + HAPLOTYPE_PAIRS_LOG, true);
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.INFO);
 	}

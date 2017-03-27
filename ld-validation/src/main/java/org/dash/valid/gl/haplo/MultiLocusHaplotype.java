@@ -34,38 +34,43 @@ import org.dash.valid.gl.GLStringConstants;
 public class MultiLocusHaplotype extends Haplotype {
 	private HashMap<Locus, List<String>> alleleMap = new HashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
-	
+
 	@Override
 	public Set<Locus> getLoci() {
 		return alleleMap.keySet();
 	}
-	
+
 	@Override
 	public Integer getHaplotypeInstance(Locus locus) {
 		return haplotypeInstanceMap.get(locus);
 	}
-	
+
 	@Override
 	public List<Integer> getHaplotypeInstances() {
 		return new ArrayList<Integer>(haplotypeInstanceMap.values());
 	}
-	
+
 	public HashMap<Locus, Integer> getHaplotypeInstanceMap() {
 		return haplotypeInstanceMap;
 	}
-	
+
 	@Override
 	public List<String> getAlleles(Locus locus) {
 		List<String> alleles = null;
 		switch (locus) {
 		case HLA_DRB345:
 			alleles = new ArrayList<String>();
-			if (alleleMap.containsKey(Locus.HLA_DRB345)) alleles.addAll(alleleMap.get(Locus.HLA_DRB345));
+			if (alleleMap.containsKey(Locus.HLA_DRB345))
+				alleles.addAll(alleleMap.get(Locus.HLA_DRB345));
 			else {
-				if (alleleMap.containsKey(Locus.HLA_DRB3)) alleles.addAll(alleleMap.get(Locus.HLA_DRB3));
-				if (alleleMap.containsKey(Locus.HLA_DRB4)) alleles.addAll(alleleMap.get(Locus.HLA_DRB4));
-				if (alleleMap.containsKey(Locus.HLA_DRB5)) alleles.addAll(alleleMap.get(Locus.HLA_DRB5));
-				if (alleleMap.containsKey(Locus.HLA_DRBX)) alleles.addAll(alleleMap.get(Locus.HLA_DRBX));
+				if (alleleMap.containsKey(Locus.HLA_DRB3))
+					alleles.addAll(alleleMap.get(Locus.HLA_DRB3));
+				if (alleleMap.containsKey(Locus.HLA_DRB4))
+					alleles.addAll(alleleMap.get(Locus.HLA_DRB4));
+				if (alleleMap.containsKey(Locus.HLA_DRB5))
+					alleles.addAll(alleleMap.get(Locus.HLA_DRB5));
+				if (alleleMap.containsKey(Locus.HLA_DRBX))
+					alleles.addAll(alleleMap.get(Locus.HLA_DRBX));
 			}
 			break;
 		default:
@@ -76,11 +81,11 @@ public class MultiLocusHaplotype extends Haplotype {
 		}
 		return alleles;
 	}
-	
+
 	public HashMap<Locus, List<String>> getAlleleMap() {
 		return this.alleleMap;
 	}
-	
+
 	@Override
 	public List<String> getAlleles() {
 		List<String> alleleSet = new ArrayList<String>();
@@ -89,15 +94,22 @@ public class MultiLocusHaplotype extends Haplotype {
 		}
 		return alleleSet;
 	}
-	
+
+	public MultiLocusHaplotype(HashMap<Locus, List<String>> alleleMap, HashMap<Locus, Integer> haplotypeInstanceMap,
+			boolean drb345Homozygous) {
+		this.alleleMap = alleleMap;
+		this.haplotypeInstanceMap = haplotypeInstanceMap;
+		setDRB345Homozygous(drb345Homozygous);
+	}
+
 	public MultiLocusHaplotype(HashMap<Locus, SingleLocusHaplotype> singleLocusHaplotypes, boolean drb345Homozygous) {
 		for (SingleLocusHaplotype singleLocusHaplotype : singleLocusHaplotypes.values()) {
-			alleleMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getAlleles());	
+			alleleMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getAlleles());
 			haplotypeInstanceMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getHaplotypeInstance());
 		}
 		setDRB345Homozygous(drb345Homozygous);
 	}
-	
+
 	@Override
 	public String getHaplotypeString() {
 		StringBuffer sb = new StringBuffer();
@@ -108,17 +120,20 @@ public class MultiLocusHaplotype extends Haplotype {
 
 		if (this.linkage != null) {
 			for (Locus locus : loci) {
-				sb.append(linkage.getDisequilibriumElement().getHlaElement(locus));
-				//sb.append(getAlleles(locus));
+				// TODO:  Make less clumsy to get rid of brackets?
+				if (linkage.getDisequilibriumElement().getHlaElement(locus).size() == 1) {
+					sb.append(linkage.getDisequilibriumElement().getHlaElement(locus).get(0));
+				} else {
+					sb.append(linkage.getDisequilibriumElement().getHlaElement(locus));
+				}
 				sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
 			}
-		}
-		else {
+		} else {
 			for (Locus locus : loci) {
 				sb.append(getAlleles(locus));
 				sb.append(GLStringConstants.GENE_DELIMITER);
 			}
 		}
-		return sb.substring(0,  sb.length() - 1);
+		return sb.substring(0, sb.length() - 1);
 	}
 }

@@ -44,9 +44,13 @@ public class LinkageElementsMapTest extends TestCase {
 		FrequencyByRace freq = new FrequencyByRace(new Double(.2), "1","AAFA");
 		frequenciesByRace.add(freq);
 		
-		HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
-		hlaElementMap.put(Locus.HLA_B, "HLA-B*07:01");
-		hlaElementMap.put(Locus.HLA_C, "HLA-C*01:01");
+		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
+		List<String> val = new ArrayList<String>();
+		val.add("HLA-B*07:01");
+		hlaElementMap.put(Locus.HLA_B, val);
+		val = new ArrayList<String>();
+		val.add("HLA-C*01:01");
+		hlaElementMap.put(Locus.HLA_C, val);
 		
 		
 		DisequilibriumElementByRace element1 = new DisequilibriumElementByRace(hlaElementMap, frequenciesByRace);
@@ -58,9 +62,13 @@ public class LinkageElementsMapTest extends TestCase {
 		freq = new FrequencyByRace(new Double(.4), "3", "API");
 		frequenciesByRace.add(freq);
 		
-		hlaElementMap = new HashMap<Locus, String>();
-		hlaElementMap.put(Locus.HLA_B, "HLA-B*52:01");
-		hlaElementMap.put(Locus.HLA_C, "HLA-C*04:01");
+		hlaElementMap = new HashMap<Locus, List<String>>();
+		val = new ArrayList<String>();
+		val.add("HLA-B*52:01");
+		hlaElementMap.put(Locus.HLA_B, val);
+		val = new ArrayList<String>();
+		val.add("HLA-C*04:01");
+		hlaElementMap.put(Locus.HLA_C, val);
 		
 		DisequilibriumElementByRace element2 = new DisequilibriumElementByRace(hlaElementMap, frequenciesByRace);
 		

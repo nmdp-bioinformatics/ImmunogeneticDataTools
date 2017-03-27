@@ -23,6 +23,7 @@ package org.dash.valid.report;
 
 import java.util.logging.Logger;
 
+import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.DisequilibriumElement;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
@@ -52,7 +53,7 @@ public class DetectedDisequilibriumElement {
 			sb.append(locus.getShortName() + " Locus: " + getDisequilibriumElement().getHlaElement(locus) + GLStringConstants.NEWLINE);
 		}
 				
-		sb.append(getDisequilibriumElement().getFrequencyInfo());
+		sb.append(((CoreDisequilibriumElement) getDisequilibriumElement()).getFrequencyInfo());
 		
 		return sb.toString();
 	}

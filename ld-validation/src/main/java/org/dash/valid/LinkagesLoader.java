@@ -59,6 +59,7 @@ public class LinkagesLoader {
 	}
 	
 	public static LinkagesLoader getInstance(Set<Linkages> linkages) {
+
 		if (instance == null) {
 			instance = new LinkagesLoader(linkages);
 		}
