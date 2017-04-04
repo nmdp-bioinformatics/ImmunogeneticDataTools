@@ -42,23 +42,20 @@ public class SummaryWriter {
 	
 	private static Logger LOGGER = Logger.getLogger(SummaryWriter.class.getName());
 	
-	public static String SUMMARY_XML_FILE = "summary.xml";
-	public static String LINKAGE_FINDINGS_SCHEMA = "schema/LinkageFindings.xsd";
+	public static final String SUMMARY_XML_FILE = "summary.xml";
+	public static final String LINKAGE_FINDINGS_SCHEMA = "schema/LinkageFindings.xsd";
+	private static final String DEFAULT_PATH = "./";
 	
 	private static FileWriter fileWriter;
 	private static PrintWriter printWriter;
 	
-	static {
+	private SummaryWriter() {
 		try {			
-			  fileWriter = new FileWriter("./" + SUMMARY_XML_FILE, true);
+			  fileWriter = new FileWriter(DEFAULT_PATH + SUMMARY_XML_FILE, true);
 			  printWriter = new PrintWriter(fileWriter); 		
 		} catch (IOException e) {
 			LOGGER.warning("Couldn't write to file: " + SUMMARY_XML_FILE);
 		}
-	}
-	
-	private SummaryWriter() {
-		
 	}
 	
 	public static SummaryWriter getInstance() {
@@ -85,7 +82,7 @@ public class SummaryWriter {
 		printWriter.write(reportedFindings);
 	}
 
-	public String formatDetectedLinkages(DetectedLinkageFindings findings) {
+	public static String formatDetectedLinkages(DetectedLinkageFindings findings) {
         JAXBContext context;
         StringWriter writer = new StringWriter();
         

@@ -46,17 +46,22 @@ public class DetectedFindingsWriter {
 	private static int rowId = 0;
 	private static FileWriter fileWriter;
 	private static PrintWriter printWriter;
+	
+	public static final String DETECTED_FINDINGS_CSV = "detectedFindings.csv";
+	public static final String DETECTED_FINDINGS_XLSX = "detectedFindings.xlsx";
+	private static final String DEFAULT_PATH = "./";
+	public static final String DETECTED_FINDINGS_SHEET_NAME = "Detected Findings";
 
 	static {
 		try {			
-			  fileWriter = new FileWriter("./detectedFindings.csv");
+			  fileWriter = new FileWriter(DEFAULT_PATH + DETECTED_FINDINGS_CSV);
 			  printWriter = new PrintWriter(fileWriter);
 			
 		      //Create blank workbook
 		      workbook = new XSSFWorkbook(); 
 		      //Create a blank sheet
-		      spreadsheet = workbook.createSheet("Detected Findings");
-		      out = new FileOutputStream(new File("./detectedFindings.xlsx")); 
+		      spreadsheet = workbook.createSheet(DETECTED_FINDINGS_SHEET_NAME);
+		      out = new FileOutputStream(new File(DEFAULT_PATH + DETECTED_FINDINGS_XLSX)); 
 		      
 		      XSSFRow row = spreadsheet.createRow(rowId++);
 		      
@@ -76,7 +81,7 @@ public class DetectedFindingsWriter {
 				  cell.setCellValue(linkage.getLoci() + " min L(genotype)");
 			  }     		
 		} catch (IOException e) {
-			LOGGER.warning("Couldn't write to file detectedFindings.xlsx");
+			LOGGER.warning("Couldn't write to file: " + DETECTED_FINDINGS_XLSX);
 		}
 	}
 	
@@ -91,7 +96,7 @@ public class DetectedFindingsWriter {
 			fileWriter.close();
 		}
 		catch (IOException ioe) {
-			LOGGER.warning("Couldn't close fileWriter after writing to detectedFindings.csv.");
+			LOGGER.warning("Couldn't close fileWriter after writing to: " + DETECTED_FINDINGS_CSV);
 		}
 	}
 	
@@ -106,6 +111,7 @@ public class DetectedFindingsWriter {
 		
 		return instance;
 	}
+	
 	/**
 	 * @param linkagesFound
 	 * @throws IOException 

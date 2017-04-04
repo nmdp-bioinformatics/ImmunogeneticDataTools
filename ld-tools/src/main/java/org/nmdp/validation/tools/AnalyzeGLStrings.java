@@ -36,10 +36,15 @@ import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
+import org.dash.valid.handler.CommonWellDocumentedFileHandler;
 import org.dash.valid.handler.HaplotypePairFileHandler;
 import org.dash.valid.handler.HaplotypePairWarningFileHandler;
+import org.dash.valid.handler.LinkageDisequilibriumFileHandler;
+import org.dash.valid.handler.LinkageWarningFileHandler;
+import org.dash.valid.report.CommonWellDocumentedWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;
+import org.dash.valid.report.LinkageDisequilibriumWriter;
 import org.dash.valid.report.SummaryWriter;
 import org.dishevelled.commandline.ArgumentList;
 import org.dishevelled.commandline.CommandLine;
@@ -63,6 +68,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     private final String freq;
     private final Boolean warnings;
     private final File frequencyFile;
+    private final File allelesFile;
     private static final String USAGE = "analyze-gl-strings [args]";
 
 
@@ -72,13 +78,14 @@ public class AnalyzeGLStrings implements Callable<Integer> {
      * @param inputFile input file, if any
      * @param outputFile output interpretation file, if any
      */
-    public AnalyzeGLStrings(File inputFile, File outputFile, String hladb, String freq, Boolean warnings, File frequencyFile) {
+    public AnalyzeGLStrings(File inputFile, File outputFile, String hladb, String freq, Boolean warnings, File frequencyFile, File allelesFile) {
         this.inputFile = inputFile;
         this.outputFile   = outputFile;
         this.hladb = hladb;
         this.freq = freq;
         this.warnings = warnings;
         this.frequencyFile = frequencyFile;
+        this.allelesFile = allelesFile;
     }
     
     @Override
@@ -97,15 +104,22 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     	System.setProperty(Frequencies.FREQUENCIES_PROPERTY, freq != null ? freq : GLStringConstants.EMPTY_STRING);
     	    	
     	if (frequencyFile !=  null) {
-    		HLAFrequenciesLoader.getInstance(frequencyFile);
+    		HLAFrequenciesLoader.getInstance(frequencyFile, allelesFile);
     	}
     	    	
     	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
     	
-    	PrintWriter writer = null;
+    	writeOutput(findingsList);
+	}
+
+	private void writeOutput(List<DetectedLinkageFindings> findingsList) throws IOException {
+		PrintWriter writer = null;
     	PrintWriter summaryWriter = null;
     	PrintWriter pairWriter = null;
     	PrintWriter pairWarningsWriter = null;
+    	PrintWriter linkageWriter = null;
+    	PrintWriter linkageWarningsWriter = null;
+    	PrintWriter nonCwdWriter = null;
     	
     	boolean writeToDir = false;
     	
@@ -115,6 +129,9 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     		summaryWriter = writer(new File(outputFile + "/" + SummaryWriter.SUMMARY_XML_FILE), true);
     		pairWriter = writer(new File(outputFile + "/" + HaplotypePairFileHandler.HAPLOTYPE_PAIRS_LOG), true);
     		pairWarningsWriter = writer(new File(outputFile + "/" + HaplotypePairWarningFileHandler.HAPLOTYPE_PAIRS_WARNING_LOG), true);
+    		linkageWriter = writer(new File(outputFile + "/" + LinkageDisequilibriumFileHandler.LINKAGES_LOG), true);
+    		linkageWarningsWriter = writer(new File(outputFile + "/" + LinkageWarningFileHandler.LINKAGE_WARNINGS_LOG), true);
+    		nonCwdWriter = writer(new File(outputFile + "/" + CommonWellDocumentedFileHandler.NON_CWD_WARNINGS_LOG), true);
     	}
     	else {
     		writer = writer(outputFile, true);
@@ -126,17 +143,21 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     		}
     		
         	if (writeToDir) {
-        		summaryWriter.write(SummaryWriter.getInstance().formatDetectedLinkages(findings));
+        		summaryWriter.write(SummaryWriter.formatDetectedLinkages(findings));
         		
         		if (findings.hasAnomalies()) {
-        			pairWarningsWriter.write(HaplotypePairWriter.getInstance().formatDetectedLinkages(findings));
+        			pairWarningsWriter.write(HaplotypePairWriter.formatDetectedLinkages(findings));
+        			linkageWarningsWriter.write(LinkageDisequilibriumWriter.formatDetectedLinkages(findings));
         		}
         		else {
-        			pairWriter.write(HaplotypePairWriter.getInstance().formatDetectedLinkages(findings));
+        			pairWriter.write(HaplotypePairWriter.formatDetectedLinkages(findings));
+        			linkageWriter.write(LinkageDisequilibriumWriter.formatDetectedLinkages(findings));
+        			nonCwdWriter.write(CommonWellDocumentedWriter.formatCommonWellDocumented(findings));
+        			//DetectedFindingsWriter.getInstance(outputFile.getPath()).reportDetectedFindings(findings);
         		}
         	}
         	else {
-        		writer.write(SummaryWriter.getInstance().formatDetectedLinkages(findings));
+        		writer.write(SummaryWriter.formatDetectedLinkages(findings));
         	}
         		
 		}
@@ -145,6 +166,10 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 			summaryWriter.close();
 			pairWriter.close();
 			pairWarningsWriter.close();
+			linkageWriter.close();
+			linkageWarningsWriter.close();
+			nonCwdWriter.close();
+			//DetectedFindingsWriter.getInstance().closeWriters();
 		}
 		else {
 			writer.close();
@@ -165,8 +190,9 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         StringArgument freq = new StringArgument("f", "frequencies", "Frequency Set (e.g. nmdp, nmdp-2007, wiki), default nmdp-2007", false);
         BooleanArgument warnings = new BooleanArgument("w", "warnings-only", "Only log warnings, default all GL String output", false);
         FileArgument frequencyFile = new FileArgument("q", "frequency-file", "frequency input file, default nmdp-2007 five locus", false);
+        FileArgument allelesFile = new FileArgument("l", "allele-file", "alleles known to have frequencies, default none", false);
 
-        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFile);
+        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFile, allelesFile);
         CommandLine commandLine = new CommandLine(args);
 
         AnalyzeGLStrings analyzeGLStrings = null;
@@ -181,7 +207,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
                 Usage.usage(USAGE, null, commandLine, arguments, System.out);
                 System.exit(0);
             }
-            analyzeGLStrings = new AnalyzeGLStrings(inputFile.getValue(), outputFile.getValue(), hladb.getValue(), freq.getValue(), warnings.getValue(), frequencyFile.getValue());
+            analyzeGLStrings = new AnalyzeGLStrings(inputFile.getValue(), outputFile.getValue(), hladb.getValue(), freq.getValue(), warnings.getValue(), frequencyFile.getValue(), allelesFile.getValue());
         }
         catch (CommandLineParseException | IllegalArgumentException e) {
             Usage.usage(USAGE, e, commandLine, arguments, System.err);

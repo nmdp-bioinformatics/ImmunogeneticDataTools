@@ -63,7 +63,7 @@ public class LinkageDisequilibriumGenotypeList {
 	private static Integer ALLELE_AMBIGUITY_THRESHOLD = 20;
 	private static Integer PROTEIN_THRESHOLD = 10;
 
-	static {
+	static {		
 		String alleleAmbiguityThreshold;
 		if ((alleleAmbiguityThreshold = System
 				.getProperty("org.dash.ambThreshold")) != null) {

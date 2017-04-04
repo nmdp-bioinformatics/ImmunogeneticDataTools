@@ -29,8 +29,11 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 public class LinkageWarningFileHandler extends FileHandler implements Filter {
+	public static final String LINKAGE_WARNINGS_LOG = "linkageWarnings.log";
+	private static final String DEFAULT_PATH = "./";
+	
 	public LinkageWarningFileHandler() throws IOException, SecurityException {
-		super("./linkageWarnings.log", true);
+		super(DEFAULT_PATH + LINKAGE_WARNINGS_LOG, true);
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.WARNING);
 	}

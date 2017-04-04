@@ -32,8 +32,8 @@ import org.dash.valid.handler.LinkageWarningFileHandler;
 public class LinkageDisequilibriumWriter {	
 	private static LinkageDisequilibriumWriter instance = null;
 	private static Logger FILE_LOGGER = Logger.getLogger(LinkageDisequilibriumWriter.class.getName());
-
-	static {
+	
+	private LinkageDisequilibriumWriter() {
 		try {
 			FILE_LOGGER.addHandler(new LinkageDisequilibriumFileHandler());
 			FILE_LOGGER.addHandler(new LinkageWarningFileHandler());
@@ -41,10 +41,6 @@ public class LinkageDisequilibriumWriter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private LinkageDisequilibriumWriter() {
-		
 	}
 	
 	public static LinkageDisequilibriumWriter getInstance() {
@@ -68,7 +64,7 @@ public class LinkageDisequilibriumWriter {
 		}
 	}
 
-	public String formatDetectedLinkages(DetectedLinkageFindings findings) {
+	public static String formatDetectedLinkages(DetectedLinkageFindings findings) {
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		

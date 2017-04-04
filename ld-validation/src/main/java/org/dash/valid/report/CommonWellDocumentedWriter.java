@@ -31,18 +31,14 @@ import org.dash.valid.handler.CommonWellDocumentedFileHandler;
 public class CommonWellDocumentedWriter {
 	private static CommonWellDocumentedWriter instance = null;
 	private static Logger FILE_LOGGER = Logger.getLogger(CommonWellDocumentedWriter.class.getName());
-
-	static {
+	
+	private CommonWellDocumentedWriter() {
 		try {
 			FILE_LOGGER.addHandler(new CommonWellDocumentedFileHandler());
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private CommonWellDocumentedWriter() {
-		
 	}
 	
 	public static CommonWellDocumentedWriter getInstance() {
@@ -58,7 +54,7 @@ public class CommonWellDocumentedWriter {
 		FILE_LOGGER.warning(cwd);
 	}
 
-	public String formatCommonWellDocumented(
+	public static String formatCommonWellDocumented(
 			DetectedLinkageFindings findings) {
 		if (findings.getNonCWDAlleles() == null || findings.getNonCWDAlleles().size() == 0) {
 			return GLStringConstants.EMPTY_STRING;

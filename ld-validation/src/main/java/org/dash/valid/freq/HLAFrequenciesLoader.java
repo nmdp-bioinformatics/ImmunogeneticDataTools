@@ -74,7 +74,6 @@ public class HLAFrequenciesLoader {
 	public static final String NMDP_2007_DRB1DQB1_FREQUENCIES = "frequencies/nmdp-2007/DRB1DQB1.xls";
 	public static final String NMDP_2007_FIVE_LOCUS_FREQUENCIES = "frequencies/nmdp-2007/ACBDRB1DQB1.xls";
 	
-	//private static final String NMDP_STD_FIVE_LOCUS_FREQUENCIES = "frequencies/nmdp-std/2015_ALL.csv";
 	public static final String NMDP_2007_STD_ABC_FREQUENCIES = "frequencies/std/NMDP_2007_ACB_Freqs.csv";
 	public static final String NMDP_2007_STD_BC_FREQUENCIES = "frequencies/std/NMDP_2007_CB_Freqs.csv";
 	public static final String NMDP_2007_STD_DRB1DQB1_FREQUENCIES = "frequencies/std/NMDP_2007_DRB1DQB1_Freqs.csv";
@@ -103,9 +102,9 @@ public class HLAFrequenciesLoader {
     	
     }
     
-    public static HLAFrequenciesLoader getInstance(File file) {
+    public static HLAFrequenciesLoader getInstance(File frequencyFile, File allelesFile) {
     	instance = new HLAFrequenciesLoader();
-    	instance.init(file);
+    	instance.init(frequencyFile, allelesFile);
     	
     	return instance;
     }
@@ -147,9 +146,9 @@ public class HLAFrequenciesLoader {
 		return null;
 	}
 	
-	private void init(File file) {
+	private void init(File frequencyFile, File allelesFile) {
 		try {
-			InputStream is = new FileInputStream(file);
+			InputStream is = new FileInputStream(frequencyFile);
 			InputStreamReader isr = new InputStreamReader(is);
 			BufferedReader reader = new BufferedReader(isr);
 			
@@ -161,13 +160,17 @@ public class HLAFrequenciesLoader {
 			
 			this.disequilibriumElementsMap.put(loci, elements);
 			
-			for (Locus locus : loci) {
-				if (locus.hasIndividualFrequencies()) {
-					loadIndividualLocusFrequency(Frequencies.NMDP, locus);
-				}
+			if (allelesFile != null) {
+				loadIndividualLocusFrequencies(allelesFile);
 			}
+			
+//			for (Locus locus : loci) {
+//				if (locus.hasIndividualFrequencies()) {
+//					loadIndividualLocusFrequency(Frequencies.NMDP, locus);
+//				}
+//			}
 		}
-		catch (IOException | InvalidFormatException e) {
+		catch (IOException e) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
 			e.printStackTrace();
 			
@@ -421,6 +424,35 @@ public class HLAFrequenciesLoader {
         return disequilibriumElements;
 	}
 	
+	private void loadIndividualLocusFrequencies(File allelesFile) throws IOException {
+		String row;
+		String parts[];
+		Locus locus;
+		List<String> singleLocusFrequencies;
+		
+		InputStream inStream = new FileInputStream(allelesFile);
+		
+		InputStreamReader isr = new InputStreamReader(inStream);
+		BufferedReader reader = new BufferedReader(isr);
+		
+		while ((row = reader.readLine()) != null) {
+			parts = row.split(GLStringUtilities.ESCAPED_ASTERISK);
+			locus = Locus.lookup(parts[0]);
+			
+			if (individualLocusFrequencies.containsKey(locus)) {
+				singleLocusFrequencies = individualLocusFrequencies.get(locus);
+			}
+			else {
+				singleLocusFrequencies = new ArrayList<String>();
+			}
+			
+			singleLocusFrequencies.add(row);
+			individualLocusFrequencies.put(locus, singleLocusFrequencies);			
+		}
+		
+		reader.close();
+	}
+	
 	private void loadIndividualLocusFrequencies(Frequencies freq) throws IOException, InvalidFormatException {
 		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 			for (Locus locus : linkage.getLoci()) {
@@ -433,8 +465,6 @@ public class HLAFrequenciesLoader {
 
 	private void loadIndividualLocusFrequency(Frequencies freq, Locus locus)
 			throws IOException, InvalidFormatException {
-		List<String> singleLocusFrequencies = new ArrayList<String>();
-		// TODO:  Get a hold of (or create) single locus frequencies in standard file format
 		String extension = freq.equals(Frequencies.NMDP) || freq.equals(Frequencies.NMDP_STD) ? ".xlsx" : ".xls";
 		String shortName = freq.getShortName();
 		if (freq.equals(Frequencies.NMDP_STD)) shortName = Frequencies.NMDP.getShortName();
@@ -443,6 +473,17 @@ public class HLAFrequenciesLoader {
       
 		if (inputStream == null) return;
 		
+		List<String> singleLocusFrequencies = loadIndividualLocusFrequency(inputStream);
+		
+		individualLocusFrequencies.put(locus,  singleLocusFrequencies);
+	}
+
+	public static List<String> loadIndividualLocusFrequency(InputStream inputStream)
+			throws IOException, InvalidFormatException {
+		String detectedLocus = null;
+		String locusShortName = null;
+		List<String> singleLocusFrequencies = new ArrayList<String>();
+
 		Workbook workbook = WorkbookFactory.create(inputStream);
 		
 		// Return first sheet from the XLSX workbook
@@ -460,20 +501,21 @@ public class HLAFrequenciesLoader {
 		    Row row = rowIterator.next();
 
 		    if (row.getRowNum() == firstRow) {
+		    	detectedLocus = row.getCell(0).getStringCellValue();
+		    	locusShortName = Locus.lookup(detectedLocus).getShortName();
 		    	continue;
 		    }
 		    else {
 			    cellValue = row.getCell(0).getStringCellValue();
 			    if (!cellValue.contains(GLStringConstants.ASTERISK)) {
-			    	cellValue = locus.getShortName() + GLStringConstants.ASTERISK + cellValue.substring(0, 2) + GLStringUtilities.COLON + cellValue.substring(2);
+			    	cellValue = locusShortName + GLStringConstants.ASTERISK + cellValue.substring(0, 2) + GLStringUtilities.COLON + cellValue.substring(2);
 			    }
 				singleLocusFrequencies.add(GLStringConstants.HLA_DASH + cellValue);
 		    }            
 		}
 		
-		individualLocusFrequencies.put(locus,  singleLocusFrequencies);
-		
 		workbook.close();
+		return singleLocusFrequencies;
 	}
 	
 	private static List<String> readHeaderElementsByRace(Row row) {		
@@ -568,16 +610,6 @@ public class HLAFrequenciesLoader {
 			}
 			
 			disequilibriumElements.add(new BaseDisequilibriumElement(hlaElementMap, columns[locusPositions.length], columns[locusPositions.length + 1]));
-//			String freq = columns[locusPositions.length];
-//			if (freq == null || GLStringConstants.EMPTY_STRING.equals(freq.trim())) {
-//				freq = "0";
-//			}
-//			
-//			FrequencyByRace frequencyByRace = new FrequencyByRace(new Double(freq), null, "UNK");
-//			List<FrequencyByRace> frequenciesByRace = new ArrayList<FrequencyByRace>();
-//			frequenciesByRace.add(frequencyByRace);
-//			
-//			disequilibriumElements.add(new DisequilibriumElementByRace(hlaElementMap, frequenciesByRace));
 		}
 		
 		reader.close();

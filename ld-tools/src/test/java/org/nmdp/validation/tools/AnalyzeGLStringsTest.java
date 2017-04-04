@@ -20,8 +20,9 @@ public class AnalyzeGLStringsTest extends TestCase {
 		String freq = null;
 		Boolean warnings = null;
 		File frequencyFile = null;
+		File allelesFile = null;
 		
-		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFile);
+		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFile, allelesFile);
 		analyzer.runAnalysis(reader);
 		
 		assertTrue(true);

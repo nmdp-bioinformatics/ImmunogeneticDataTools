@@ -35,8 +35,8 @@ import org.dash.valid.handler.HaplotypePairWarningFileHandler;
 public class HaplotypePairWriter {	
 	private static HaplotypePairWriter instance = null;
 	private static Logger FILE_LOGGER = Logger.getLogger(HaplotypePairWriter.class.getName());
-
-	static {
+	
+	private HaplotypePairWriter() {
 		try {
 			FILE_LOGGER.addHandler(new HaplotypePairFileHandler());
 			FILE_LOGGER.addHandler(new HaplotypePairWarningFileHandler());
@@ -44,10 +44,6 @@ public class HaplotypePairWriter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private HaplotypePairWriter() {
-		
 	}
 	
 	public static HaplotypePairWriter getInstance() {
@@ -71,7 +67,7 @@ public class HaplotypePairWriter {
 		}
 	}
 
-	public String formatDetectedLinkages(DetectedLinkageFindings findings) {
+	public static String formatDetectedLinkages(DetectedLinkageFindings findings) {
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		

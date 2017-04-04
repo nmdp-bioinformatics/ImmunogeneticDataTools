@@ -74,11 +74,11 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 		
 		assertNotNull(findings);	
 		
-		String output = HaplotypePairWriter.getInstance().formatDetectedLinkages(findings);
+		String output = HaplotypePairWriter.formatDetectedLinkages(findings);
 		
 		System.out.println(output);
 		
-		output = LinkageDisequilibriumWriter.getInstance().formatDetectedLinkages(findings);
+		output = LinkageDisequilibriumWriter.formatDetectedLinkages(findings);
 	
 		System.out.println(output);
 	}

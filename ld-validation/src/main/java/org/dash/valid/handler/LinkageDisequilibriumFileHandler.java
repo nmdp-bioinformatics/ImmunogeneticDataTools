@@ -29,8 +29,11 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 public class LinkageDisequilibriumFileHandler extends FileHandler implements Filter {
+	public static final String LINKAGES_LOG = "linkages.log";
+	private static final String DEFAULT_PATH = "./";
+	
 	public LinkageDisequilibriumFileHandler() throws IOException, SecurityException {
-		super("./linkages.log", true);
+		super(DEFAULT_PATH + LINKAGES_LOG, true);
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.INFO);
 	}

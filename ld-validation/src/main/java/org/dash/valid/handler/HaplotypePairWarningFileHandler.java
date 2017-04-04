@@ -29,12 +29,11 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 public class HaplotypePairWarningFileHandler extends FileHandler implements Filter {
-	private static final String DEFAULT_PATH = ".";
-	private static final String FORWARD_SLASH = "/";
+	private static final String DEFAULT_PATH = "./";
 	public static final String HAPLOTYPE_PAIRS_WARNING_LOG = "haplotypePairWarnings.log";
 	
 	public HaplotypePairWarningFileHandler() throws IOException, SecurityException {
-		super(DEFAULT_PATH + FORWARD_SLASH + HAPLOTYPE_PAIRS_WARNING_LOG, true);
+		super(DEFAULT_PATH + HAPLOTYPE_PAIRS_WARNING_LOG, true);
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.WARNING);
 	}
