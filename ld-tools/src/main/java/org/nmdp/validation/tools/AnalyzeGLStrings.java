@@ -98,7 +98,15 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 
 	public void runAnalysis(BufferedReader reader) throws IOException {
 		List<DetectedLinkageFindings> findingsList;
-    	System.setProperty(HLADatabaseVersion.HLADB_PROPERTY, hladb != null ? hladb : GLStringConstants.EMPTY_STRING);
+		
+    	findingsList = performAnalysis(reader);
+    	
+    	writeOutput(findingsList);
+	}
+
+	public List<DetectedLinkageFindings> performAnalysis(BufferedReader reader) throws IOException {
+		List<DetectedLinkageFindings> findingsList;
+		System.setProperty(HLADatabaseVersion.HLADB_PROPERTY, hladb != null ? hladb : GLStringConstants.EMPTY_STRING);
     	
     	// TODO:  Figure out how to make it stop reporting the default here...
     	System.setProperty(Frequencies.FREQUENCIES_PROPERTY, freq != null ? freq : GLStringConstants.EMPTY_STRING);
@@ -108,8 +116,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     	}
     	    	
     	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
-    	
-    	writeOutput(findingsList);
+		return findingsList;
 	}
 
 	private void writeOutput(List<DetectedLinkageFindings> findingsList) throws IOException {

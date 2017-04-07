@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
+
+import org.dash.valid.report.DetectedLinkageFindings;
 
 import junit.framework.TestCase;
 
@@ -23,9 +26,10 @@ public class AnalyzeGLStringsTest extends TestCase {
 		File allelesFile = null;
 		
 		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFile, allelesFile);
-		analyzer.runAnalysis(reader);
+		List<DetectedLinkageFindings> findingsList = analyzer.performAnalysis(reader);
 		
-		assertTrue(true);
+		assertNotNull(findingsList);
+		assertTrue(findingsList.size() > 0);
 	}
 
 }

@@ -56,7 +56,7 @@ If you prefer to compile / package the software from source, follow these instru
 *Properties:*
 
 + **Name:**  org.dash.frequencies
-+ **Value(s):**  wiki, nmdp-2007, nmdp
++ **Value(s):**  wiki, nmdp-2007 (nmdp-2007-std), nmdp (nmdp-std)
 + **Description:**  Specifies the desired frequency set
 + **Note:**  The 2011 NMDP Frequencies (if specifying 'nmdp') are associated with a license agreement, specifying the allowance of use for research, but disallowing re-distribution.  If you wish to use the 2011 NMDP Frequencies, you'll need to install them in your local repository by following the frequency install instructions at the bottom of this file.
 
@@ -90,7 +90,7 @@ If you prefer to compile / package the software from source, follow these instru
 + Login using OpenId
 + Carefully read and accept the license agreement
 + Grab the following files and install at src/main/resources/frequencies/nmdp
-+ *A.xlsx, A~C~B.xlsx, C.xlsx, B.xlsx, C~B.xlsx, DRB3-4-5.xlsx, DRB1.xlsx, DQB1.xlsx, DRB3-4-5~DRB1~DQB1.xlsx*
++ *A.xlsx, A\~C\~B.xlsx, C.xlsx, B.xlsx, C\~B.xlsx, DRB3-4-5.xlsx, DRB1.xlsx, DQB1.xlsx, DRB3-4-5\~DRB1\~DQB1.xlsx*
 
 *2011 NMDP Frequency Re-Formatting Instructions:*
 
