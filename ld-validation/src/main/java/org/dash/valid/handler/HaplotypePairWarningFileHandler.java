@@ -29,8 +29,11 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 public class HaplotypePairWarningFileHandler extends FileHandler implements Filter {
+	private static final String DEFAULT_PATH = "./";
+	public static final String HAPLOTYPE_PAIRS_WARNING_LOG = "haplotypePairWarnings.log";
+	
 	public HaplotypePairWarningFileHandler() throws IOException, SecurityException {
-		super("./haplotypePairWarnings.log", true);
+		super(DEFAULT_PATH + HAPLOTYPE_PAIRS_WARNING_LOG, true);
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.WARNING);
 	}

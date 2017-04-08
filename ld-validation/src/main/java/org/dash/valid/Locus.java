@@ -124,7 +124,7 @@ public enum Locus {
 	
 	public static Locus lookup(String value) {
 		for (Locus locus : values()) {
-			if (locus.getFullName().equals(value) || locus.getShortName().equals(value)) {
+			if (locus.getFullName().equals(value) || locus.getShortName().equals(value) || (locus.getFrequencyName() != null && locus.getFrequencyName().equals(value))) {
 				return locus;
 			}			
 		}

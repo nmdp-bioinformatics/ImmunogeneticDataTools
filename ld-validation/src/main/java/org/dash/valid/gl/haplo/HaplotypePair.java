@@ -28,6 +28,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
 import org.dash.valid.Locus;
 import org.dash.valid.base.BaseDisequilibriumElement;
 import org.dash.valid.gl.GLStringConstants;
@@ -35,12 +39,15 @@ import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.race.RelativeFrequencyByRace;
 
-
+@XmlRootElement(name="haplo-pair")
+@XmlType(propOrder={"haplotype1", "haplotype2", "frequencies", "frequency"})
 public class HaplotypePair {
 	private Haplotype haplotype1;
 	private Haplotype haplotype2;
 	private boolean byRace;
 	private EnumSet<Locus> loci;
+	private Set<RelativeFrequencyByRace> frequencies = new LinkedHashSet<RelativeFrequencyByRace>();
+	private String frequency;
 	
     private static final Logger LOGGER = Logger.getLogger(HaplotypePair.class.getName());
 	
@@ -49,7 +56,12 @@ public class HaplotypePair {
 			return frequencies.iterator().next();
 		}
 		
-		return null;
+		return frequency;
+	}
+	
+	@XmlElement(name="frequency")
+	public String getFrequency() {
+		return frequency;
 	}
 	
 	public boolean isByRace() {
@@ -72,24 +84,24 @@ public class HaplotypePair {
 		return this.loci;
 	}
 	
-	Set<Object> frequencies = new LinkedHashSet<Object>();
-	
-	public Set<Object> getFrequencies() {
-		return frequencies;
-	}
-	
-	public void setFrequencies(Set<Object> frequencies) {
-		this.frequencies = frequencies;
-	}
-
+	@XmlElement(name="haplotype")
 	public Haplotype getHaplotype1() {
 		return haplotype1;
 	}
-
+	
+	@XmlElement(name="haplotype")
 	public Haplotype getHaplotype2() {
 		return haplotype2;
 	}
-
+		
+	@XmlElement(name="frequencies")
+	public Set<RelativeFrequencyByRace> getFrequencies() {
+		return frequencies;
+	}
+	
+	public HaplotypePair() {
+		
+	}
 	
 	public HaplotypePair(Haplotype haplotype1, Haplotype haplotype2) {		
 		if (new HaplotypeComparator().compare(haplotype1, haplotype2) <= 0) {
@@ -119,7 +131,7 @@ public class HaplotypePair {
 				for (FrequencyByRace haplo2Freqs : ((DisequilibriumElementByRace) haplotype2.getLinkage().getDisequilibriumElement()).getFrequenciesByRace()) {
 					if (haplo1Freqs.getRace().equals(haplo2Freqs.getRace())) {
 						pairFrequency = haplo1Freqs.getFrequency() * haplo2Freqs.getFrequency();
-						freqByRace = new RelativeFrequencyByRace(new Double(pairFrequency), haplo1Freqs.getRace());
+						freqByRace = new RelativeFrequencyByRace(new Double(pairFrequency), haplo1Freqs.getRace(), haplo1Freqs, haplo2Freqs);
 								
 						frequenciesByRaceList.add(freqByRace);
 					}
@@ -132,7 +144,7 @@ public class HaplotypePair {
 			frequencies.addAll(frequenciesByRaceList);
 		}
 		else {
-			frequencies.add(((BaseDisequilibriumElement) haplotype1.getLinkage().getDisequilibriumElement()).getFrequency() + "*" + 
+			frequency = (((BaseDisequilibriumElement) haplotype1.getLinkage().getDisequilibriumElement()).getFrequency() + "*" + 
 							((BaseDisequilibriumElement) haplotype2.getLinkage().getDisequilibriumElement()).getFrequency());
 		}
 	}
@@ -157,8 +169,13 @@ public class HaplotypePair {
 		StringBuffer sb = new StringBuffer(haplotype1.getHaplotypeString() + GLStringConstants.NEWLINE +
 		haplotype2.getHaplotypeString() + GLStringConstants.NEWLINE);
 		
-		for (Object frequency : getFrequencies()) {
-			sb.append(frequency + GLStringConstants.NEWLINE);
+		if (getFrequencies() != null && getFrequencies().size() > 0) {
+			for (RelativeFrequencyByRace relativeFrequency : getFrequencies()) {
+				sb.append(relativeFrequency + GLStringConstants.NEWLINE);
+			}
+		}
+		else {
+			sb.append(frequency);
 		}
 		
 		return sb.toString();

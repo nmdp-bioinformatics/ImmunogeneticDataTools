@@ -24,13 +24,19 @@ package org.dash.valid.gl.haplo;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.dash.valid.Locus;
 import org.dash.valid.report.DetectedDisequilibriumElement;
 
+@XmlRootElement(name="haplotype")
 public abstract class Haplotype {	
 	DetectedDisequilibriumElement linkage;
 	private boolean drb345Homozygous;
-
+	
+	@XmlTransient
 	public DetectedDisequilibriumElement getLinkage() {
 		return linkage;
 	}
@@ -47,6 +53,7 @@ public abstract class Haplotype {
 		return this.drb345Homozygous;
 	}
 	
+	@XmlAttribute(name="value")
 	public abstract String getHaplotypeString();
 	
 	public abstract List<String> getAlleles();

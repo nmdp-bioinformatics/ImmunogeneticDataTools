@@ -56,8 +56,10 @@ import org.dishevelled.commandline.argument.StringArgument;
 public class NormalizeFrequencyFile implements Callable<Integer> {
 	
     private final File inputFile;
-    private final String linkages;
+    private final String frequencies;
     private final File outputFile;
+    
+    public static final String SINGLE = "single";
     
     private static Map<EnumSet<Locus>, Locus[]> LOCUS_POSITION_MAP = new HashMap<EnumSet<Locus>, Locus[]>();
     
@@ -78,41 +80,51 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
      * @param inputFile input file, if any
      * @param outputFile output interpretation file, if any
      */
-    public NormalizeFrequencyFile(File inputFile, String linkages, File outputFile) {
+    public NormalizeFrequencyFile(File inputFile, String frequencies, File outputFile) {
         this.inputFile = inputFile;
-        this.linkages = linkages;
+        this.frequencies = frequencies;
         this.outputFile   = outputFile;
     }
     
     @Override
     public Integer call() throws Exception {
-		HashSet<String> linkageNames = new HashSet<String>();
-		linkageNames.add(linkages);
-		Set<Linkages> linkagesSet = Linkages.lookup(linkageNames);
-		LinkagesLoader.getInstance(linkagesSet);
-								
-		List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.loadNMDPLinkageReferenceData(new FileInputStream(inputFile), LOCUS_POSITION_MAP.get(Linkages.lookup(linkages).getLoci()));
-		
-		PrintWriter writer = new PrintWriter(outputFile);
-		
-		for (DisequilibriumElement element : disequilibriumElements) {
-			StringBuffer sb = new StringBuffer();
-			int locusCounter = 0;
-			for (Locus locus : Locus.lookup(element.getLoci())) {
-				if (locusCounter > 0) {
-					sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
+    	PrintWriter writer = new PrintWriter(outputFile);
+    	
+    	if (SINGLE.equals(frequencies)) {
+    		List<String> singleLocusFrequencies = HLAFrequenciesLoader.loadIndividualLocusFrequency(new FileInputStream(inputFile));
+    		
+    		for (String allele : singleLocusFrequencies) {
+    			writer.write(allele + GLStringConstants.NEWLINE);
+    		}
+    	}
+    	else {
+			HashSet<String> linkageNames = new HashSet<String>();
+			linkageNames.add(frequencies);
+			Set<Linkages> linkagesSet = Linkages.lookup(linkageNames);
+			LinkagesLoader.getInstance(linkagesSet);
+									
+			List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.loadNMDPLinkageReferenceData(new FileInputStream(inputFile), LOCUS_POSITION_MAP.get(Linkages.lookup(frequencies).getLoci()));
+					
+			for (DisequilibriumElement element : disequilibriumElements) {
+				StringBuffer sb = new StringBuffer();
+				int locusCounter = 0;
+				for (Locus locus : Locus.lookup(element.getLoci())) {
+					if (locusCounter > 0) {
+						sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
+					}
+					sb.append(element.getHlaElement(locus).get(0));
+					locusCounter++;
 				}
-				sb.append(element.getHlaElement(locus));
-				locusCounter++;
+				
+				List<FrequencyByRace> frequencies = ((DisequilibriumElementByRace) element).getFrequenciesByRace();
+				for (FrequencyByRace frequency : frequencies) {
+					writer.write(frequency.getRace() + GLStringConstants.COMMA + sb + GLStringConstants.COMMA + frequency.getFrequency() + GLStringConstants.COMMA + frequency.getRank() + GLStringConstants.NEWLINE);
+				}
 			}
-			
-			List<FrequencyByRace> frequencies = ((DisequilibriumElementByRace) element).getFrequenciesByRace();
-			for (FrequencyByRace frequency : frequencies) {
-				writer.write(frequency.getRace() + GLStringConstants.COMMA + sb + GLStringConstants.COMMA + frequency.getFrequency() + GLStringConstants.COMMA + frequency.getRank() + GLStringConstants.NEWLINE);
-			}
-		}
 		
-		writer.close();
+    	}
+    	
+    	writer.close();
     	
     	return 0;
 	}    	
@@ -125,11 +137,11 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
     public static void main(final String[] args) {
         Switch about = new Switch("a", "about", "display about message");
         Switch help  = new Switch("h", "help", "display help message");
-        FileArgument inputFile = new FileArgument("i", "input-file", "input file, default stdin", false);
-        StringArgument linkages = new StringArgument("l", "linakges", "linkages (acb, cb, drb_dqb, five_loc, six_loc), default five_loc", false);
-        FileArgument outputFile   = new FileArgument("o", "output-file", "output allele assignment file, default stdout", false);
+        FileArgument inputFile = new FileArgument("i", "input-file", "input file, default stdin", true);
+        StringArgument frequencies = new StringArgument("f", "frequencies", "frequencies (acb, cb, drb_dqb, five_loc, six_loc, single), default five_loc", true);
+        FileArgument outputFile   = new FileArgument("o", "output-file", "output allele assignment file, default stdout", true);
 
-        ArgumentList arguments  = new ArgumentList(about, help, inputFile, linkages, outputFile);
+        ArgumentList arguments  = new ArgumentList(about, help, inputFile, frequencies, outputFile);
         CommandLine commandLine = new CommandLine(args);
 
         NormalizeFrequencyFile normalizeFrequencyFile = null;
@@ -144,7 +156,7 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
                 Usage.usage(USAGE, null, commandLine, arguments, System.out);
                 System.exit(0);
             }
-            normalizeFrequencyFile = new NormalizeFrequencyFile(inputFile.getValue(), linkages.getValue(), outputFile.getValue());
+            normalizeFrequencyFile = new NormalizeFrequencyFile(inputFile.getValue(), frequencies.getValue(), outputFile.getValue());
         }
         catch (CommandLineParseException | IllegalArgumentException e) {
             Usage.usage(USAGE, e, commandLine, arguments, System.err);

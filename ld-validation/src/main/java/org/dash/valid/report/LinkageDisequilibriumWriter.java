@@ -32,8 +32,8 @@ import org.dash.valid.handler.LinkageWarningFileHandler;
 public class LinkageDisequilibriumWriter {	
 	private static LinkageDisequilibriumWriter instance = null;
 	private static Logger FILE_LOGGER = Logger.getLogger(LinkageDisequilibriumWriter.class.getName());
-
-	static {
+	
+	private LinkageDisequilibriumWriter() {
 		try {
 			FILE_LOGGER.addHandler(new LinkageDisequilibriumFileHandler());
 			FILE_LOGGER.addHandler(new LinkageWarningFileHandler());
@@ -41,10 +41,6 @@ public class LinkageDisequilibriumWriter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private LinkageDisequilibriumWriter() {
-		
 	}
 	
 	public static LinkageDisequilibriumWriter getInstance() {
@@ -57,8 +53,19 @@ public class LinkageDisequilibriumWriter {
 	/**
 	 * @param linkagesFound
 	 */
-	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) {				
-		StringBuffer sb = new StringBuffer("Id: " + findings.getGenotypeList().getId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGenotypeList().getGLString());
+	public synchronized void reportDetectedLinkages(DetectedLinkageFindings findings) {						
+		String output = formatDetectedLinkages(findings);
+	
+		if (findings.hasAnomalies()) {
+			FILE_LOGGER.warning(output);
+		}
+		else {
+			FILE_LOGGER.info(output);
+		}
+	}
+
+	public static String formatDetectedLinkages(DetectedLinkageFindings findings) {
+		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
 		sb.append(GLStringConstants.NEWLINE + "Frequencies:  " + Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)) + GLStringConstants.NEWLINE);
@@ -74,12 +81,6 @@ public class LinkageDisequilibriumWriter {
 		}
 		
 		sb.append(GLStringConstants.NEWLINE + "***************************************" + GLStringConstants.NEWLINE);
-	
-		if (findings.hasAnomalies()) {
-			FILE_LOGGER.warning(sb.toString());
-		}
-		else {
-			FILE_LOGGER.info(sb.toString());
-		}
+		return sb.toString();
 	}
 }

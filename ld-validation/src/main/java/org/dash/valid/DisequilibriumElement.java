@@ -23,6 +23,7 @@ package org.dash.valid;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.dash.valid.gl.GLStringConstants;
@@ -46,25 +47,25 @@ public abstract class DisequilibriumElement {
 
 	public abstract String getFrequencyInfo();
 		
-	private HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
+	private HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
 
-	public Collection<String> getHlaElements() {
+	public Collection<List<String>> getHlaElements() {
 		return hlaElementMap.values();
 	}
 	
-	public void setHlaElementMap(HashMap<Locus, String> hlaElementMap) {
+	public void setHlaElementMap(HashMap<Locus, List<String>> hlaElementMap) {
 		this.hlaElementMap = hlaElementMap;
 	}
 	
-	public void setHlaElement(Locus locus, String hlaElement) {
+	public void setHlaElement(Locus locus, List<String> hlaElement) {
 		hlaElementMap.put(locus, hlaElement);
 	}
 	
-	public String getHlaElement(Locus locus) {
+	public List<String> getHlaElement(Locus locus) {
 		return hlaElementMap.get(locus);
 	}
 	
-	public DisequilibriumElement(HashMap<Locus, String> hlaElementMap) {
+	public DisequilibriumElement(HashMap<Locus, List<String>> hlaElementMap) {
 		this.hlaElementMap = hlaElementMap;
 	}
 	
@@ -75,30 +76,40 @@ public abstract class DisequilibriumElement {
 	}
 	
 	@Override
-	public boolean equals(Object element1) {
-		if (getLoci().equals(((DisequilibriumElement) element1).getLoci())) {
-			if (getHlaElements().containsAll(((DisequilibriumElement) element1).getHlaElements())) {
-				return true;
-			}
-		}
-		
+	public boolean equals(Object element1) {		
 		for (Locus locus : getLoci()) {
-			if (GLStringUtilities.fieldLevelComparison(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus))) {
-				continue;
+			// any found?
+			boolean anyFound = false;
+			List<String> baseAlleles = getHlaElement(locus);
+			List<String> compareAlleles = ((DisequilibriumElement)element1).getHlaElement(locus);
+			for (String baseAllele : baseAlleles) {
+				if (compareAlleles == null) {
+					return false;
+				}
+				for (String compareAllele : compareAlleles) {
+					if (GLStringUtilities.fieldLevelComparison(baseAllele, compareAllele) || GLStringUtilities.checkAntigenRecognitionSite(baseAllele, compareAllele)) {
+						anyFound = true;
+						break;
+					}
+				}
+				if (anyFound) {
+					break;
+				}
 			}
 			
-			if (GLStringUtilities.checkAntigenRecognitionSite(getHlaElement(locus), ((DisequilibriumElement)element1).getHlaElement(locus))) {
+			if (anyFound) {
+				anyFound = false;
 				continue;
 			}
 				
 			if (Locus.isDRB345(locus) &&
 					(((DisequilibriumElement) element1).getHaplotype() != null &&
 					((DisequilibriumElement) element1).getHaplotype().getDrb345Homozygous() &&  
-					(getHlaElement(locus).equals(GLStringConstants.DASH) || getHlaElement(locus).equals(GLStringConstants.NNNN))) ||
+					(getHlaElement(locus).contains(GLStringConstants.DASH) || getHlaElement(locus).contains(GLStringConstants.NNNN))) ||
 					(getHaplotype() != null &&
 					getHaplotype().getDrb345Homozygous() && 
-					(((DisequilibriumElement) element1).getHlaElement(locus).equals(GLStringConstants.DASH) || 
-					((DisequilibriumElement) element1).getHlaElement(locus).equals(GLStringConstants.NNNN))))
+					(((DisequilibriumElement) element1).getHlaElement(locus).contains(GLStringConstants.DASH) || 
+					((DisequilibriumElement) element1).getHlaElement(locus).contains(GLStringConstants.NNNN))))
 			{
 				continue;
 			}

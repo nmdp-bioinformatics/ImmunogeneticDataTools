@@ -21,6 +21,7 @@
 */
 package org.dash.valid;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.dash.valid.ars.HLADatabaseVersion;
+import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
@@ -70,7 +72,7 @@ public class HLALinkageDisequilibrium {
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 				
-		DetectedLinkageFindings findings = new DetectedLinkageFindings();
+		DetectedLinkageFindings findings = new DetectedLinkageFindings(Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).toString());
 
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {
@@ -82,7 +84,7 @@ public class HLALinkageDisequilibrium {
 			findings.addFindingSought(loci);
 			List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.getInstance().getDisequilibriumElements(loci);
 			
-			linkedPairs.addAll(findLinkedPairs(glString, loci, disequilibriumElements));
+			linkedPairs.addAll(findLinkedPairs(glString, loci, disequilibriumElements, findings));
 		}		
 		
 		LOGGER.info(linkedPairs.size() + " linkedPairs");
@@ -98,28 +100,44 @@ public class HLALinkageDisequilibrium {
 	private static Set<HaplotypePair> findLinkedPairs(
 			LinkageDisequilibriumGenotypeList glString,
 			EnumSet<Locus> loci,
-			List<DisequilibriumElement> disequilibriumElements) {
+			List<DisequilibriumElement> disequilibriumElements,
+			DetectedLinkageFindings findings) {
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 
 		Set<MultiLocusHaplotype> linkedHaplotypes = new HashSet<MultiLocusHaplotype>();
 		
+		Set<DetectedDisequilibriumElement> detectedDisequilibriumElements = new HashSet<DetectedDisequilibriumElement>();
+		
+		MultiLocusHaplotype clonedHaplotype = null;
+				
 		for (MultiLocusHaplotype possibleHaplotype : glString.getPossibleHaplotypes(loci)) {
-			HashMap<Locus, String> hlaElementMap = new HashMap<Locus, String>();
+			List<DisequilibriumElement> shortenedList = new ArrayList<DisequilibriumElement>(disequilibriumElements);
+
+			HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
 
 			for (Locus locus : possibleHaplotype.getLoci()) {
 				if (loci.contains(locus)) {
-					hlaElementMap.put(locus, possibleHaplotype.getAlleles(locus).get(0));
+					
+					hlaElementMap.put(locus, possibleHaplotype.getAlleles(locus));
 				}
 			}
 			
 			DisequilibriumElement element = new CoreDisequilibriumElement(hlaElementMap, possibleHaplotype);
-			
-			if (disequilibriumElements.contains(element)) {
-				int index = disequilibriumElements.indexOf(element);
-				possibleHaplotype.setLinkage(new DetectedDisequilibriumElement(disequilibriumElements.get(index)));
-				linkedHaplotypes.add(possibleHaplotype);
+			DetectedDisequilibriumElement detectedElement = null;
+						
+			while (shortenedList.contains(element)) {
+				int index = shortenedList.indexOf(element);
+				clonedHaplotype = new MultiLocusHaplotype(possibleHaplotype.getAlleleMap(), possibleHaplotype.getHaplotypeInstanceMap(), possibleHaplotype.getDrb345Homozygous());
+				detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
+				clonedHaplotype.setLinkage(detectedElement);
+				linkedHaplotypes.add(clonedHaplotype);
+				detectedDisequilibriumElements.add(detectedElement);
+				
+				shortenedList = shortenedList.subList(index + 1, shortenedList.size());
 			}
 		}
+		
+		findings.addLinkages(detectedDisequilibriumElements);
 		
 		for (Haplotype haplotype1 : linkedHaplotypes) {	
 			for (Haplotype haplotype2 : linkedHaplotypes) {

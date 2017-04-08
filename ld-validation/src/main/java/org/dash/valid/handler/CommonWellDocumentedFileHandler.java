@@ -29,15 +29,18 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 public class CommonWellDocumentedFileHandler extends FileHandler implements Filter {
+	public static final String NON_CWD_WARNINGS_LOG = "nonCwdWarnings.log";
+	private static final String DEFAULT_PATH = "./";
+	
 	public CommonWellDocumentedFileHandler() throws IOException, SecurityException {
-		super("./nonCwdWarnings.log", true);
+		super(DEFAULT_PATH + NON_CWD_WARNINGS_LOG, true);
 		setFormatter(new SimpleFormatter());
 		setLevel(Level.INFO);
 	}
 
 	@Override
 	public boolean isLoggable(LogRecord record) {
-		if (record.getLevel() == Level.WARNING) {
+		if (record.getLevel() == Level.INFO) {
 			return true;
 		}
 		

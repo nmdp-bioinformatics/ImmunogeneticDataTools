@@ -21,10 +21,49 @@
 */
 package org.dash.valid.race;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
+@XmlRootElement(name="linkage")
+@XmlType(propOrder={"frequency", "relativeFrequency", "hap1Frequency", "hap1Rank", "hap2Frequency", "hap2Rank"})
 public class RelativeFrequencyByRace implements RaceFrequency {
-	Double frequency;
 	Float relativeFrequency;
+	Double frequency;
+	String race;
+	FrequencyByRace hap1Frequency;
+	FrequencyByRace hap2Frequency;
 	
+	@XmlElement(name="hap1-frequency")
+	public Double getHap1Frequency() {
+		return hap1Frequency.getFrequency();
+	}
+	
+	@XmlElement(name="hap1-rank")
+	public String getHap1Rank() {
+		return hap1Frequency.getRank();
+	}
+
+	private void setHap1Frequency(FrequencyByRace hap1Frequency) {
+		this.hap1Frequency = hap1Frequency;
+	}
+
+	@XmlElement(name="hap2-frequency")
+	public Double getHap2Frequency() {
+		return hap2Frequency.getFrequency();
+	}
+	
+	@XmlElement(name="hap2-rank")
+	public String getHap2Rank() {
+		return hap2Frequency.getRank();
+	}
+
+	private void setHap2Frequency(FrequencyByRace hap2Frequency) {
+		this.hap2Frequency = hap2Frequency;
+	}
+	
+	@XmlElement(name="relative-frequency")
 	public Float getRelativeFrequency() {
 		return relativeFrequency;
 	}
@@ -37,28 +76,36 @@ public class RelativeFrequencyByRace implements RaceFrequency {
 	public void setRelativeFrequency(Float relativeFrequency) {
 		this.relativeFrequency = relativeFrequency;
 	}
-
-	String race;
 	
-	public RelativeFrequencyByRace(Double frequency, String race) {
-		this.frequency = frequency;
-		this.race = race;
+	public RelativeFrequencyByRace() {
+		
 	}
 	
+	public RelativeFrequencyByRace(Double frequency, String race, FrequencyByRace hap1Frequency, FrequencyByRace hap2Frequency) {
+		setFrequency(frequency);
+		setRace(race);
+		setHap1Frequency(hap1Frequency);
+		setHap2Frequency(hap2Frequency);
+	}
+	
+	@XmlElement(name="frequency")
 	public Double getFrequency() {
 		return frequency;
 	}
 	public void setFrequency(Double frequency) {
 		this.frequency = frequency;
 	}
+	
+	@XmlAttribute(name="race")
 	public String getRace() {
 		return race;
 	}
 	public void setRace(String race) {
 		this.race = race;
 	}
+
 	public String getRaceType() {
-		return BroadRace.contains(race) ? "Broad" : "Detailed";
+		return BroadRace.contains(getRace()) ? "Broad" : "Detailed";
 	}
 	
 	public String toString() {
