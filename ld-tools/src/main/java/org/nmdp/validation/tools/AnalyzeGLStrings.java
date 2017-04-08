@@ -192,7 +192,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         Switch about = new Switch("a", "about", "display about message");
         Switch help  = new Switch("h", "help", "display help message");
         FileArgument inputFile = new FileArgument("i", "input-file", "input file, default stdin", false);
-        FileArgument outputFile   = new FileArgument("o", "output-file", "output allele assignment file, default stdout", false);
+        FileArgument outputFile   = new FileArgument("o", "output-location", "specify an output file or an existing directory, default stdout", false);
         StringArgument hladb = new StringArgument("v", "hladb-version", "HLA DB version (e.g. 3.19.0), default latest", false);
         StringArgument freq = new StringArgument("f", "frequencies", "Frequency Set (e.g. nmdp, nmdp-2007, wiki), default nmdp-2007", false);
         BooleanArgument warnings = new BooleanArgument("w", "warnings-only", "Only log warnings, default all GL String output", false);
