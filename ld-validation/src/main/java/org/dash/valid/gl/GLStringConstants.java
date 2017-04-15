@@ -37,4 +37,11 @@ public class GLStringConstants {
 	public static final String SPACE = " ";
 	public static final String NNNN = "HLA-DRBX*NNNN";
 	public static final String COMMA = ",";
+	public static final String HML = "hml";
+	public static final String XML = "xml";
+	public static final String SAMPLE_ELEMENT = "sample";
+	public static final String ID_ATTRIBUTE = "id";
+	public static final String TYPING_ELEMENT = "typing";
+	public static final String ALLELE_ASSIGNMENT_ELEMENT = "allele-assignment";
+	public static final String GL_STRING_ELEMENT = "glstring";
 }

@@ -63,7 +63,6 @@ public class GLStringUtilitiesTest extends TestCase {
 		assertTrue(elements.contains(HLA_A0102));
 	}
 	
-	// TODO:  Revisit - not elegantly supporting whether individual frequencies are available to be checked
 	@Test
 	public void testHasFrequency() throws IOException {
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
@@ -90,6 +89,14 @@ public class GLStringUtilitiesTest extends TestCase {
 		for (String key : glStrings.keySet()) {
 			assertTrue(COMMA_DELIMITED.equals(key));
 		}
+	}
+	
+	@Test
+	public void testHMLFile() {
+		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("hml_1_0_2-example7-ngsFull.xml");
+		for (String key : glStrings.keySet()) {
+			assertTrue("1367-7150-8".equals(key));
+		}	
 	}
 	
 	@Test

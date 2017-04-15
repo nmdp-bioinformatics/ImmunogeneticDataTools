@@ -202,12 +202,15 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 
 	private void parseGLString() {
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
+		Locus locus = null;
+		
 		List<String> genes = GLStringUtilities.parse(glString,
 				GLStringConstants.GENE_DELIMITER);
 		for (String gene : genes) {
 			String[] splitString = gene
 					.split(GLStringUtilities.ESCAPED_ASTERISK);
-			String locus = splitString[0];
+			String locusVal = splitString[0];
 
 			List<String> genotypeAmbiguities = GLStringUtilities.parse(gene,
 					GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
@@ -222,7 +225,15 @@ public class LinkageDisequilibriumGenotypeList {
 						List<String> alleleAmbiguities = GLStringUtilities
 								.parse(genePhase,
 										GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
-						setAlleles(Locus.normalizeLocus(Locus.lookup(locus)), alleleAmbiguities);
+						
+						if (locusMap.containsKey(locusVal)) {
+							locus = locusMap.get(locusVal);
+						}
+						else {
+							locus = Locus.normalizeLocus(Locus.lookup(locusVal));
+							locusMap.put(locusVal, locus);
+						}
+						setAlleles(locus, alleleAmbiguities);
 					}
 				}
 			}
@@ -230,7 +241,9 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 
 	private void decomposeMug() {
-		String locus = null;
+		String locusVal = null;
+		Locus locus = null;
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
 
 		List<GenotypeList> genotypeLists = mug.getGenotypeLists();
 		for (GenotypeList gl : genotypeLists) {
@@ -244,9 +257,17 @@ public class LinkageDisequilibriumGenotypeList {
 						List<String> alleleStrings = new ArrayList<String>();
 						for (Allele allele : alleles) {
 							alleleStrings.add(allele.getGlstring());
-							locus = allele.getLocus().toString();
+							locusVal = allele.getLocus().toString();
 						}
-						setAlleles(Locus.normalizeLocus(Locus.lookup(locus)), alleleStrings);
+						
+						if (locusMap.containsKey(locusVal)) {
+							locus = locusMap.get(locusVal);
+						}
+						else {
+							locus = Locus.normalizeLocus(Locus.lookup(locusVal));
+							locusMap.put(locusVal, locus);
+						}
+						setAlleles(locus, alleleStrings);
 					}
 				}
 			}
@@ -332,6 +353,7 @@ public class LinkageDisequilibriumGenotypeList {
 		List<List<Object>> haplotypeCombinations = cartesianProduct(allelesByLocus);
 		String[] alleleParts;
 		Locus locus;
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
 
 		for (List<Object> haplotypeCombo : haplotypeCombinations) {
 			boolean drb345Homozygous = false;
@@ -339,9 +361,13 @@ public class LinkageDisequilibriumGenotypeList {
 				List<String> alleles = (List<String>) haplotypePart;
 				alleleParts = alleles.iterator().next()
 						.split(GLStringUtilities.ESCAPED_ASTERISK);
-				locus = Locus.lookup(alleleParts[0]);
-
-				locus = Locus.normalizeLocus(locus);
+				if (locusMap.containsKey(alleleParts[0])) {
+					locus = locusMap.get(alleleParts[0]);
+				}
+				else {
+					locus = Locus.normalizeLocus(Locus.lookup(alleleParts[0]));
+					locusMap.put(alleleParts[0], locus);
+				}
 				
 				if (Locus.HLA_DRB345.equals(locus) && hasHomozygous(locus)) {
 					drb345Homozygous = true;

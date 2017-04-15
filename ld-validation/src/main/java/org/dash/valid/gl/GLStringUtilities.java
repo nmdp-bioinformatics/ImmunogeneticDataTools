@@ -37,6 +37,10 @@ import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
@@ -45,6 +49,11 @@ import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.nmdp.gl.client.GlClient;
 import org.nmdp.gl.client.GlClientException;
 import org.nmdp.gl.client.local.LocalGlClient;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
@@ -293,6 +302,10 @@ public class GLStringUtilities {
 			LOGGER.severe("Problem reading GL String file: " + name);
 			e.printStackTrace();
 		}
+		 catch (ParserConfigurationException | SAXException e) {
+				LOGGER.severe("Couldn't parse xml file: " + name);
+				e.printStackTrace();
+		 }
 		
 		return glStrings;
 	}
@@ -318,6 +331,9 @@ public class GLStringUtilities {
 		} catch (IOException e) {
 			LOGGER.severe("Problem opening GL String file: " + filename);
 			e.printStackTrace();
+		} catch (SAXException | ParserConfigurationException e) {
+			LOGGER.severe("Couldn't parse xml file: " + filename);
+			e.printStackTrace();
 		} finally {
 			try {
 				reader.close();
@@ -332,23 +348,47 @@ public class GLStringUtilities {
 
 	private static LinkedHashMap<String, String> parseGLStringFile(String filename,
 			BufferedReader reader)
-			throws IOException {
+			throws IOException, ParserConfigurationException, SAXException {
 		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
-		String line;
-		String[] parts = null;
-		int lineNumber = 0;
-		while ((line = reader.readLine()) != null) {
-			parts = line.split(FILE_DELIMITER_REGEX);
-			if (parts.length == 1) {
-				glStrings.put(filename + "-" + lineNumber, parts[0]);
-			} else if (parts.length == 2) {
-				glStrings.put(parts[0], parts[1]);
-			} else {
-				LOGGER.warning("Unexpected line format at line "
-						+ lineNumber + ": " + filename);
-			}
 
-			lineNumber++;
+		if (filename.endsWith(GLStringConstants.XML) || filename.endsWith(GLStringConstants.HML)) {
+		    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		    DocumentBuilder builder = factory.newDocumentBuilder();
+		    InputSource is = new InputSource(reader);
+		    Document doc = builder.parse(is);
+		    String sampleId;
+		    StringBuffer glString = new StringBuffer();
+		    Element alleleAssignment;
+
+		    NodeList nList = doc.getElementsByTagName(GLStringConstants.SAMPLE_ELEMENT);
+		    for (int i=0;i<nList.getLength();i++) {
+		    	sampleId = nList.item(i).getAttributes().getNamedItem(GLStringConstants.ID_ATTRIBUTE).getNodeValue();
+		    	NodeList typingElements = ((Element) nList.item(i)).getElementsByTagName(GLStringConstants.TYPING_ELEMENT);
+		    	for (int j=0;j<typingElements.getLength();j++) {
+		    		alleleAssignment = (Element) ((Element) typingElements.item(j)).getElementsByTagName(GLStringConstants.ALLELE_ASSIGNMENT_ELEMENT).item(0);
+		    		if (j > 0) glString.append(GLStringConstants.GENE_DELIMITER);
+		    		glString.append(((Element) alleleAssignment.getElementsByTagName(GLStringConstants.GL_STRING_ELEMENT).item(0)).getTextContent().trim());
+		    	}
+		    	glStrings.put(sampleId,  glString.toString());
+		    }
+		}
+		else {
+			String line;
+			String[] parts = null;
+			int lineNumber = 0;
+			while ((line = reader.readLine()) != null) {
+				parts = line.split(FILE_DELIMITER_REGEX);
+				if (parts.length == 1) {
+					glStrings.put(filename + "-" + lineNumber, parts[0]);
+				} else if (parts.length == 2) {
+					glStrings.put(parts[0], parts[1]);
+				} else {
+					LOGGER.warning("Unexpected line format at line "
+							+ lineNumber + ": " + filename);
+				}
+	
+				lineNumber++;
+			}
 		}
 		
 		return glStrings;

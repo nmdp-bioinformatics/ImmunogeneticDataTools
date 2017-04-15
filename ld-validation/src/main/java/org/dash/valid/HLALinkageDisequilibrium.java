@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.dash.valid.ars.HLADatabaseVersion;
-import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
@@ -51,7 +50,7 @@ import org.dash.valid.report.DetectedLinkageFindings;
  * http://en.wikipedia.org/wiki/Linkage_disequilibrium
  * 
  * This class leverages a specific set of linkage disequilibrium associations relevant in the context
- * of HLA (http://en.wikipedia.org/wiki/Human_leukocyte_antigen)  and immunogenetics:
+ * of HLA (http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics:
  * 
  * http://en.wikiversity.org/wiki/HLA/Linkage_Disequilibrium/B-C_Blocks
  * http://en.wikiversity.org/wiki/HLA/Linkage_Disequilibrium/DR-DQ_Blocks
@@ -59,21 +58,15 @@ import org.dash.valid.report.DetectedLinkageFindings;
  */
 
 public class HLALinkageDisequilibrium {
-	private static HLADatabaseVersion hladb;
-	
+
     private static final Logger LOGGER = Logger.getLogger(HLALinkageDisequilibrium.class.getName());
-		
-	static {
-		hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
-	}
 			
-	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {		
+	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString, HLADatabaseVersion hladb, String freq) {		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 				
-		DetectedLinkageFindings findings = new DetectedLinkageFindings(Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).toString());
-
+		DetectedLinkageFindings findings = new DetectedLinkageFindings(freq);
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {
 			return findings;

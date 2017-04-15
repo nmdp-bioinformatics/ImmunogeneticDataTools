@@ -31,6 +31,8 @@ import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import org.dash.valid.ars.HLADatabaseVersion;
+import org.dash.valid.freq.Frequencies;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.handler.ProgressConsoleHandler;
@@ -39,6 +41,7 @@ import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
+import org.dash.valid.report.SummaryWriter;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumAnalyzer {		
@@ -55,7 +58,9 @@ public class LinkageDisequilibriumAnalyzer {
     
 	public static void main(String[] args) {
 		try {
-			analyzeGLStringFiles(args);
+			HLADatabaseVersion hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
+			Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
+			analyzeGLStringFiles(args, hladb, freq.toString());
 		} catch (IOException e) {
 			LOGGER.severe("Unable to process.  Please check log files and configuration.");
 			return;
@@ -76,17 +81,17 @@ public class LinkageDisequilibriumAnalyzer {
 		DetectedFindingsWriter.getInstance().closeWriters();
 	}
 	
-	private static void analyzeGLStringFiles(String[] filenames) throws IOException {		
+	private static void analyzeGLStringFiles(String[] filenames, HLADatabaseVersion hladb, String freq) throws IOException {		
 		for (int i=0;i<filenames.length;i++) {
 			LOGGER.info("Processing file: " + filenames[i] + " (" + (i+1) + " of " + filenames.length + ")");
-			analyzeGLStringFile(filenames[i]);		
+			analyzeGLStringFile(filenames[i], hladb, freq);		
 		}		
 	}
 	
-	public static List<DetectedLinkageFindings> analyzeGLStringFile(String name, BufferedReader reader) throws IOException {
+	public static List<DetectedLinkageFindings> analyzeGLStringFile(String name, BufferedReader reader, HLADatabaseVersion hladb, String freq) throws IOException {
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(name, reader);
 		
-		List<DetectedLinkageFindings> findingsList = detectLinkages(glStrings);
+		List<DetectedLinkageFindings> findingsList = detectLinkages(glStrings, hladb, freq);
 		
 		return findingsList;
 	}
@@ -94,19 +99,20 @@ public class LinkageDisequilibriumAnalyzer {
 	/**
 	 * @param filename
 	 */
-	public static void analyzeGLStringFile(String filename) throws IOException {				
+	public static void analyzeGLStringFile(String filename, HLADatabaseVersion hladb, String freq) throws IOException {				
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(filename);
 		List<DetectedLinkageFindings> findingsList = null;
 		
 		
 		
-		findingsList = detectLinkages(glStrings);
+		findingsList = detectLinkages(glStrings, hladb, freq);
 		
 		for (DetectedLinkageFindings findings : findingsList) {
 			LinkageDisequilibriumWriter.getInstance().reportDetectedLinkages(findings);
 			HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
 			CommonWellDocumentedWriter.getInstance().reportCommonWellDocumented(findings);
 			DetectedFindingsWriter.getInstance().reportDetectedFindings(findings);
+			SummaryWriter.getInstance().reportDetectedLinkages(findings);
 		}
 	}
 
@@ -115,7 +121,7 @@ public class LinkageDisequilibriumAnalyzer {
 	 * @throws IOException 
 	 * @throws SecurityException 
 	 */
-	private static List<DetectedLinkageFindings> detectLinkages(Map<String, String> glStrings) {
+	private static List<DetectedLinkageFindings> detectLinkages(Map<String, String> glStrings, HLADatabaseVersion hladb, String freq) {
 		LinkageDisequilibriumGenotypeList linkedGLString;
 		String glString;
 		List<DetectedLinkageFindings> findingsList = new ArrayList<DetectedLinkageFindings>();
@@ -133,7 +139,7 @@ public class LinkageDisequilibriumAnalyzer {
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
 			idx++;
 			
-			boolean homozygousOnly = "true".equals(System.getProperty("org.dash.homozygous")) ? true : false;
+			boolean homozygousOnly = Boolean.TRUE.equals(System.getProperty("org.dash.homozygous")) ? Boolean.TRUE : Boolean.FALSE;
 			
 			// TODO:  Actually implement by skipping the record
 			if (!linkedGLString.checkAmbiguitiesThresholds()) {
@@ -145,21 +151,23 @@ public class LinkageDisequilibriumAnalyzer {
 				continue;
 			}
 
-			findingsList.add(detectLinkages(linkedGLString));
+			findingsList.add(detectLinkages(linkedGLString, hladb, freq));
 		}
 		
 		return findingsList;
 	}
 	
 	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) {
+		HLADatabaseVersion hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
+		Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
 		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug.getId(), mug);
-		DetectedLinkageFindings findings = detectLinkages(linkedGLString);
+		DetectedLinkageFindings findings = detectLinkages(linkedGLString, hladb, freq.toString());
 
 		return findings;
 	}
 
-	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
-		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString);
+	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString, HLADatabaseVersion hladb, String freq) {
+		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString, hladb, freq);
 				
 		return findings;
 	}

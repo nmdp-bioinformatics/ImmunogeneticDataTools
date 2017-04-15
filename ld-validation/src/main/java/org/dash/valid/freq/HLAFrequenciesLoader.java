@@ -163,12 +163,6 @@ public class HLAFrequenciesLoader {
 			if (allelesFile != null) {
 				loadIndividualLocusFrequencies(allelesFile);
 			}
-			
-//			for (Locus locus : loci) {
-//				if (locus.hasIndividualFrequencies()) {
-//					loadIndividualLocusFrequency(Frequencies.NMDP, locus);
-//				}
-//			}
 		}
 		catch (IOException e) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
@@ -357,6 +351,8 @@ public class HLAFrequenciesLoader {
 		
 		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
 		DisequilibriumElementByRace disElement;
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
+		Locus locus = null;
 		
 		for (String haplotype : frequencyMap.keySet()) {
 			String[] locusHaplotypes = haplotype.split(GLStringConstants.GENE_PHASE_DELIMITER);
@@ -366,7 +362,16 @@ public class HLAFrequenciesLoader {
 				String[] parts = locusHaplotype.split(GLStringUtilities.ESCAPED_ASTERISK);
 				List<String> val = new ArrayList<String>();
 				val.add(locusHaplotype);
-				hlaElementMap.put(Locus.normalizeLocus(Locus.lookup(parts[0])), val);
+				
+				if (locusMap.containsKey(parts[0])) {
+					locus = locusMap.get(parts[0]);
+				}
+				else {
+					locus = Locus.normalizeLocus(Locus.lookup(parts[0]));
+					locusMap.put(parts[0], locus);
+				}
+				
+				hlaElementMap.put(locus, val);
 			}
 			
 			disElement = new DisequilibriumElementByRace(hlaElementMap, frequencyMap.get(haplotype));
@@ -427,6 +432,7 @@ public class HLAFrequenciesLoader {
 	private void loadIndividualLocusFrequencies(File allelesFile) throws IOException {
 		String row;
 		String parts[];
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
 		Locus locus;
 		List<String> singleLocusFrequencies;
 		
@@ -437,7 +443,13 @@ public class HLAFrequenciesLoader {
 		
 		while ((row = reader.readLine()) != null) {
 			parts = row.split(GLStringUtilities.ESCAPED_ASTERISK);
-			locus = Locus.lookup(parts[0]);
+			if (locusMap.containsKey(parts[0])) {
+				locus = locusMap.get(parts[0]);
+			}
+			else {
+				locus = Locus.lookup(parts[0]);
+				locusMap.put(parts[0], locus);
+			}
 			
 			if (individualLocusFrequencies.containsKey(locus)) {
 				singleLocusFrequencies = individualLocusFrequencies.get(locus);

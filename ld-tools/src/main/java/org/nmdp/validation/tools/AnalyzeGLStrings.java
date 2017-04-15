@@ -105,17 +105,20 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 	}
 
 	public List<DetectedLinkageFindings> performAnalysis(BufferedReader reader) throws IOException {
+		HLADatabaseVersion hladbVersion;
 		List<DetectedLinkageFindings> findingsList;
-		System.setProperty(HLADatabaseVersion.HLADB_PROPERTY, hladb != null ? hladb : GLStringConstants.EMPTY_STRING);
-    	
-    	// TODO:  Figure out how to make it stop reporting the default here...
-    	System.setProperty(Frequencies.FREQUENCIES_PROPERTY, freq != null ? freq : GLStringConstants.EMPTY_STRING);
     	    	
+		// TODO:  Handle multiple frequency files on the command line??  Or, impose a merger of frequency files into standard format?  Can linkagesSought be determined then?
     	if (frequencyFile !=  null) {
     		HLAFrequenciesLoader.getInstance(frequencyFile, allelesFile);
     	}
-    	    	
-    	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
+    	else {
+    		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, (freq != null) ? freq : GLStringConstants.EMPTY_STRING);
+    	}
+    	 
+    	hladbVersion = (hladb != null) ? HLADatabaseVersion.lookup(hladb) : HLADatabaseVersion.getLatest();
+
+    	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader, hladbVersion, freq);
 		return findingsList;
 	}
 
