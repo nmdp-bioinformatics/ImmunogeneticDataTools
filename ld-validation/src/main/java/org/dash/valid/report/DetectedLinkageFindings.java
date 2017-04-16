@@ -303,6 +303,7 @@ public class DetectedLinkageFindings {
 	public Set<String> getNonCWDAlleles() {
 		return nonCWDAlleles;
 	}
+	
 	public void setNonCWDAlleles(Set<String> nonCWDAlleles) {
 		this.nonCWDAlleles = nonCWDAlleles;
 	}

@@ -357,12 +357,12 @@ public class GLStringUtilities {
 		    InputSource is = new InputSource(reader);
 		    Document doc = builder.parse(is);
 		    String sampleId;
-		    StringBuffer glString = new StringBuffer();
 		    Element alleleAssignment;
 
 		    NodeList nList = doc.getElementsByTagName(GLStringConstants.SAMPLE_ELEMENT);
 		    for (int i=0;i<nList.getLength();i++) {
 		    	sampleId = nList.item(i).getAttributes().getNamedItem(GLStringConstants.ID_ATTRIBUTE).getNodeValue();
+			    StringBuffer glString = new StringBuffer();
 		    	NodeList typingElements = ((Element) nList.item(i)).getElementsByTagName(GLStringConstants.TYPING_ELEMENT);
 		    	for (int j=0;j<typingElements.getLength();j++) {
 		    		alleleAssignment = (Element) ((Element) typingElements.item(j)).getElementsByTagName(GLStringConstants.ALLELE_ASSIGNMENT_ELEMENT).item(0);
