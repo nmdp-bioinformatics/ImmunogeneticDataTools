@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
@@ -54,6 +55,7 @@ import org.dishevelled.commandline.Switch;
 import org.dishevelled.commandline.Usage;
 import org.dishevelled.commandline.argument.BooleanArgument;
 import org.dishevelled.commandline.argument.FileArgument;
+import org.dishevelled.commandline.argument.FileSetArgument;
 import org.dishevelled.commandline.argument.StringArgument;
 
 /**
@@ -67,7 +69,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     private final String hladb;
     private final String freq;
     private final Boolean warnings;
-    private final File frequencyFile;
+    private final Set<File> frequencyFiles;
     private final File allelesFile;
     private static final String USAGE = "analyze-gl-strings [args]";
 
@@ -78,13 +80,13 @@ public class AnalyzeGLStrings implements Callable<Integer> {
      * @param inputFile input file, if any
      * @param outputFile output interpretation file, if any
      */
-    public AnalyzeGLStrings(File inputFile, File outputFile, String hladb, String freq, Boolean warnings, File frequencyFile, File allelesFile) {
+    public AnalyzeGLStrings(File inputFile, File outputFile, String hladb, String freq, Boolean warnings, Set<File> frequencyFiles, File allelesFile) {
         this.inputFile = inputFile;
         this.outputFile   = outputFile;
         this.hladb = hladb;
         this.freq = freq;
         this.warnings = warnings;
-        this.frequencyFile = frequencyFile;
+        this.frequencyFiles = frequencyFiles;
         this.allelesFile = allelesFile;
     }
     
@@ -108,9 +110,8 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 		HLADatabaseVersion hladbVersion;
 		List<DetectedLinkageFindings> findingsList;
     	    	
-		// TODO:  Handle multiple frequency files on the command line??  Or, impose a merger of frequency files into standard format?  Can linkagesSought be determined then?
-    	if (frequencyFile !=  null) {
-    		HLAFrequenciesLoader.getInstance(frequencyFile, allelesFile);
+    	if (frequencyFiles !=  null) {
+    		HLAFrequenciesLoader.getInstance(frequencyFiles, allelesFile);
     	}
     	else {
     		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, (freq != null) ? freq : GLStringConstants.EMPTY_STRING);
@@ -199,10 +200,10 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         StringArgument hladb = new StringArgument("v", "hladb-version", "HLA DB version (e.g. 3.19.0), default latest", false);
         StringArgument freq = new StringArgument("f", "frequencies", "Frequency Set (e.g. nmdp, nmdp-2007, wiki), default nmdp-2007", false);
         BooleanArgument warnings = new BooleanArgument("w", "warnings-only", "Only log warnings, default all GL String output", false);
-        FileArgument frequencyFile = new FileArgument("q", "frequency-file", "frequency input file, default nmdp-2007 five locus", false);
+        FileSetArgument frequencyFiles = new FileSetArgument("q", "frequency-file(s)", "frequency input files (comma separated), default nmdp-2007 five locus", false);
         FileArgument allelesFile = new FileArgument("l", "allele-file", "alleles known to have frequencies, default none", false);
 
-        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFile, allelesFile);
+        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFiles, allelesFile);
         CommandLine commandLine = new CommandLine(args);
 
         AnalyzeGLStrings analyzeGLStrings = null;
@@ -217,7 +218,8 @@ public class AnalyzeGLStrings implements Callable<Integer> {
                 Usage.usage(USAGE, null, commandLine, arguments, System.out);
                 System.exit(0);
             }
-            analyzeGLStrings = new AnalyzeGLStrings(inputFile.getValue(), outputFile.getValue(), hladb.getValue(), freq.getValue(), warnings.getValue(), frequencyFile.getValue(), allelesFile.getValue());
+            
+            analyzeGLStrings = new AnalyzeGLStrings(inputFile.getValue(), outputFile.getValue(), hladb.getValue(), freq.getValue(), warnings.getValue(), frequencyFiles.getValue(), allelesFile.getValue());
         }
         catch (CommandLineParseException | IllegalArgumentException e) {
             Usage.usage(USAGE, e, commandLine, arguments, System.err);

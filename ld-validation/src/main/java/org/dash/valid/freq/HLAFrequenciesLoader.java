@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -102,9 +103,9 @@ public class HLAFrequenciesLoader {
     	
     }
     
-    public static HLAFrequenciesLoader getInstance(File frequencyFile, File allelesFile) {
+    public static HLAFrequenciesLoader getInstance(Set<File> frequencyFiles, File allelesFile) {
     	instance = new HLAFrequenciesLoader();
-    	instance.init(frequencyFile, allelesFile);
+    	instance.init(frequencyFiles, allelesFile);
     	
     	return instance;
     }
@@ -146,19 +147,23 @@ public class HLAFrequenciesLoader {
 		return null;
 	}
 	
-	private void init(File frequencyFile, File allelesFile) {
+	private void init(Set<File> frequencyFiles, File allelesFile) {
+		Set<Linkages> linkages = new HashSet<Linkages>();
 		try {
-			InputStream is = new FileInputStream(frequencyFile);
-			InputStreamReader isr = new InputStreamReader(is);
-			BufferedReader reader = new BufferedReader(isr);
+			for (File frequencyFile : frequencyFiles) {
+				InputStream is = new FileInputStream(frequencyFile);
+				InputStreamReader isr = new InputStreamReader(is);
+				BufferedReader reader = new BufferedReader(isr);
+				
+				List<DisequilibriumElement> elements = loadStandardReferenceData(reader);
+				
+				EnumSet<Locus> loci = Locus.lookup(elements.iterator().next().getLoci());
+				linkages.addAll(Linkages.lookup(loci));
+				
+				this.disequilibriumElementsMap.put(loci, elements);
+			}
 			
-			List<DisequilibriumElement> elements = loadStandardReferenceData(reader);
-			
-			EnumSet<Locus> loci = Locus.lookup(elements.iterator().next().getLoci());
-			Set<Linkages> linkages = Linkages.lookup(loci);
 			LinkagesLoader.getInstance(linkages);
-			
-			this.disequilibriumElementsMap.put(loci, elements);
 			
 			if (allelesFile != null) {
 				loadIndividualLocusFrequencies(allelesFile);

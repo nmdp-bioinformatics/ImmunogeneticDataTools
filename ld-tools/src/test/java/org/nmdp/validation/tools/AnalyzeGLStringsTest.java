@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Set;
 
 import org.dash.valid.report.DetectedLinkageFindings;
 
@@ -22,10 +23,10 @@ public class AnalyzeGLStringsTest extends TestCase {
 		String hladb = null;
 		String freq = null;
 		Boolean warnings = null;
-		File frequencyFile = null;
+		Set<File> frequencyFiles = null;
 		File allelesFile = null;
 		
-		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFile, allelesFile);
+		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFiles, allelesFile);
 		List<DetectedLinkageFindings> findingsList = analyzer.performAnalysis(reader);
 		
 		assertNotNull(findingsList);
