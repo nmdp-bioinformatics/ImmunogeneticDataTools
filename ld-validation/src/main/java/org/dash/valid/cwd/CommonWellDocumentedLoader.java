@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.gl.GLStringConstants;
 
 public class CommonWellDocumentedLoader {
@@ -63,34 +62,33 @@ public class CommonWellDocumentedLoader {
 		this.hlaDbByAccession = hlaDbByAccession;
 	}
 
-	private CommonWellDocumentedLoader(HLADatabaseVersion hladb) {
+	private CommonWellDocumentedLoader(String hladb) {
 		init(hladb);
 	}
 	
 	public static CommonWellDocumentedLoader getInstance() {
-		HLADatabaseVersion hladb = null;
 		if (instance == null) {
-			hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
+			String hladb = System.getProperty(GLStringConstants.HLADB_PROPERTY);
 			instance = new CommonWellDocumentedLoader(hladb);
 		}
 		
 		return instance;
 	}
 	
-	private void init(HLADatabaseVersion hladb) {
+	private void init(String hladb) {
 		try {
 			loadCommonWellDocumentedAlleles(hladb);
 		}
-		catch (FileNotFoundException e) {
-			
-		}
 		catch (IOException e) {
-			
+			e.printStackTrace();
 		}
+
 	}
 	
-	public void loadCommonWellDocumentedAlleles(HLADatabaseVersion hladb) throws IOException, FileNotFoundException {		
+	public void loadCommonWellDocumentedAlleles(String hladb) throws IOException, FileNotFoundException {		
 		String filename = "reference/CWD.txt";
+		
+		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
 		
 		HashMap<String, String> cwdByAccession = new HashMap<String, String>();
 		HashMap<String, List<String>> hlaDbByAccession = new HashMap<String, List<String>>();
@@ -113,7 +111,7 @@ public class CommonWellDocumentedLoader {
 			if (idx < 1) {
 				headers = Arrays.asList(columns);
 
-				hladbIdx = headers.indexOf(hladb.getCwdName());	
+				hladbIdx = headers.indexOf(hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING));	
 				
 				if (hladbIdx == -1) {
 					hladbIdx = 1;

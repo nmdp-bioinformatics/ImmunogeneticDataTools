@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
-import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
@@ -43,6 +42,7 @@ import org.dash.valid.handler.HaplotypePairWarningFileHandler;
 import org.dash.valid.handler.LinkageDisequilibriumFileHandler;
 import org.dash.valid.handler.LinkageWarningFileHandler;
 import org.dash.valid.report.CommonWellDocumentedWriter;
+import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
@@ -66,7 +66,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 	
     private final File inputFile;
     private final File outputFile;
-    private final String hladb;
+    private String hladb;
     private final String freq;
     private final Boolean warnings;
     private final Set<File> frequencyFiles;
@@ -107,19 +107,18 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 	}
 
 	public List<DetectedLinkageFindings> performAnalysis(BufferedReader reader) throws IOException {
-		HLADatabaseVersion hladbVersion;
 		List<DetectedLinkageFindings> findingsList;
     	    	
     	if (frequencyFiles !=  null) {
     		HLAFrequenciesLoader.getInstance(frequencyFiles, allelesFile);
     	}
-    	else {
-    		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, (freq != null) ? freq : GLStringConstants.EMPTY_STRING);
-    	}
+    	
+    	System.setProperty(Frequencies.FREQUENCIES_PROPERTY, (freq != null) ? freq : "Inputted");
+    	
+    	if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
+    	System.setProperty(GLStringConstants.HLADB_PROPERTY, hladb);
     	 
-    	hladbVersion = (hladb != null) ? HLADatabaseVersion.lookup(hladb) : HLADatabaseVersion.getLatest();
-
-    	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader, hladbVersion, freq);
+    	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
 		return findingsList;
 	}
 
@@ -131,6 +130,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     	PrintWriter linkageWriter = null;
     	PrintWriter linkageWarningsWriter = null;
     	PrintWriter nonCwdWriter = null;
+    	PrintWriter detectedFindingsWriter = null;
     	
     	boolean writeToDir = false;
     	
@@ -143,6 +143,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     		linkageWriter = writer(new File(outputFile + "/" + LinkageDisequilibriumFileHandler.LINKAGES_LOG), true);
     		linkageWarningsWriter = writer(new File(outputFile + "/" + LinkageWarningFileHandler.LINKAGE_WARNINGS_LOG), true);
     		nonCwdWriter = writer(new File(outputFile + "/" + CommonWellDocumentedFileHandler.NON_CWD_WARNINGS_LOG), true);
+    		detectedFindingsWriter = writer(new File(outputFile + "/" + DetectedFindingsWriter.DETECTED_FINDINGS_CSV), true);
     	}
     	else {
     		writer = writer(outputFile, true);
@@ -164,7 +165,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         			pairWriter.write(HaplotypePairWriter.formatDetectedLinkages(findings));
         			linkageWriter.write(LinkageDisequilibriumWriter.formatDetectedLinkages(findings));
         			nonCwdWriter.write(CommonWellDocumentedWriter.formatCommonWellDocumented(findings));
-        			//DetectedFindingsWriter.getInstance(outputFile.getPath()).reportDetectedFindings(findings);
+        			detectedFindingsWriter.write(DetectedFindingsWriter.formatDetectedFindings(findings));
         		}
         	}
         	else {
@@ -180,7 +181,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 			linkageWriter.close();
 			linkageWarningsWriter.close();
 			nonCwdWriter.close();
-			//DetectedFindingsWriter.getInstance().closeWriters();
+			detectedFindingsWriter.close();
 		}
 		else {
 			writer.close();

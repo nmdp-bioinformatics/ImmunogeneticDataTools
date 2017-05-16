@@ -21,17 +21,22 @@
 */
 package org.dash.gl;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.LinkedHashMap;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.junit.Before;
 import org.junit.Test;
+import org.nmdp.gl.client.http.HttpClient;
+import org.nmdp.gl.client.http.restassured.RestAssuredHttpClient;
+
+import junit.framework.TestCase;
 
 public class GLStringTest extends TestCase {	
 	private static final String SIMPLE_DRB4_STRING = "HLA-DRB4*01:01:01:01";
@@ -74,33 +79,34 @@ public class GLStringTest extends TestCase {
 		assertTrue(homozygousCString.hasHomozygous(Locus.HLA_C));
 	}
 	
-//	@Test
-//	public void testHttpClient() {
-//		BufferedReader reader = null;
-//		String glString = null;
-//		
-//		HttpClient glClient = new RestAssuredHttpClient();
-//		String id = glClient.post("https://gl.nmdp.org/imgt-hla/3.18.0/multilocus-unphased-genotype", STRICT_GL_STRING);
-//		
-//		InputStream in = glClient.get(id);
-//		
-//		try {
-//			reader = new BufferedReader(new InputStreamReader(in));
-//			
-//			while ((glString = reader.readLine()) != null) {
-//				assertTrue(STRICT_GL_STRING.equals(glString));
-//			}
-//		}
-//		catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		finally {
-//			try {
-//				reader.close();
-//			}
-//			catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
+	@Test
+	public void testHttpClient() {
+		BufferedReader reader = null;
+		String glString = null;
+		
+		HttpClient glClient = new RestAssuredHttpClient();
+		//String id = glClient.post("https://gl.nmdp.org/imgt-hla/3.18.0/multilocus-unphased-genotype", STRICT_GL_STRING);
+		String id = glClient.post("https://gl.nmdp.org/nonstrict/multilocus-unphased-genotype", STRICT_GL_STRING);
+		
+		InputStream in = glClient.get(id);
+		
+		try {
+			reader = new BufferedReader(new InputStreamReader(in));
+			
+			while ((glString = reader.readLine()) != null) {
+				assertTrue(STRICT_GL_STRING.equals(glString));
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				reader.close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

@@ -192,18 +192,22 @@ public class GLStringUtilities {
 			e.printStackTrace();
 		}
 		
-		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
-		
-		arsMap = instance.getArsMap();
+		HashMap<String, HashSet<String>> arsMap = instance.getArsMap();
 
-		for (String arsCode : arsMap.keySet()) {
-			if (arsCode.equals(referenceAllele)
-					&& arsMap.get(arsCode).contains(matchedValue)) {
-				return true;
-			}
-			else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
-					&& arsMap.get(arsCode).contains(matchedValue)) {
-				return true;
+		if (arsMap.containsKey(referenceAllele)) {
+			for (String arsCode : arsMap.keySet()) {
+				if (arsCode.equals(referenceAllele)
+						&& arsMap.get(arsCode).contains(matchedValue)) {
+					return true;
+				}
+				
+    			// TODO:  Not sure this accomplished anything...remove?
+
+//				else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
+//						&& arsMap.get(arsCode).contains(matchedValue)) {
+//					// TODO:  Does this ever happen?
+//					return true;
+//				}
 			}
 		}
 

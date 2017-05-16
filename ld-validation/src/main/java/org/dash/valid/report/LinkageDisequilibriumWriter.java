@@ -24,7 +24,6 @@ package org.dash.valid.report;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import org.dash.valid.freq.Frequencies;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.handler.LinkageDisequilibriumFileHandler;
 import org.dash.valid.handler.LinkageWarningFileHandler;
@@ -68,7 +67,7 @@ public class LinkageDisequilibriumWriter {
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
-		sb.append(GLStringConstants.NEWLINE + "Frequencies:  " + Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)) + GLStringConstants.NEWLINE);
+		sb.append(GLStringConstants.NEWLINE + "Frequencies:  " + findings.getFrequencies() + GLStringConstants.NEWLINE);
 				
 		if (!findings.hasLinkages()) {
 			sb.append(GLStringConstants.NEWLINE + "WARNING - NO LINKAGES FOUND" + GLStringConstants.NEWLINE);

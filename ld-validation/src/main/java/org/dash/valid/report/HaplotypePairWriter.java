@@ -26,7 +26,6 @@ import java.util.EnumSet;
 import java.util.logging.Logger;
 
 import org.dash.valid.Locus;
-import org.dash.valid.freq.Frequencies;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.haplo.HaplotypePair;
 import org.dash.valid.handler.HaplotypePairFileHandler;
@@ -71,7 +70,7 @@ public class HaplotypePairWriter {
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
-		sb.append(GLStringConstants.NEWLINE + "Frequencies:  " + Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)) + GLStringConstants.NEWLINE);
+		sb.append(GLStringConstants.NEWLINE + "Frequencies:  " + findings.getFrequencies() + GLStringConstants.NEWLINE);
 		
 		for (EnumSet<Locus> findingSought : findings.getFindingsSought()) {
 			if (findings.hasLinkedPairs(findingSought) && findings.getFirstPair(findingSought) != null) {

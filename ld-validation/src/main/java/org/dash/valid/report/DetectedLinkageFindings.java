@@ -40,7 +40,6 @@ import javax.xml.bind.annotation.XmlType;
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.LinkageElementsSet;
 import org.dash.valid.Locus;
-import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.HaplotypePair;
 import org.dash.valid.gl.haplo.HaplotypePairComparator;
@@ -59,7 +58,7 @@ public class DetectedLinkageFindings {
 	private Set<DetectedDisequilibriumElement> linkages = new LinkageElementsSet(new DisequilibriumElementComparator());
 	private Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 	private Set<String> nonCWDAlleles;
-	private HLADatabaseVersion hladb;
+	private String hladb;
 	private String frequencies;
 	
 	private HashMap<Set<Locus>, Integer> linkageCountsMap = new HashMap<Set<Locus>, Integer>();
@@ -292,10 +291,10 @@ public class DetectedLinkageFindings {
 
 	@XmlAttribute(name="hladb")
 	public String getHladb() {
-		return hladb.getArsName();
+		return this.hladb;
 	}
 	
-	public void setHladb(HLADatabaseVersion hladb) {
+	public void setHladb(String hladb) {
 		this.hladb = hladb;
 	}
 	

@@ -29,8 +29,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.dash.valid.ars.HLADatabaseVersion;
+import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
+import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.Haplotype;
@@ -50,10 +51,7 @@ import org.dash.valid.report.DetectedLinkageFindings;
  * http://en.wikipedia.org/wiki/Linkage_disequilibrium
  * 
  * This class leverages a specific set of linkage disequilibrium associations relevant in the context
- * of HLA (http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics:
- * 
- * http://en.wikiversity.org/wiki/HLA/Linkage_Disequilibrium/B-C_Blocks
- * http://en.wikiversity.org/wiki/HLA/Linkage_Disequilibrium/DR-DQ_Blocks
+ * of HLA (http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics.
  * 
  */
 
@@ -61,12 +59,12 @@ public class HLALinkageDisequilibrium {
 
     private static final Logger LOGGER = Logger.getLogger(HLALinkageDisequilibrium.class.getName());
 			
-	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString, HLADatabaseVersion hladb, String freq) {		
+	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 				
-		DetectedLinkageFindings findings = new DetectedLinkageFindings(freq);
+		DetectedLinkageFindings findings = new DetectedLinkageFindings(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {
 			return findings;
@@ -85,7 +83,7 @@ public class HLALinkageDisequilibrium {
 		findings.setGenotypeList(glString);
 		findings.setLinkedPairs(linkedPairs);
 		findings.setNonCWDAlleles(notCommon);
-		findings.setHladb(hladb);
+		findings.setHladb(System.getProperty(GLStringConstants.HLADB_PROPERTY));
 		
 		return findings;
 	}
