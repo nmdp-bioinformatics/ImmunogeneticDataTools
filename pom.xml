@@ -44,7 +44,7 @@
     <module>ld-tools</module>
   </modules>
   <properties>
-    <maven.compile.source>1.8</maven.compile.source>
+    <maven.compile.source>1.7</maven.compile.source>
     <maven.compile.target>1.7</maven.compile.target>
     <maven.enforcer.jdk-version>[1.7,)</maven.enforcer.jdk-version>
     <maven.enforcer.maven-version>[3.0.4,)</maven.enforcer.maven-version>

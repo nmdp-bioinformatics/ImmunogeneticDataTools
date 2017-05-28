@@ -34,7 +34,7 @@ import org.dash.valid.LocusSet;
 import org.dash.valid.gl.GLStringConstants;
 
 public class MultiLocusHaplotype extends Haplotype {
-	private Map<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
+	private ConcurrentHashMap<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
 
 	@Override
@@ -86,7 +86,7 @@ public class MultiLocusHaplotype extends Haplotype {
 	}
 
 	@Override
-	public Map<Locus, List<String>> getAlleleMap() {
+	public ConcurrentHashMap<Locus, List<String>> getAlleleMap() {
 		return this.alleleMap;
 	}
 
