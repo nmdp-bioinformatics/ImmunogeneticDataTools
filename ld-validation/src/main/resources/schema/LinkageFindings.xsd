@@ -16,7 +16,8 @@
     <xs:element name="haplo-pair">
     	<xs:complexType>
     		<xs:sequence>
-    			<xs:element ref="haplotype" maxOccurs="2"/>
+    			<xs:element ref="haplotype1" maxOccurs="1"/>
+    			<xs:element ref="haplotype2" maxOccurs="1"/>
     			<xs:element ref="frequencies" minOccurs="0" maxOccurs="unbounded"/>
     			<xs:element name="frequency" minOccurs="0" maxOccurs="1"/>
     		</xs:sequence>
@@ -37,7 +38,12 @@
     	</xs:complexType>
     </xs:element>
     
-    <xs:element name="haplotype">
+    <xs:element name="haplotype1">
+    	<xs:complexType>
+    		<xs:attribute name="value" type="xs:string"/>
+    	</xs:complexType>
+    </xs:element>
+        <xs:element name="haplotype2">
     	<xs:complexType>
     		<xs:attribute name="value" type="xs:string"/>
     	</xs:complexType>

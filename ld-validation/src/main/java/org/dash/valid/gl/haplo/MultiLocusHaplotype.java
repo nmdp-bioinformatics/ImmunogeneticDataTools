@@ -24,7 +24,9 @@ package org.dash.valid.gl.haplo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.dash.valid.Locus;
 import org.dash.valid.LocusComparator;
@@ -32,7 +34,7 @@ import org.dash.valid.LocusSet;
 import org.dash.valid.gl.GLStringConstants;
 
 public class MultiLocusHaplotype extends Haplotype {
-	private HashMap<Locus, List<String>> alleleMap = new HashMap<Locus, List<String>>();
+	private Map<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
 
 	@Override
@@ -50,6 +52,7 @@ public class MultiLocusHaplotype extends Haplotype {
 		return new ArrayList<Integer>(haplotypeInstanceMap.values());
 	}
 
+	@Override
 	public HashMap<Locus, Integer> getHaplotypeInstanceMap() {
 		return haplotypeInstanceMap;
 	}
@@ -82,7 +85,8 @@ public class MultiLocusHaplotype extends Haplotype {
 		return alleles;
 	}
 
-	public HashMap<Locus, List<String>> getAlleleMap() {
+	@Override
+	public Map<Locus, List<String>> getAlleleMap() {
 		return this.alleleMap;
 	}
 
@@ -94,8 +98,12 @@ public class MultiLocusHaplotype extends Haplotype {
 		}
 		return alleleSet;
 	}
+	
+	public void removeAlleles(Locus locus) {
+		alleleMap.remove(locus);
+	}
 
-	public MultiLocusHaplotype(HashMap<Locus, List<String>> alleleMap, HashMap<Locus, Integer> haplotypeInstanceMap,
+	public MultiLocusHaplotype(ConcurrentHashMap<Locus, List<String>> alleleMap, HashMap<Locus, Integer> haplotypeInstanceMap,
 			boolean drb345Homozygous) {
 		this.alleleMap = alleleMap;
 		this.haplotypeInstanceMap = haplotypeInstanceMap;

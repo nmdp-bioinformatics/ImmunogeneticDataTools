@@ -32,6 +32,7 @@ import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.nmdp.gl.client.http.HttpClient;
 import org.nmdp.gl.client.http.restassured.RestAssuredHttpClient;
@@ -79,34 +80,35 @@ public class GLStringTest extends TestCase {
 		assertTrue(homozygousCString.hasHomozygous(Locus.HLA_C));
 	}
 	
-	@Test
-	public void testHttpClient() {
-		BufferedReader reader = null;
-		String glString = null;
-		
-		HttpClient glClient = new RestAssuredHttpClient();
-		//String id = glClient.post("https://gl.nmdp.org/imgt-hla/3.18.0/multilocus-unphased-genotype", STRICT_GL_STRING);
-		String id = glClient.post("https://gl.nmdp.org/nonstrict/multilocus-unphased-genotype", STRICT_GL_STRING);
-		
-		InputStream in = glClient.get(id);
-		
-		try {
-			reader = new BufferedReader(new InputStreamReader(in));
-			
-			while ((glString = reader.readLine()) != null) {
-				assertTrue(STRICT_GL_STRING.equals(glString));
-			}
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		finally {
-			try {
-				reader.close();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+//	@Test
+//	@Ignore
+//	public void testHttpClient() {
+//		BufferedReader reader = null;
+//		String glString = null;
+//		
+//		HttpClient glClient = new RestAssuredHttpClient();
+//		//String id = glClient.post("https://gl.nmdp.org/imgt-hla/3.18.0/multilocus-unphased-genotype", STRICT_GL_STRING);
+//		String id = glClient.post("https://gl.nmdp.org/nonstrict/multilocus-unphased-genotype", STRICT_GL_STRING);
+//		
+//		InputStream in = glClient.get(id);
+//		
+//		try {
+//			reader = new BufferedReader(new InputStreamReader(in));
+//			
+//			while ((glString = reader.readLine()) != null) {
+//				assertTrue(STRICT_GL_STRING.equals(glString));
+//			}
+//		}
+//		catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		finally {
+//			try {
+//				reader.close();
+//			}
+//			catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 }

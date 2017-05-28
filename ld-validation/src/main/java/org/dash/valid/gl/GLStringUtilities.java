@@ -34,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -41,10 +42,14 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
+import org.dash.valid.gl.haplo.Haplotype;
+import org.dash.valid.gl.haplo.MultiLocusHaplotype;
+import org.dash.valid.gl.haplo.SingleLocusHaplotype;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.nmdp.gl.client.GlClient;
 import org.nmdp.gl.client.GlClientException;
@@ -75,6 +80,64 @@ public class GLStringUtilities {
 		}
 
 		return elements;
+	}
+	
+	public static List<Haplotype> buildHaplotypes(String glString) {		
+		List<Haplotype> knownHaplotypes = new CopyOnWriteArrayList<Haplotype>();
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
+		Locus locus = null;
+		
+		if (StringUtils.countMatches(glString, GLStringConstants.GENE_PHASE_DELIMITER) > 1 && StringUtils.countMatches(glString,  GLStringConstants.GENE_COPY_DELIMITER) == 1) {
+			List<String> genes = GLStringUtilities.parse(glString,
+					GLStringConstants.GENE_DELIMITER);
+			for (String gene : genes) {
+				List<String> genotypeAmbiguities = GLStringUtilities.parse(gene,
+						GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
+				for (String genotypeAmbiguity : genotypeAmbiguities) {
+					List<String> geneCopies = GLStringUtilities.parse(
+							genotypeAmbiguity,
+							GLStringConstants.GENE_COPY_DELIMITER);
+					
+					int i=0;
+
+					for (String geneCopy : geneCopies) {
+						HashMap<Locus,SingleLocusHaplotype> singleLocusHaplotypes = new HashMap<Locus, SingleLocusHaplotype>();
+
+						List<String> genePhases = GLStringUtilities.parse(geneCopy,
+								GLStringConstants.GENE_PHASE_DELIMITER);
+						for (String genePhase : genePhases) {
+							String[] splitString = genePhase
+									.split(GLStringUtilities.ESCAPED_ASTERISK);
+							String locusVal = splitString[0];
+							
+							List<String> alleleAmbiguities = GLStringUtilities
+									.parse(genePhase,
+											GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
+							
+							if (locusMap.containsKey(locusVal)) {
+								locus = locusMap.get(locusVal);
+							}
+							else {
+								locus = Locus.normalizeLocus(Locus.lookup(locusVal));
+								locusMap.put(locusVal, locus);
+							}
+
+							SingleLocusHaplotype haplotype = new SingleLocusHaplotype(locus, alleleAmbiguities, i);
+							singleLocusHaplotypes.put(locus, haplotype);
+
+						}
+						// TODO:  Fix  homozygous logic here -- currently hardcoded
+						knownHaplotypes.add(new MultiLocusHaplotype(singleLocusHaplotypes, false));
+						
+						i++;
+					}
+				}
+			}
+			
+			//pair = new HaplotypePair(knownHaplotypes.get(0), knownHaplotypes.get(1));
+		}
+		
+		return knownHaplotypes;
 	}
 
 	public static boolean validateGLStringFormat(String glString) {

@@ -84,12 +84,12 @@ public class HaplotypePair {
 		return this.loci;
 	}
 	
-	@XmlElement(name="haplotype")
+	@XmlElement(name="haplotype1")
 	public Haplotype getHaplotype1() {
 		return haplotype1;
 	}
 	
-	@XmlElement(name="haplotype")
+	@XmlElement(name="haplotype2")
 	public Haplotype getHaplotype2() {
 		return haplotype2;
 	}

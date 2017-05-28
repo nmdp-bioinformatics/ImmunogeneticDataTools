@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
+import org.dash.valid.gl.haplo.Haplotype;
 import org.dash.valid.handler.ProgressConsoleHandler;
 import org.dash.valid.report.CommonWellDocumentedWriter;
 import org.dash.valid.report.DetectedFindingsWriter;
@@ -132,22 +133,30 @@ public class LinkageDisequilibriumAnalyzer {
 			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
 			linkedGLString = new LinkageDisequilibriumGenotypeList(key, mug);
 			
+			List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(glString);
+			
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
 			idx++;
-			
-			boolean homozygousOnly = Boolean.TRUE.equals(System.getProperty("org.dash.homozygous")) ? Boolean.TRUE : Boolean.FALSE;
-			
-			// TODO:  Actually implement by skipping the record
-			if (!linkedGLString.checkAmbiguitiesThresholds()) {
-				LOGGER.info("GL String contains an unusual number of ambiguities, proteins and/or uncommon alleles");
-			}
-			
-			if (homozygousOnly && !linkedGLString.hasHomozygous(LinkagesLoader.getInstance().getLoci())) {
-				LOGGER.info("Only checking for homozygous.  GL String contains no homozygous typings for the loci in question.  Bypassing record.");
-				continue;
-			}
 
-			findingsList.add(detectLinkages(linkedGLString));
+			if (knownHaplotypes.size() > 0) {
+				findingsList.add(HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString, knownHaplotypes));
+
+			}
+			else {	
+				boolean homozygousOnly = Boolean.TRUE.equals(System.getProperty("org.dash.homozygous")) ? Boolean.TRUE : Boolean.FALSE;
+				
+				// TODO:  Actually implement by skipping the record
+				if (!linkedGLString.checkAmbiguitiesThresholds()) {
+					LOGGER.info("GL String contains an unusual number of ambiguities, proteins and/or uncommon alleles");
+				}
+				
+				if (homozygousOnly && !linkedGLString.hasHomozygous(LinkagesLoader.getInstance().getLoci())) {
+					LOGGER.info("Only checking for homozygous.  GL String contains no homozygous typings for the loci in question.  Bypassing record.");
+					continue;
+				}
+	
+				findingsList.add(detectLinkages(linkedGLString));
+			}
 		}
 		
 		return findingsList;
@@ -160,7 +169,7 @@ public class LinkageDisequilibriumAnalyzer {
 		return findings;
 	}
 
-	private static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
+	public static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
 		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString);
 				
 		return findings;
