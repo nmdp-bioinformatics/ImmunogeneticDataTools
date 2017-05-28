@@ -78,11 +78,10 @@ public class AntigenRecognitionSiteLoader {
 					instance = new AntigenRecognitionSiteLoader();
 					hladb = System.getProperty(GLStringConstants.HLADB_PROPERTY);
 	
-					//instance.init(hladb);
-					instance.init();
+					instance.init(hladb);
 				}
 			}
-			catch (IOException e) { // | ParserConfigurationException | SAXException e) {
+			catch (IOException | ParserConfigurationException | SAXException e) {
 				LOGGER.info("Couldn't find IMGT file in the correct format for hladb: " + hladb);
 				instance.init();
 				System.setProperty(GLStringConstants.HLADB_PROPERTY, "Default");
