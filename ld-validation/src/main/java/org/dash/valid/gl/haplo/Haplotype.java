@@ -23,8 +23,8 @@ package org.dash.valid.gl.haplo;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -59,7 +59,7 @@ public abstract class Haplotype {
 	public abstract String getHaplotypeString();
 	
 	public abstract List<String> getAlleles();
-	public abstract ConcurrentHashMap<Locus, List<String>> getAlleleMap();
+	public abstract Map<Locus, List<String>> getAlleleMap();
 	public abstract HashMap<Locus, Integer> getHaplotypeInstanceMap();
 	public abstract List<String> getAlleles(Locus locus);
 	public abstract void removeAlleles(Locus locus);
