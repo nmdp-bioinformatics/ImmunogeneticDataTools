@@ -84,7 +84,9 @@ public class AntigenRecognitionSiteLoader {
 			catch (IOException | ParserConfigurationException | SAXException e) {
 				LOGGER.info("Couldn't find IMGT file in the correct format for hladb: " + hladb);
 				instance.init();
-				System.setProperty(GLStringConstants.HLADB_PROPERTY, "Default");
+				
+				// TODO:  Make final determination - commenting this in messes up the CWD logic currently
+				//System.setProperty(GLStringConstants.HLADB_PROPERTY, "Default");
 			}
 		}
 

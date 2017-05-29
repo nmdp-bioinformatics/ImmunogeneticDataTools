@@ -21,14 +21,7 @@
 */
 package org.dash;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -42,7 +35,6 @@ import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.Haplotype;
 import org.dash.valid.report.DetectedLinkageFindings;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 
@@ -110,15 +102,11 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 	
 	@Test
 	public void testLinkageReportingInlineGLString() throws IOException {				
-		//String fullyQualified = GLStringUtilities.fullyQualifyGLString("HLA-A*11:01:01+HLA-A*24:02:01:01/HLA-A*24:02:01:02L/HLA-A*24:02:01:03^HLA-B*18:01:01:01/HLA-B*18:01:01:02/HLA-B*18:51+HLA-B*53:01:01^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*02:01:01^HLA-DPB1*02:01:02+HLA-DPB1*09:01^HLA-DQA1*01:02:01:01/HLA-DQA1*01:02:01:02/HLA-DQA1*01:02:01:03/HLA-DQA1*01:02:01:04/HLA-DQA1*01:11+HLA-DQA1*03:01:01^HLA-DQB1*03:05:01+HLA-DQB1*06:09^HLA-DRB1*11:04:01+HLA-DRB1*13:02:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02+HLA-DRB3*03:01:01");
+		String fullyQualified = GLStringUtilities.fullyQualifyGLString("HLA-A*11:01:01+HLA-A*24:02:01:01/HLA-A*24:02:01:02L/HLA-A*24:02:01:03^HLA-B*18:01:01:01/HLA-B*18:01:01:02/HLA-B*18:51+HLA-B*53:01:01^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*02:01:01^HLA-DPB1*02:01:02+HLA-DPB1*09:01^HLA-DQA1*01:02:01:01/HLA-DQA1*01:02:01:02/HLA-DQA1*01:02:01:03/HLA-DQA1*01:02:01:04/HLA-DQA1*01:11+HLA-DQA1*03:01:01^HLA-DQB1*03:05:01+HLA-DQB1*06:09^HLA-DRB1*11:04:01+HLA-DRB1*13:02:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02+HLA-DRB3*03:01:01");
 		
-		String fullyQualified = GLStringUtilities.fullyQualifyGLString("HLA-A*24:02:01:01~HLA-C*04:01:01:06~HLA-B*35:02:01~HLA-DRB3*02:02:01:02~HLA-DRB1*11:01:01:01~HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02~HLA-DQB1*03:01:01:03~HLA-DPA1*01:03:01:01~HLA-DPB1*05:01:01+HLA-A*11:01:01:01~HLA-C*12:03:01:01~HLA-B*35:03:01~HLA-DRB3*02:02:01:01~HLA-DRB1*13:01:01:01/HLA-DRB1*13:01:01:02~HLA-DQA1*01:03:01:02~HLA-DQB1*06:03:01~HLA-DPA1*02:01:01:01~HLA-DPB1*13:01:01/HLA-DPB1*107:01");
-		LinkageDisequilibriumGenotypeList genotypeList = new LinkageDisequilibriumGenotypeList("SBCFMW0003", fullyQualified);
-		//MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(fullyQualified);
-		//DetectedLinkageFindings findings = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
-		
-		DetectedLinkageFindings findings = LinkageDisequilibriumAnalyzer.detectLinkages(genotypeList);
-		
+		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(fullyQualified);
+		DetectedLinkageFindings findings = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
+				
 		assertNotNull(findings);	
 	}
 }
