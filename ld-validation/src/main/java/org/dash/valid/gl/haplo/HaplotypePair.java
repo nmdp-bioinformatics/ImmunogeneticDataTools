@@ -103,14 +103,14 @@ public class HaplotypePair {
 		
 	}
 	
-	public HaplotypePair(Haplotype haplotype1, Haplotype haplotype2) {		
-		if (new HaplotypeComparator().compare(haplotype1, haplotype2) <= 0) {
-			this.haplotype1 = haplotype1;
-			this.haplotype2 = haplotype2;
+	public HaplotypePair(Haplotype hap1, Haplotype hap2) {		
+		if (new HaplotypeComparator().compare(hap1, hap2) <= 0) {
+			this.haplotype1 = hap1;
+			this.haplotype2 = hap2;
 		}
 		else {
-			this.haplotype2 = haplotype1;
-			this.haplotype1 = haplotype2;
+			this.haplotype2 = hap1;
+			this.haplotype1 = hap2;
 		}
 		
 		setLoci(Locus.lookup(haplotype1.getLoci()));

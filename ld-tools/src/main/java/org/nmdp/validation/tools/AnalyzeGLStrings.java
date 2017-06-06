@@ -44,6 +44,7 @@ import org.dash.valid.handler.LinkageWarningFileHandler;
 import org.dash.valid.report.CommonWellDocumentedWriter;
 import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
+import org.dash.valid.report.DetectedLinkageFindingsList;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
 import org.dash.valid.report.SummaryWriter;
@@ -149,13 +150,17 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     		writer = writer(outputFile, true);
     	}
     	
+    	DetectedLinkageFindingsList allFindings = new DetectedLinkageFindingsList();
+    	allFindings.setFindings(findingsList);
+    	String summaryFindings = SummaryWriter.formatDetectedLinkages(allFindings);
+    	
 		for (DetectedLinkageFindings findings : findingsList) {
     		if (warnings != null && warnings == Boolean.TRUE && !findings.hasAnomalies()) {
     			continue;
     		}
     		
         	if (writeToDir) {
-        		summaryWriter.write(SummaryWriter.formatDetectedLinkages(findings));
+        		//summaryWriter.write(SummaryWriter.formatDetectedLinkages(findings));
         		
         		if (findings.hasAnomalies()) {
         			pairWarningsWriter.write(HaplotypePairWriter.formatDetectedLinkages(findings));
@@ -169,12 +174,13 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         		}
         	}
         	else {
-        		writer.write(SummaryWriter.formatDetectedLinkages(findings));
+        		//writer.write(SummaryWriter.formatDetectedLinkages(findings));
         	}
         		
 		}
     	
 		if (writeToDir) {
+			summaryWriter.write(summaryFindings);
 			summaryWriter.close();
 			pairWriter.close();
 			pairWarningsWriter.close();
@@ -184,6 +190,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 			detectedFindingsWriter.close();
 		}
 		else {
+			writer.write(summaryFindings);
 			writer.close();
 		}
 	}

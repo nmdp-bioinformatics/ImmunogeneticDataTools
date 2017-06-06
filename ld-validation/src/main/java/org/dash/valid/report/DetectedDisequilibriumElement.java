@@ -21,11 +21,14 @@
 */
 package org.dash.valid.report;
 
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.DisequilibriumElement;
 import org.dash.valid.Locus;
+import org.dash.valid.LocusComparator;
+import org.dash.valid.LocusSet;
 import org.dash.valid.gl.GLStringConstants;
 
 
@@ -49,13 +52,23 @@ public class DetectedDisequilibriumElement {
 	public String toString() {		
 		StringBuffer sb = new StringBuffer();
 		
-		for (Locus locus : getDisequilibriumElement().getLoci()) {
-			sb.append(locus.getShortName() + " Locus: " + getDisequilibriumElement().getHlaElement(locus) + GLStringConstants.NEWLINE);
-		}
-				
-		sb.append(((CoreDisequilibriumElement) getDisequilibriumElement()).getFrequencyInfo());
+		Set<Locus> loci = new LocusSet(new LocusComparator());
+		loci.addAll(getDisequilibriumElement().getLoci());
 		
-		return sb.toString();
+		for (Locus locus : loci) {
+			// TODO:  Make less clumsy to get rid of brackets?
+
+			//sb.append(locus.getShortName() + " Locus: " + getDisequilibriumElement().getHlaElement(locus) + GLStringConstants.NEWLINE);
+			if (getDisequilibriumElement().getHlaElement(locus).size() == 1) {
+				sb.append(getDisequilibriumElement().getHlaElement(locus).get(0));
+			} else {
+				sb.append(getDisequilibriumElement().getHlaElement(locus));
+			}
+			
+			sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
+		}
+			
+		return sb.substring(0, sb.length() - 1) + GLStringConstants.NEWLINE + ((CoreDisequilibriumElement) getDisequilibriumElement()).getFrequencyInfo();
 	}
 	
 	@Override

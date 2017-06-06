@@ -31,7 +31,7 @@ import junit.framework.TestCase;
 public class HLAFrequenciesLoaderTest extends TestCase {
 
 	@Test
-	public void testLoadNMDPLinkageReferenceData() throws Exception {
+	public void testLoadNMDPLinkageReferenceData() throws Exception {		
 		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance().loadNMDPLinkageReferenceData(HLAFrequenciesLoader.NMDP_2007_FIVE_LOCUS_FREQUENCIES, HLAFrequenciesLoader.NMDP_FIVE_LOCUS_POS);
 		assertTrue(disElements != null && disElements.size() > 0);
 	}

@@ -72,33 +72,8 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 		
 		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(glString, knownHaplotypes);
 		
-		assertNotNull(findings);
-		
-		//HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
+		assertNotNull(findings);		
 	}
-	
-//	@Test
-//	@Ignore
-//	public void testGetFrequencies() throws MalformedURLException, ProtocolException, IOException {
-//		String uri = "http://hfcus-dash6.b12x.org:8080/hfc";
-//			URL url = new URL(uri);
-//			HttpURLConnection connection =
-//			    (HttpURLConnection) url.openConnection();
-//			connection.setRequestMethod("GET");
-//			connection.setRequestProperty("Accept", "application/json");
-//
-//			//JAXBContext jc = JAXBContext.newInstance(Customer.class);
-//			InputStream xml = connection.getInputStream();
-//			BufferedReader reader = new BufferedReader(new InputStreamReader(xml));
-//			String line;
-//			while ((line = reader.readLine()) != null) {
-//				System.out.println(line);
-//			}
-//			//Customer customer =
-//			//    (Customer) jc.createUnmarshaller().unmarshal(xml);
-//
-//			connection.disconnect();
-//	}
 	
 	@Test
 	public void testLinkageReportingInlineGLString() throws IOException {				

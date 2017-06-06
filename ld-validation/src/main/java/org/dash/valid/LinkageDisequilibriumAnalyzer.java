@@ -38,6 +38,7 @@ import org.dash.valid.handler.ProgressConsoleHandler;
 import org.dash.valid.report.CommonWellDocumentedWriter;
 import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
+import org.dash.valid.report.DetectedLinkageFindingsList;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
 import org.dash.valid.report.SummaryWriter;
@@ -76,6 +77,8 @@ public class LinkageDisequilibriumAnalyzer {
 		}
 		
 		DetectedFindingsWriter.getInstance().closeWriters();
+		
+		SummaryWriter.getInstance().closeWriters();
 	}
 	
 	private static void analyzeGLStringFiles(String[] filenames) throws IOException {		
@@ -109,8 +112,13 @@ public class LinkageDisequilibriumAnalyzer {
 			HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
 			CommonWellDocumentedWriter.getInstance().reportCommonWellDocumented(findings);
 			DetectedFindingsWriter.getInstance().reportDetectedFindings(findings);
-			SummaryWriter.getInstance().reportDetectedLinkages(findings);
+			//SummaryWriter.getInstance().reportDetectedLinkages(findings);
 		}
+		
+		DetectedLinkageFindingsList allFindings = new DetectedLinkageFindingsList();
+		allFindings.setFindings(findingsList);
+		
+		SummaryWriter.getInstance().reportDetectedLinkages(allFindings);
 	}
 
 	/**
