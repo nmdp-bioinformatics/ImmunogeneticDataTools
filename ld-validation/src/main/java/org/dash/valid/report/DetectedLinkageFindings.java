@@ -50,7 +50,7 @@ import org.dash.valid.race.RelativeFrequencyByRaceSet;
 
 
 @XmlRootElement(name="gl-freq")
-@XmlType(propOrder={"GLString", "nonCWDAlleles", "linkedPairs"})
+@XmlType(propOrder={"nonCWDAlleles", "linkedPairs"})
 public class DetectedLinkageFindings {
 	public static final int EXPECTED_LINKAGES = 2;
 
@@ -307,12 +307,12 @@ public class DetectedLinkageFindings {
 		this.nonCWDAlleles = nonCWDAlleles;
 	}
 	
-	@XmlAttribute(name="id")
+	//@XmlAttribute(name="id")
 	public String getGLId() {
 		return getGenotypeList().getId();
 	}
 	
-	@XmlElement(name="gl-string")
+	//@XmlElement(name="gl-string")
 	public String getGLString() {
 		return getGenotypeList().getGLString();
 	}

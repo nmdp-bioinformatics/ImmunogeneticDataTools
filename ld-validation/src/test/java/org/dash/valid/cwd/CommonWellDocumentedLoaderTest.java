@@ -24,6 +24,7 @@ package org.dash.valid.cwd;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.dash.valid.gl.GLStringConstants;
 import org.junit.Test;
 
 import junit.framework.TestCase;
@@ -40,6 +41,7 @@ public class CommonWellDocumentedLoaderTest extends TestCase {
 
 	@Test
 	public void testLoadAllCWD() throws FileNotFoundException, IOException {
+		System.setProperty(GLStringConstants.HLADB_PROPERTY, GLStringConstants.LATEST_HLADB);
 		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
 		
 		assertTrue(cwdLoader.getAccessionMap().containsKey(DQA10111));

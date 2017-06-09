@@ -26,14 +26,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
 import org.dash.valid.Locus;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
-import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.junit.Test;
+import org.nmdp.gl.MultilocusUnphasedGenotype;
+
+import junit.framework.TestCase;
 
 public class GLStringUtilitiesTest extends TestCase {
 	private static final String BOGUS_ALLELE = "HLA-A*QI:UD";
@@ -52,6 +52,8 @@ public class GLStringUtilitiesTest extends TestCase {
 	private static final String HLA_C04010101 = "HLA-C*04:01:01:01";
 	private static final String INVALID_GL_STRING = "A*01:01:01:01+26:01:01^B*38:01:01/38:27+44:03:01/44:03:10/44:125^C*04:01:01:01/04:01:01:02/04:01:01:03/04:01:01:04/04:01:01:05/04:20/04:117+12:03:01:01/12:03:01:02/12:34^DPA1*01:03:01:01/01:03:01:02/01:03:01:03/01:03:01:04/01:03:01:05+01:03:01:01/01:03:01:02/01:03:01:03/01:03:01:04/01:03:01:05^DPB1*04:01:01:01/04:01:01:02+04:01:01:01/04:01:01:02^DQA1*02:01+05:05:01:01/05:05:01:02/05:05:01:03/05:09/05:11^DQB1*02:02+03:01:01:01/03:01:01:02/03:01:01:03^DRB1*07:01:01:01/07:01:01:02+11:01:01^DRB3*02:02:01:01/02:02:01:02^DRB4*01:01:01:01/03:01N";
 	private static final String VALID_GL_STRING = "HLA-A*01:01:01:01+HLA-A*26:01:01^HLA-B*38:01:01/HLA-B*38:27+HLA-B*44:03:01/HLA-B*44:03:10/HLA-B*44:125^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05^HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02+HLA-DPB1*04:01:01:01/HLA-DPB1*04:01:01:02^HLA-DQA1*02:01+HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02/HLA-DQA1*05:05:01:03/HLA-DQA1*05:09/HLA-DQA1*05:11^HLA-DQB1*02:02+HLA-DQB1*03:01:01:01/HLA-DQB1*03:01:01:02/HLA-DQB1*03:01:01:03^HLA-DRB1*07:01:01:01/HLA-DRB1*07:01:01:02+HLA-DRB1*11:01:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02^HLA-DRB4*01:01:01:01/HLA-DRB4*03:01N";
+	private static final String INVALID_GL_STRING_MAC = "A*01:AB+A*26:01^C*01:AC+C*04:01";
+	private static final String VALID_GL_STRING_MAC = "HLA-A*01:01/HLA-A*01:02+HLA-A*26:01^HLA-C*01:01/HLA-C*01:03+HLA-C*04:01";
 	private static final String TAB_DELIMITED = "TAB_DELIMITED";
 	private static final String COMMA_DELIMITED = "COMMA_DELIMITED";
 	
@@ -142,6 +144,13 @@ public class GLStringUtilitiesTest extends TestCase {
 	}
 	
 	@Test
+	public void testFullyQualifyGLStringMAC() {
+		String fullyQualifiedGLString = GLStringUtilities.fullyQualifyGLString(INVALID_GL_STRING_MAC);
+		
+		assertTrue(VALID_GL_STRING_MAC.equals(fullyQualifiedGLString));
+	}
+	
+	@Test
 	public void testConvertToMug() {
 		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(VALID_GL_STRING);
 		
@@ -150,9 +159,17 @@ public class GLStringUtilitiesTest extends TestCase {
 	
 	@Test
 	public void testCommonWellDocumented() {
+		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.25.0");
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(HLA_DQB10202 + GLStringConstants.ALLELE_AMBIGUITY_DELIMITER + BOGUS_ALLELE + GLStringConstants.ALLELE_AMBIGUITY_DELIMITER + HLA_A01010101);
 		assertTrue(notCommon.contains(BOGUS_ALLELE));
 		assertTrue(notCommon.contains(HLA_DQB10202));
 		assertFalse(notCommon.contains(HLA_A01010101));
+	}
+	
+	@Test
+	public void testDecodeMAC() throws IOException {
+		String result = GLStringUtilities.decodeMAC("HLA-A*01:AB");
+		
+		assertTrue("HLA-A*01:01/HLA-A*01:02".equals(result));
 	}
 }

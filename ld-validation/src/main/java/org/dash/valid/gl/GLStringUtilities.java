@@ -27,6 +27,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,6 +82,63 @@ public class GLStringUtilities {
 		}
 
 		return elements;
+	}
+	
+	public static String getLatestImgtRelease() {
+		HttpURLConnection connection = null;
+		String imgtRelease = null;
+
+		try {
+			URL url = new URL("https://hml.nmdp.org/mac/api/imgtHlaReleases");
+			
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			//connection.setRequestProperty("Accept", "application/json");
+			
+			InputStream xml = connection.getInputStream();
+			
+			BufferedReader reader = new BufferedReader(new InputStreamReader(xml));
+			imgtRelease = reader.readLine().split(GLStringConstants.SPACE)[0];
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			connection.disconnect();
+		}
+		
+		return imgtRelease;
+	}
+	
+	public static String decodeMAC(String typing) {
+		String decodedValue = null;
+		HttpURLConnection connection = null;
+		
+		try {
+			String uri = "https://hml.nmdp.org/mac/api/decode/?";
+			String imgtRelease = System.getProperty(GLStringConstants.HLADB_PROPERTY);
+			if (imgtRelease == null || GLStringConstants.LATEST_HLADB.equals(imgtRelease)) {
+				imgtRelease = getLatestImgtRelease();
+				//System.setProperty(GLStringConstants.HLADB_PROPERTY, imgtRelease);
+			}
+			URL url = new URL(uri + "imgtHlaRelease=" + imgtRelease + "&typing=" + typing + "&expand=false");
+			
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			
+			InputStream xml = connection.getInputStream();
+			
+			BufferedReader reader = new BufferedReader(new InputStreamReader(xml));
+			decodedValue = reader.readLine();			
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			connection.disconnect();
+		}
+		
+		return decodedValue;
 	}
 	
 	public static List<Haplotype> buildHaplotypes(String glString) {		
@@ -159,6 +218,11 @@ public class GLStringUtilities {
 				LOGGER.warning("Unexpected allele: " + token);
 				return false;
 			}
+			
+			if (parts[1].substring(0,1).matches(ALPHA_REGEX)) {
+				LOGGER.info("GLString contains allele codes.  These will be decoded.");
+				return false;
+			}
 		}
 
 		return true;
@@ -169,9 +233,11 @@ public class GLStringUtilities {
 		
 		CommonWellDocumentedLoader loader = CommonWellDocumentedLoader.getInstance();
 		
-		HashMap<String, String> accessionMap = loader.getAccessionMap();
-
 		Set<String> cwdAlleles = loader.getCwdAlleles();
+
+		if (cwdAlleles.size() == 0) return new HashSet<String>();
+		
+		HashMap<String, String> accessionMap = loader.getAccessionMap();
 
 		StringTokenizer st = new StringTokenizer(glString,
 				GL_STRING_DELIMITER_REGEX);
@@ -312,6 +378,7 @@ public class GLStringUtilities {
 				GL_STRING_DELIMITER_REGEX, true);
 		StringBuffer sb = new StringBuffer();
 		String part;
+		String[] segments;
 		String locus = null;
 
 		while (st.hasMoreTokens()) {
@@ -328,6 +395,12 @@ public class GLStringUtilities {
 				continue;
 			} else {
 				part = fillLocus(Locus.lookup(locus), part);
+			}
+			
+			segments = part.split(COLON);
+			
+			if (segments[1].substring(0,1).matches(ALPHA_REGEX)) {
+				part = decodeMAC(part);
 			}
 
 			sb.append(part);

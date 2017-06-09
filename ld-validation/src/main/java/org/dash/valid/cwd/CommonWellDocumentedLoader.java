@@ -49,8 +49,8 @@ public class CommonWellDocumentedLoader {
 
 	private static CommonWellDocumentedLoader instance = null;
 	
-	private Set<String> cwdAlleles;
-	private HashMap<String, String> accessionMap;
+	private Set<String> cwdAlleles = new HashSet<String>();
+	private HashMap<String, String> accessionMap = new HashMap<String, String>();
 
 	private CommonWellDocumentedLoader(String hladb) {
 		init(hladb);
@@ -107,7 +107,9 @@ public class CommonWellDocumentedLoader {
 		HashMap<String, String> accessionMap = null;
 		boolean accessionLoaded = false;
 		
-		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
+		//if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
+		
+		if (hladb == null || GLStringConstants.LATEST_HLADB.equals(hladb)) return;
 
 		try {
 			accessionMap = loadFromIMGT(hladb);

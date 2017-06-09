@@ -32,6 +32,7 @@ import java.util.concurrent.Callable;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Locus;
+import org.dash.valid.Sample;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.report.DetectedLinkageFindings;
 import org.dishevelled.commandline.ArgumentList;
@@ -118,7 +119,8 @@ public class ValidateLdGlstrings implements Callable<Integer> {
                       
                       String fullyQualified            = GLStringUtilities.fullyQualifyGLString(tokens[1]);
          			  MultilocusUnphasedGenotype mug   = GLStringUtilities.convertToMug(fullyQualified);
-        			  DetectedLinkageFindings findings = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
+        			  Sample sample = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
+        			  DetectedLinkageFindings findings = sample.getFindings();
         			  Float minimumDifference          = findings.getMinimumDifference(Locus.FIVE_LOCUS);
         			  minimumDifference                = minimumDifference == null ? 0 : minimumDifference;
         			  SubjectMug subjectMug = builder.reset()

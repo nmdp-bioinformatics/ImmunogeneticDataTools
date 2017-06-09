@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Set;
 
-import org.dash.valid.report.DetectedLinkageFindings;
+import org.dash.valid.Sample;
 
 import junit.framework.TestCase;
 
@@ -27,10 +27,10 @@ public class AnalyzeGLStringsTest extends TestCase {
 		File allelesFile = null;
 		
 		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFiles, allelesFile);
-		List<DetectedLinkageFindings> findingsList = analyzer.performAnalysis(reader);
+		List<Sample> samplesList = analyzer.performAnalysis(reader);
 		
-		assertNotNull(findingsList);
-		assertTrue(findingsList.size() > 0);
+		assertNotNull(samplesList);
+		assertTrue(samplesList.size() > 0);
 	}
 
 }

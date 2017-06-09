@@ -38,9 +38,9 @@ import org.dash.valid.handler.ProgressConsoleHandler;
 import org.dash.valid.report.CommonWellDocumentedWriter;
 import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
-import org.dash.valid.report.DetectedLinkageFindingsList;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
+import org.dash.valid.report.SamplesList;
 import org.dash.valid.report.SummaryWriter;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 
@@ -88,12 +88,12 @@ public class LinkageDisequilibriumAnalyzer {
 		}		
 	}
 	
-	public static List<DetectedLinkageFindings> analyzeGLStringFile(String name, BufferedReader reader) throws IOException {
+	public static List<Sample> analyzeGLStringFile(String name, BufferedReader reader) throws IOException {
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(name, reader);
 		
-		List<DetectedLinkageFindings> findingsList = detectLinkages(glStrings);
+		List<Sample> samplesList = detectLinkages(glStrings);
 		
-		return findingsList;
+		return samplesList;
 	}
 
 	/**
@@ -101,13 +101,12 @@ public class LinkageDisequilibriumAnalyzer {
 	 */
 	public static void analyzeGLStringFile(String filename) throws IOException {				
 		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(filename);
-		List<DetectedLinkageFindings> findingsList = null;
+		List<Sample> samplesList = null;
 		
+		samplesList = detectLinkages(glStrings);
 		
-		
-		findingsList = detectLinkages(glStrings);
-		
-		for (DetectedLinkageFindings findings : findingsList) {
+		for (Sample sample : samplesList) {
+			DetectedLinkageFindings findings = sample.getFindings();
 			LinkageDisequilibriumWriter.getInstance().reportDetectedLinkages(findings);
 			HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
 			CommonWellDocumentedWriter.getInstance().reportCommonWellDocumented(findings);
@@ -115,10 +114,10 @@ public class LinkageDisequilibriumAnalyzer {
 			//SummaryWriter.getInstance().reportDetectedLinkages(findings);
 		}
 		
-		DetectedLinkageFindingsList allFindings = new DetectedLinkageFindingsList();
-		allFindings.setFindings(findingsList);
+		SamplesList allSamples = new SamplesList();
+		allSamples.setSamples(samplesList);
 		
-		SummaryWriter.getInstance().reportDetectedLinkages(allFindings);
+		SummaryWriter.getInstance().reportDetectedLinkages(allSamples);
 	}
 
 	/**
@@ -126,14 +125,16 @@ public class LinkageDisequilibriumAnalyzer {
 	 * @throws IOException 
 	 * @throws SecurityException 
 	 */
-	private static List<DetectedLinkageFindings> detectLinkages(Map<String, String> glStrings) {
+	private static List<Sample> detectLinkages(Map<String, String> glStrings) {
 		LinkageDisequilibriumGenotypeList linkedGLString;
 		String glString;
-		List<DetectedLinkageFindings> findingsList = new ArrayList<DetectedLinkageFindings>();
+		List<Sample> samplesList = new ArrayList<Sample>();
 		
 		int idx = 1;
 		for (String key : glStrings.keySet()) {
 			glString = glStrings.get(key);
+			String submittedGlString = glString;
+			
 			if (!GLStringUtilities.validateGLStringFormat(glString)) {
 				glString = GLStringUtilities.fullyQualifyGLString(glString);
 			}
@@ -141,13 +142,15 @@ public class LinkageDisequilibriumAnalyzer {
 			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
 			linkedGLString = new LinkageDisequilibriumGenotypeList(key, mug);
 			
+			linkedGLString.setSubmittedGlString(submittedGlString);
+			
 			List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(glString);
 			
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
 			idx++;
 
 			if (knownHaplotypes.size() > 0) {
-				findingsList.add(HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString, knownHaplotypes));
+				samplesList.add(HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString, knownHaplotypes));
 
 			}
 			else {	
@@ -163,23 +166,23 @@ public class LinkageDisequilibriumAnalyzer {
 					continue;
 				}
 	
-				findingsList.add(detectLinkages(linkedGLString));
+				samplesList.add(detectLinkages(linkedGLString));
 			}
 		}
 		
-		return findingsList;
+		return samplesList;
 	}
 	
-	public static DetectedLinkageFindings detectLinkages(MultilocusUnphasedGenotype mug) {
+	public static Sample detectLinkages(MultilocusUnphasedGenotype mug) {
 		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug.getId(), mug);
-		DetectedLinkageFindings findings = detectLinkages(linkedGLString);
+		Sample sample = detectLinkages(linkedGLString);
 
-		return findings;
+		return sample;
 	}
 
-	public static DetectedLinkageFindings detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
-		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString);
+	public static Sample detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
+		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString);
 				
-		return findings;
+		return sample;
 	}
 }

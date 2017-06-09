@@ -60,7 +60,9 @@ public class HLALinkageDisequilibrium {
 
     private static final Logger LOGGER = Logger.getLogger(HLALinkageDisequilibrium.class.getName());
 			
-	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {		
+	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {	
+		Sample sample = new Sample(glString);
+		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
@@ -68,7 +70,8 @@ public class HLALinkageDisequilibrium {
 		DetectedLinkageFindings findings = new DetectedLinkageFindings(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {
-			return findings;
+			sample.setFindings(findings);
+			return sample;
 		}
 						
 		for (Linkages linkage : linkages) {
@@ -86,18 +89,22 @@ public class HLALinkageDisequilibrium {
 		findings.setNonCWDAlleles(notCommon);
 		findings.setHladb(System.getProperty(GLStringConstants.HLADB_PROPERTY));
 		
-		return findings;
+		sample.setFindings(findings);
+		return sample;
 	}
 	
-	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString, List<Haplotype> knownHaplotypes) {		
+	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString, List<Haplotype> knownHaplotypes) {		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 						
+		Sample sample = new Sample(glString);
+		
 		DetectedLinkageFindings findings = new DetectedLinkageFindings(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {
-			return findings;
+			sample.setFindings(findings);
+			return sample;
 		}
 						
 		for (Linkages linkage : linkages) {
@@ -127,7 +134,8 @@ public class HLALinkageDisequilibrium {
 		findings.setNonCWDAlleles(notCommon);
 		findings.setHladb(System.getProperty(GLStringConstants.HLADB_PROPERTY));
 		
-		return findings;
+		sample.setFindings(findings);
+		return sample;
 	}
 
 	public static Haplotype enrichHaplotype(EnumSet<Locus> loci, List<DisequilibriumElement> disequilibriumElements, Haplotype haplotype) {

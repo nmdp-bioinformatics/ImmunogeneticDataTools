@@ -77,12 +77,12 @@ public class SummaryWriter {
 		}
 	}
 	
-	public void reportDetectedLinkages(DetectedLinkageFindingsList findings) {
+	public void reportDetectedLinkages(SamplesList findings) {
 		String reportedFindings = formatDetectedLinkages(findings);
 		printWriter.write(reportedFindings);
 	}
 
-	public static String formatDetectedLinkages(DetectedLinkageFindingsList findings) {
+	public static String formatDetectedLinkages(SamplesList findings) {
         StringWriter writer = new StringWriter();
         SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI); 
         
@@ -92,7 +92,7 @@ public class SummaryWriter {
         try {
         	URL url = SummaryWriter.class.getClassLoader().getResource(LINKAGE_FINDINGS_SCHEMA);
         	Schema schema = sf.newSchema(url);
-        	context = JAXBContext.newInstance(DetectedLinkageFindingsList.class);
+        	context = JAXBContext.newInstance(SamplesList.class);
 
 	        m = context.createMarshaller();
 	        //for pretty-print XML in JAXB

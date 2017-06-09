@@ -30,11 +30,11 @@ import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
+import org.dash.valid.Sample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.Haplotype;
-import org.dash.valid.report.DetectedLinkageFindings;
 import org.junit.Test;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 
@@ -56,9 +56,9 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 			
 			assertNotNull(mug);
 			
-			DetectedLinkageFindings findings = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
+			Sample sample = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
 			
-			assertNotNull(findings);
+			assertNotNull(sample);
 		}
 	}
 	
@@ -70,9 +70,9 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 		List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(fullyQualified);
 		LinkageDisequilibriumGenotypeList glString = new LinkageDisequilibriumGenotypeList("SBCFMW0003", fullyQualified);
 		
-		DetectedLinkageFindings findings = HLALinkageDisequilibrium.hasLinkageDisequilibrium(glString, knownHaplotypes);
+		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(glString, knownHaplotypes);
 		
-		assertNotNull(findings);		
+		assertNotNull(sample);		
 	}
 	
 	@Test
@@ -80,8 +80,8 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 		String fullyQualified = GLStringUtilities.fullyQualifyGLString("HLA-A*11:01:01+HLA-A*24:02:01:01/HLA-A*24:02:01:02L/HLA-A*24:02:01:03^HLA-B*18:01:01:01/HLA-B*18:01:01:02/HLA-B*18:51+HLA-B*53:01:01^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*02:01:01^HLA-DPB1*02:01:02+HLA-DPB1*09:01^HLA-DQA1*01:02:01:01/HLA-DQA1*01:02:01:02/HLA-DQA1*01:02:01:03/HLA-DQA1*01:02:01:04/HLA-DQA1*01:11+HLA-DQA1*03:01:01^HLA-DQB1*03:05:01+HLA-DQB1*06:09^HLA-DRB1*11:04:01+HLA-DRB1*13:02:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02+HLA-DRB3*03:01:01");
 		
 		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(fullyQualified);
-		DetectedLinkageFindings findings = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
+		Sample sample = LinkageDisequilibriumAnalyzer.detectLinkages(mug);
 				
-		assertNotNull(findings);	
+		assertNotNull(sample);	
 	}
 }

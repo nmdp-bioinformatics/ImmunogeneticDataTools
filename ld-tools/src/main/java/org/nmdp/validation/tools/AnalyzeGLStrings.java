@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
+import org.dash.valid.Sample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
@@ -44,9 +45,9 @@ import org.dash.valid.handler.LinkageWarningFileHandler;
 import org.dash.valid.report.CommonWellDocumentedWriter;
 import org.dash.valid.report.DetectedFindingsWriter;
 import org.dash.valid.report.DetectedLinkageFindings;
-import org.dash.valid.report.DetectedLinkageFindingsList;
 import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
+import org.dash.valid.report.SamplesList;
 import org.dash.valid.report.SummaryWriter;
 import org.dishevelled.commandline.ArgumentList;
 import org.dishevelled.commandline.CommandLine;
@@ -100,15 +101,15 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     }
 
 	public void runAnalysis(BufferedReader reader) throws IOException {
-		List<DetectedLinkageFindings> findingsList;
+		List<Sample> samplesList;
 		
-    	findingsList = performAnalysis(reader);
+    	samplesList = performAnalysis(reader);
     	
-    	writeOutput(findingsList);
+    	writeOutput(samplesList);
 	}
 
-	public List<DetectedLinkageFindings> performAnalysis(BufferedReader reader) throws IOException {
-		List<DetectedLinkageFindings> findingsList;
+	public List<Sample> performAnalysis(BufferedReader reader) throws IOException {
+		List<Sample> samplesList;
     	    	
     	if (frequencyFiles !=  null) {
     		HLAFrequenciesLoader.getInstance(frequencyFiles, allelesFile);
@@ -119,11 +120,11 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     	if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
     	System.setProperty(GLStringConstants.HLADB_PROPERTY, hladb);
     	 
-    	findingsList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
-		return findingsList;
+    	samplesList = LinkageDisequilibriumAnalyzer.analyzeGLStringFile(inputFile == null ? "STDIN" : inputFile.getName(), reader);
+		return samplesList;
 	}
 
-	private void writeOutput(List<DetectedLinkageFindings> findingsList) throws IOException {
+	private void writeOutput(List<Sample> samplesList) throws IOException {
 		PrintWriter writer = null;
     	PrintWriter summaryWriter = null;
     	PrintWriter pairWriter = null;
@@ -150,11 +151,12 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     		writer = writer(outputFile, true);
     	}
     	
-    	DetectedLinkageFindingsList allFindings = new DetectedLinkageFindingsList();
-    	allFindings.setFindings(findingsList);
-    	String summaryFindings = SummaryWriter.formatDetectedLinkages(allFindings);
+    	SamplesList allSamples = new SamplesList();
+    	allSamples.setSamples(samplesList);
+    	String summaryFindings = SummaryWriter.formatDetectedLinkages(allSamples);
     	
-		for (DetectedLinkageFindings findings : findingsList) {
+		for (Sample sample : samplesList) {
+			DetectedLinkageFindings findings = sample.getFindings();
     		if (warnings != null && warnings == Boolean.TRUE && !findings.hasAnomalies()) {
     			continue;
     		}
@@ -162,7 +164,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         	if (writeToDir) {
         		//summaryWriter.write(SummaryWriter.formatDetectedLinkages(findings));
         		
-        		if (findings.hasAnomalies()) {
+        		if (sample.getFindings().hasAnomalies()) {
         			pairWarningsWriter.write(HaplotypePairWriter.formatDetectedLinkages(findings));
         			linkageWarningsWriter.write(LinkageDisequilibriumWriter.formatDetectedLinkages(findings));
         		}
