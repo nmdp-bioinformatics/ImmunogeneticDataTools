@@ -41,7 +41,7 @@ public class CommonWellDocumentedLoaderTest extends TestCase {
 
 	@Test
 	public void testLoadAllCWD() throws FileNotFoundException, IOException {
-		System.setProperty(GLStringConstants.HLADB_PROPERTY, GLStringConstants.LATEST_HLADB);
+		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.25.0");
 		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
 		
 		assertTrue(cwdLoader.getAccessionMap().containsKey(DQA10111));
