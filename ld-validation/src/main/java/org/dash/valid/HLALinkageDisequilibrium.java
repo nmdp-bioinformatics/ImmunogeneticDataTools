@@ -159,10 +159,13 @@ public class HLALinkageDisequilibrium {
 		while (shortenedList.contains(element)) {
 			int index = shortenedList.indexOf(element);
 			detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
+			detectedElement.setHaplotype(element.getHaplotype());
 			enrichedHaplotype.setLinkage(detectedElement);
 			
 			shortenedList = shortenedList.subList(index + 1, shortenedList.size());
 		}
+		
+		enrichedHaplotype.setSequence(haplotype.getSequence());
 		
 		return enrichedHaplotype;
 	}
@@ -199,6 +202,7 @@ public class HLALinkageDisequilibrium {
 				int index = shortenedList.indexOf(element);
 				clonedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(possibleHaplotype.getAlleleMap()), possibleHaplotype.getHaplotypeInstanceMap(), possibleHaplotype.getDrb345Homozygous());
 				detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
+				detectedElement.setHaplotype(element.getHaplotype());
 				clonedHaplotype.setLinkage(detectedElement);
 				linkedHaplotypes.add(clonedHaplotype);
 				detectedDisequilibriumElements.add(detectedElement);

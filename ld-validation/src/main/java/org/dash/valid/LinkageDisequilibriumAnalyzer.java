@@ -144,7 +144,7 @@ public class LinkageDisequilibriumAnalyzer {
 			
 			linkedGLString.setSubmittedGlString(submittedGlString);
 			
-			List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(glString);
+			List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(linkedGLString);
 			
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
 			idx++;

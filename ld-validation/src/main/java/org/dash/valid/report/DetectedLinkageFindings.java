@@ -50,7 +50,7 @@ import org.dash.valid.race.RelativeFrequencyByRaceSet;
 
 
 @XmlRootElement(name="gl-freq")
-@XmlType(propOrder={"nonCWDAlleles", "linkedPairs"})
+@XmlType(propOrder={"nonCWDAlleles", "linkedPairs", "warnings", "anomalousLinkages"})
 public class DetectedLinkageFindings {
 	public static final int EXPECTED_LINKAGES = 2;
 
@@ -330,6 +330,13 @@ public class DetectedLinkageFindings {
 		this.genotypeList = genotypeList;
 	}
 	
+	@XmlElement(name="linkage")
+	public Set<DetectedDisequilibriumElement> getAnomalousLinkages() {
+		if (hasAnomalies()) return linkages;
+		
+		return null;
+	}
+	
 	public Set<DetectedDisequilibriumElement> getLinkages() {
 		return linkages;
 	}
@@ -355,6 +362,22 @@ public class DetectedLinkageFindings {
 	
 	public boolean hasLinkages() {
 		return this.linkages != null && this.linkages.size() > 0;
+	}
+	
+	@XmlElement(name="warning")
+	public List<String> getWarnings() {
+		List<String> warnings = new ArrayList<String>();
+		if (!hasLinkages()) {
+			warnings.add("No linkages found.");
+		}
+		
+		for (EnumSet<Locus> findingSought : this.findingsSought) {
+			if (!hasLinkedPairs(findingSought)) {
+				warnings.add("No " + findingSought + " haplotype pairs detected.");
+			}
+		}
+		
+		return warnings;
 	}
 	
 	public boolean hasAnomalies() {

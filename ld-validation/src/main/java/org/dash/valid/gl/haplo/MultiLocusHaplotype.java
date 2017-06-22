@@ -36,6 +36,18 @@ import org.dash.valid.gl.GLStringConstants;
 public class MultiLocusHaplotype extends Haplotype {
 	private Map<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
+	
+	private Integer sequence;
+	
+	@Override
+	public Integer getSequence() {
+		return sequence;
+	}
+	
+	@Override
+	public void setSequence(Integer sequence) {
+		this.sequence = sequence;
+	}
 
 	@Override
 	public Set<Locus> getLoci() {

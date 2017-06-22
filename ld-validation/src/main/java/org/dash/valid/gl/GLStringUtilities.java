@@ -93,7 +93,6 @@ public class GLStringUtilities {
 			
 			connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("GET");
-			//connection.setRequestProperty("Accept", "application/json");
 			
 			InputStream xml = connection.getInputStream();
 			
@@ -141,7 +140,8 @@ public class GLStringUtilities {
 		return decodedValue;
 	}
 	
-	public static List<Haplotype> buildHaplotypes(String glString) {		
+	public static List<Haplotype> buildHaplotypes(LinkageDisequilibriumGenotypeList linkedGlString) {
+		String glString = linkedGlString.getGLString();
 		List<Haplotype> knownHaplotypes = new CopyOnWriteArrayList<Haplotype>();
 		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
 		Locus locus = null;
@@ -185,15 +185,15 @@ public class GLStringUtilities {
 							singleLocusHaplotypes.put(locus, haplotype);
 
 						}
-						// TODO:  Fix  homozygous logic here -- currently hardcoded
-						knownHaplotypes.add(new MultiLocusHaplotype(singleLocusHaplotypes, false));
+						
+						MultiLocusHaplotype multiLocusHaplotype = new MultiLocusHaplotype(singleLocusHaplotypes, linkedGlString.hasHomozygous(Locus.HLA_DRB345));
+						multiLocusHaplotype.setSequence(i + 1);
+						knownHaplotypes.add(multiLocusHaplotype);
 						
 						i++;
 					}
 				}
-			}
-			
-			//pair = new HaplotypePair(knownHaplotypes.get(0), knownHaplotypes.get(1));
+			}			
 		}
 		
 		return knownHaplotypes;

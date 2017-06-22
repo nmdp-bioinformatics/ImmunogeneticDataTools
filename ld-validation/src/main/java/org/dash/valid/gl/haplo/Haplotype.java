@@ -29,11 +29,13 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 
 import org.dash.valid.Locus;
 import org.dash.valid.report.DetectedDisequilibriumElement;
 
 @XmlRootElement(name="haplotype")
+@XmlType(propOrder={"sequence", "haplotypeString"})
 public abstract class Haplotype {	
 	DetectedDisequilibriumElement linkage;
 	private boolean drb345Homozygous;
@@ -54,6 +56,10 @@ public abstract class Haplotype {
 	public boolean getDrb345Homozygous() {
 		return this.drb345Homozygous;
 	}
+	
+	@XmlAttribute(name="seq")
+	public abstract Integer getSequence();
+	public abstract void setSequence(Integer sequence);
 	
 	@XmlAttribute(name="value")
 	public abstract String getHaplotypeString();

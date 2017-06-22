@@ -44,7 +44,7 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 	@Test
 	public void testLinkageReportingExamples() {
 		LinkagesLoader.getInstance(Linkages.lookup(Locus.C_B_LOCI));
-		LinkageDisequilibriumAnalyzer.main(new String[] {"contrivedExamples.txt", "fullyQualifiedExample.txt", "strictExample.txt", "hml_1_0_2-example7-ngsFull.xml"});//, "shorthandExamples.txt"});
+		LinkageDisequilibriumAnalyzer.main(new String[] {"contrivedExamples.txt", "fullyQualifiedExample.txt", "strictExample.txt", "hml_1_0_2-example7-ngsFull.xml", "shorthandExamples.txt"});
 	}
 	
 	@Test
@@ -67,8 +67,9 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP.getShortName());
 		String fullyQualified = GLStringUtilities.fullyQualifyGLString("HLA-A*24:02:01:01~HLA-C*04:01:01:06~HLA-B*35:02:01~HLA-DRB3*02:02:01:02~HLA-DRB1*11:01:01:01~HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02~HLA-DQB1*03:01:01:03~HLA-DPA1*01:03:01:01~HLA-DPB1*05:01:01+HLA-A*11:01:01:01~HLA-C*12:03:01:01~HLA-B*35:03:01~HLA-DRB3*02:02:01:01~HLA-DRB1*13:01:01:01/HLA-DRB1*13:01:01:02~HLA-DQA1*01:03:01:02~HLA-DQB1*06:03:01~HLA-DPA1*02:01:01:01~HLA-DPB1*13:01:01/HLA-DPB1*107:01");
 		
-		List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(fullyQualified);
 		LinkageDisequilibriumGenotypeList glString = new LinkageDisequilibriumGenotypeList("SBCFMW0003", fullyQualified);
+
+		List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(glString);
 		
 		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(glString, knownHaplotypes);
 		

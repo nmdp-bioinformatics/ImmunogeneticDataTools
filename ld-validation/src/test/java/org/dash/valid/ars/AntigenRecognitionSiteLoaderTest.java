@@ -41,10 +41,10 @@ public class AntigenRecognitionSiteLoaderTest extends TestCase {
 		assertTrue(arsLoader.getArsMap() != null && arsLoader.getArsMap().size() > 0);
 	}
 	
-//	public void testRemoteArs() throws InvalidFormatException, IOException, ParserConfigurationException, SAXException {
-//		HashMap<String, HashSet<String>> gAllelesMap = AntigenRecognitionSiteLoader.loadGGroups("3.20.0");
-//		
-//		assertNotNull(gAllelesMap);
-//		assertTrue(gAllelesMap.keySet().size() > 0);
-//	}
+	public void testRemoteArs() throws InvalidFormatException, IOException, ParserConfigurationException, SAXException {
+		HashMap<String, HashSet<String>> gAllelesMap = AntigenRecognitionSiteLoader.loadGGroups("3.20.0");
+		
+		assertNotNull(gAllelesMap);
+		assertTrue(gAllelesMap.keySet().size() > 0);
+	}
 }
