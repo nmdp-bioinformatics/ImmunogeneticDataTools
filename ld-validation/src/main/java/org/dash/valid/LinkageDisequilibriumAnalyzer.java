@@ -24,9 +24,7 @@ package org.dash.valid;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -89,7 +87,7 @@ public class LinkageDisequilibriumAnalyzer {
 	}
 	
 	public static List<Sample> analyzeGLStringFile(String name, BufferedReader reader) throws IOException {
-		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(name, reader);
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile(name, reader);
 		
 		List<Sample> samplesList = detectLinkages(glStrings);
 		
@@ -100,7 +98,7 @@ public class LinkageDisequilibriumAnalyzer {
 	 * @param filename
 	 */
 	public static void analyzeGLStringFile(String filename) throws IOException {				
-		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile(filename);
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile(filename);
 		List<Sample> samplesList = null;
 		
 		samplesList = detectLinkages(glStrings);
@@ -111,7 +109,6 @@ public class LinkageDisequilibriumAnalyzer {
 			HaplotypePairWriter.getInstance().reportDetectedLinkages(findings);
 			CommonWellDocumentedWriter.getInstance().reportCommonWellDocumented(findings);
 			DetectedFindingsWriter.getInstance().reportDetectedFindings(findings);
-			//SummaryWriter.getInstance().reportDetectedLinkages(findings);
 		}
 		
 		SamplesList allSamples = new SamplesList();
@@ -125,24 +122,11 @@ public class LinkageDisequilibriumAnalyzer {
 	 * @throws IOException 
 	 * @throws SecurityException 
 	 */
-	private static List<Sample> detectLinkages(Map<String, String> glStrings) {
-		LinkageDisequilibriumGenotypeList linkedGLString;
-		String glString;
+	private static List<Sample> detectLinkages(List<LinkageDisequilibriumGenotypeList> glStrings) {
 		List<Sample> samplesList = new ArrayList<Sample>();
 		
 		int idx = 1;
-		for (String key : glStrings.keySet()) {
-			glString = glStrings.get(key);
-			String submittedGlString = glString;
-			
-			if (!GLStringUtilities.validateGLStringFormat(glString)) {
-				glString = GLStringUtilities.fullyQualifyGLString(glString);
-			}
-			
-			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
-			linkedGLString = new LinkageDisequilibriumGenotypeList(key, mug);
-			
-			linkedGLString.setSubmittedGlString(submittedGlString);
+		for (LinkageDisequilibriumGenotypeList linkedGLString : glStrings) {
 			
 			List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(linkedGLString);
 			

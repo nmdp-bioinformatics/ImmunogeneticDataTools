@@ -32,7 +32,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -416,11 +415,11 @@ public class GLStringUtilities {
 		return segment;
 	}
 	
-	public static LinkedHashMap<String, String> readGLStringFile(String name, BufferedReader reader) {
-		LinkedHashMap<String, String> glStrings = null;
+	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String name, BufferedReader reader) {
+		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = null;
 		
 		try {
-			glStrings = parseGLStringFile(name, reader);
+			linkedGLStrings = parseGLStringFile(name, reader);
 		} catch (IOException e) {
 			LOGGER.severe("Problem reading GL String file: " + name);
 			e.printStackTrace();
@@ -430,12 +429,12 @@ public class GLStringUtilities {
 				e.printStackTrace();
 		 }
 		
-		return glStrings;
+		return linkedGLStrings;
 	}
 
-	public static LinkedHashMap<String, String> readGLStringFile(String filename) {
+	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String filename) {
 		BufferedReader reader = null;
-		LinkedHashMap<String, String> glStrings = null;
+		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = null;
 
 		try {
 			InputStream stream = GLStringUtilities.class.getClassLoader()
@@ -446,7 +445,7 @@ public class GLStringUtilities {
 			
 			reader = new BufferedReader(new InputStreamReader(stream));
 
-			glStrings = parseGLStringFile(filename, reader);
+			linkedGLStrings = parseGLStringFile(filename, reader);
 			
 		} catch (FileNotFoundException e) {
 			LOGGER.severe("Couldn't find GL String file: " + filename);
@@ -465,14 +464,15 @@ public class GLStringUtilities {
 				e.printStackTrace();
 			}
 		}
-
-		return glStrings;
+		
+		return linkedGLStrings;
 	}
 
-	private static LinkedHashMap<String, String> parseGLStringFile(String filename,
+	private static List<LinkageDisequilibriumGenotypeList> parseGLStringFile(String filename,
 			BufferedReader reader)
 			throws IOException, ParserConfigurationException, SAXException {
-		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
+		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = new ArrayList<LinkageDisequilibriumGenotypeList>();
+
 
 		if (filename.endsWith(GLStringConstants.XML) || filename.endsWith(GLStringConstants.HML)) {
 		    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -492,29 +492,63 @@ public class GLStringUtilities {
 		    		if (j > 0) glString.append(GLStringConstants.GENE_DELIMITER);
 		    		glString.append(((Element) alleleAssignment.getElementsByTagName(GLStringConstants.GL_STRING_ELEMENT).item(0)).getTextContent().trim());
 		    	}
-		    	glStrings.put(sampleId,  glString.toString());
+		    	
+		    	linkedGLStrings.add(inflateGenotypeList(sampleId, glString.toString(), null));
 		    }
 		}
 		else {
 			String line;
 			String[] parts = null;
 			int lineNumber = 0;
+			String glString;
+			String id;
+			String note = null;			
+			
 			while ((line = reader.readLine()) != null) {
-				parts = line.split(FILE_DELIMITER_REGEX);
-				if (parts.length == 1) {
-					glStrings.put(filename + "-" + lineNumber, parts[0]);
-				} else if (parts.length == 2) {
-					glStrings.put(parts[0], parts[1]);
-				} else {
-					LOGGER.warning("Unexpected line format at line "
-							+ lineNumber + ": " + filename);
-				}
-	
 				lineNumber++;
+
+				parts = line.split(FILE_DELIMITER_REGEX);
+				
+				if (parts.length == 1) {
+					id = filename + "-" + (lineNumber - 1);
+					glString = parts[0];
+				} else if (parts.length >= 2) {
+					id = parts[0];
+					glString = parts[1];
+					
+					if (parts.length == 3) note = parts[2];
+				}
+				else {
+					LOGGER.warning("Unexpected line format at line "
+							+ (lineNumber - 1) + ": " + filename);
+					
+					continue;
+				}
+				
+				linkedGLStrings.add(inflateGenotypeList(id, glString, note));
+					
 			}
 		}
+				
+		return linkedGLStrings;
+	}
+	
+	private static LinkageDisequilibriumGenotypeList inflateGenotypeList(String id, String glString, String note) {
+		LinkageDisequilibriumGenotypeList linkedGLString;
 		
-		return glStrings;
+		String submittedGlString = glString;
+		
+		if (!GLStringUtilities.validateGLStringFormat(glString)) {
+			glString = GLStringUtilities.fullyQualifyGLString(glString);
+		}
+		
+		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
+		linkedGLString = new LinkageDisequilibriumGenotypeList(id, mug);
+		
+		linkedGLString.setSubmittedGlString(submittedGlString);
+		linkedGLString.setNote(note);
+		
+		return linkedGLString;
 	}
 
 	public static MultilocusUnphasedGenotype convertToMug(String glString) {

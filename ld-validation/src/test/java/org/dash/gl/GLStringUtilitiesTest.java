@@ -22,7 +22,6 @@
 package org.dash.gl;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +29,7 @@ import org.dash.valid.Locus;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
+import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.junit.Test;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 
@@ -56,6 +56,7 @@ public class GLStringUtilitiesTest extends TestCase {
 	private static final String VALID_GL_STRING_MAC = "HLA-A*01:01/HLA-A*01:02+HLA-A*26:01^HLA-C*01:01/HLA-C*01:03+HLA-C*04:01";
 	private static final String TAB_DELIMITED = "TAB_DELIMITED";
 	private static final String COMMA_DELIMITED = "COMMA_DELIMITED";
+	private static final String MY_NOTE = "My Note";
 	
 	@Test
 	public void testParse() {
@@ -79,25 +80,26 @@ public class GLStringUtilitiesTest extends TestCase {
 	
 	@Test
 	public void testTabDelimitedGLStringFile() {
-		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("tabDelimitedExample.txt");
-		for (String key : glStrings.keySet()) {
-			assertTrue(TAB_DELIMITED.equals(key));
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile("tabDelimitedExample.txt");
+		for (LinkageDisequilibriumGenotypeList linkedGLString : glStrings) {
+			assertTrue(TAB_DELIMITED.equals(linkedGLString.getId()));
+			assertTrue(MY_NOTE.equals(linkedGLString.getNote()));
 		}
 	}
 	
 	@Test
 	public void testCommaDelimitedGLStringFile() {
-		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("commaDelimitedExample.txt");
-		for (String key : glStrings.keySet()) {
-			assertTrue(COMMA_DELIMITED.equals(key));
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile("commaDelimitedExample.txt");
+		for (LinkageDisequilibriumGenotypeList linkedGLString : glStrings) {
+			assertTrue(COMMA_DELIMITED.equals(linkedGLString.getId()));
 		}
 	}
 	
 	@Test
 	public void testHMLFile() {
-		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("hml_1_0_2-example7-ngsFull.xml");
-		for (String key : glStrings.keySet()) {
-			assertTrue("1367-7150-8".equals(key));
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile("hml_1_0_2-example7-ngsFull.xml");
+		for (LinkageDisequilibriumGenotypeList linkedGLString : glStrings) {
+			assertTrue("1367-7150-8".equals(linkedGLString.getId()));
 		}	
 	}
 	

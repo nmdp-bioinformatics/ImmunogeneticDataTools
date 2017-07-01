@@ -15,6 +15,7 @@
 				<xs:element name="processed-gl-string" type="xs:string" minOccurs="0"/>
 			</xs:sequence>
 			<xs:attribute name="id" type="xs:string"/>
+			<xs:attribute name="note" type="xs:string"/>
 		</xs:complexType>
 	</xs:element>
     <xs:element name="gl-freq">

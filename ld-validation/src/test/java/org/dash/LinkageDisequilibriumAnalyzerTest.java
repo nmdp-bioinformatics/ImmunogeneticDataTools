@@ -22,7 +22,6 @@
 package org.dash;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.dash.valid.HLALinkageDisequilibrium;
@@ -49,10 +48,10 @@ public class LinkageDisequilibriumAnalyzerTest extends TestCase {
 	
 	@Test
 	public void testLinkageReportingMugs() throws IOException {
-		LinkedHashMap<String, String> glStrings = GLStringUtilities.readGLStringFile("fullyQualifiedExample.txt");
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile("fullyQualifiedExample.txt");
 		
-		for (String key : glStrings.keySet()) {
-			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glStrings.get(key));
+		for (LinkageDisequilibriumGenotypeList linkedGLString : glStrings) {
+			MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(linkedGLString.getGLString());
 			
 			assertNotNull(mug);
 			

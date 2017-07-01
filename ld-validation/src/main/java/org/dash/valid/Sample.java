@@ -20,6 +20,11 @@ public class Sample {
 		return getGenotypeList().getId();
 	}
 	
+	@XmlAttribute(name="note")
+	public String getNote() {
+		return getGenotypeList().getNote();
+	}
+	
 	@XmlElement(name="processed-gl-string")
 	public String getProcessedGlString() {
 		return getGenotypeList().getGLString().equals(getGenotypeList().getSubmittedGlString()) ? null : getGenotypeList().getGLString();

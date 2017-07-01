@@ -25,8 +25,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.List;
 
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringUtilities;
@@ -47,20 +46,13 @@ public class GLStringTest extends TestCase {
 	
 	@Before
 	public void setUp() throws IOException {
-		LinkedHashMap<String, String> validGLStrings = GLStringUtilities.readGLStringFile("fullyQualifiedExample.txt");
+		List<LinkageDisequilibriumGenotypeList> validGLStrings = GLStringUtilities.readGLStringFile("fullyQualifiedExample.txt");
+				
+		glString = validGLStrings.get(0);
 		
-		Set<String> keys = validGLStrings.keySet();
+		List<LinkageDisequilibriumGenotypeList> strictGLStrings = GLStringUtilities.readGLStringFile("strictExample.txt");
 		
-		for (String key : keys) {
-			glString = new LinkageDisequilibriumGenotypeList(key, GLStringUtilities.fullyQualifyGLString(validGLStrings.get(key)));
-		}
-		
-		LinkedHashMap<String, String> strictGLStrings = GLStringUtilities.readGLStringFile("strictExample.txt");
-		
-		keys = strictGLStrings.keySet();
-		String key = keys.iterator().next();
-		
-		STRICT_GL_STRING = strictGLStrings.get(key);
+		STRICT_GL_STRING = strictGLStrings.get(0).getGLString();
 	}
 	
 	@Test

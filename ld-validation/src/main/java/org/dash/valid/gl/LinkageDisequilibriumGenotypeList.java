@@ -46,6 +46,7 @@ import org.nmdp.gl.MultilocusUnphasedGenotype;
 public class LinkageDisequilibriumGenotypeList {
 	private String id;
 	private String glString;
+	private String note;
 	private String submittedGlString;
 
 	private MultilocusUnphasedGenotype mug;
@@ -103,6 +104,14 @@ public class LinkageDisequilibriumGenotypeList {
 		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 			setPossibleHaplotypes(linkage.getLoci());
 		}
+	}
+	
+	public String getNote() {
+		return note;
+	}
+	
+	public void setNote(String note) {
+		this.note = note;
 	}
 	
 	public String getSubmittedGlString() {
