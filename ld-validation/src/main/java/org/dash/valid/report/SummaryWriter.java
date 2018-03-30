@@ -46,8 +46,8 @@ public class SummaryWriter {
 	public static final String LINKAGE_FINDINGS_SCHEMA = "schema/LinkageFindings.xsd";
 	private static final String DEFAULT_PATH = "./";
 	
-	private static FileWriter fileWriter;
-	private static PrintWriter printWriter;
+	private FileWriter fileWriter;
+	private PrintWriter printWriter;
 	
 	private SummaryWriter() {
 		try {			
@@ -77,29 +77,30 @@ public class SummaryWriter {
 		}
 	}
 	
-	public void reportDetectedLinkages(DetectedLinkageFindings findings) {
+	public void reportDetectedLinkages(SamplesList findings) {
 		String reportedFindings = formatDetectedLinkages(findings);
 		printWriter.write(reportedFindings);
 	}
 
-	public static String formatDetectedLinkages(DetectedLinkageFindings findings) {
-        JAXBContext context;
+	public static String formatDetectedLinkages(SamplesList findings) {
         StringWriter writer = new StringWriter();
-        
         SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI); 
+        
+        JAXBContext context;
+        Marshaller m;
         
         try {
         	URL url = SummaryWriter.class.getClassLoader().getResource(LINKAGE_FINDINGS_SCHEMA);
         	Schema schema = sf.newSchema(url);
-        	context = JAXBContext.newInstance(DetectedLinkageFindings.class);
+        	context = JAXBContext.newInstance(SamplesList.class);
 
-	        Marshaller m = context.createMarshaller();
+	        m = context.createMarshaller();
 	        //for pretty-print XML in JAXB
 	        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	        
 	        m.setSchema(schema);
-	
-	        m.marshal(findings, writer);
+	        
+			m.marshal(findings, writer);
         }
         catch (JAXBException | SAXException e) {
         	e.printStackTrace();

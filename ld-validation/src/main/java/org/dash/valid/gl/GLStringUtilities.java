@@ -27,24 +27,39 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
+import org.dash.valid.gl.haplo.Haplotype;
+import org.dash.valid.gl.haplo.MultiLocusHaplotype;
+import org.dash.valid.gl.haplo.SingleLocusHaplotype;
 import org.nmdp.gl.MultilocusUnphasedGenotype;
 import org.nmdp.gl.client.GlClient;
 import org.nmdp.gl.client.GlClientException;
 import org.nmdp.gl.client.local.LocalGlClient;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class GLStringUtilities {
 	private static final String ALPHA_REGEX = "[A-Z]";
@@ -67,6 +82,121 @@ public class GLStringUtilities {
 
 		return elements;
 	}
+	
+	public static String getLatestImgtRelease() {
+		HttpURLConnection connection = null;
+		String imgtRelease = null;
+
+		try {
+			URL url = new URL("https://hml.nmdp.org/mac/api/imgtHlaReleases");
+			
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			
+			InputStream xml = connection.getInputStream();
+			
+			BufferedReader reader = new BufferedReader(new InputStreamReader(xml));
+			imgtRelease = reader.readLine().split(GLStringConstants.SPACE)[0];
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			connection.disconnect();
+		}
+		
+		return imgtRelease;
+	}
+	
+	public static String decodeMAC(String typing) {
+		String decodedValue = null;
+		HttpURLConnection connection = null;
+		
+		try {
+			String uri = "https://hml.nmdp.org/mac/api/decode/?";
+			String imgtRelease = System.getProperty(GLStringConstants.HLADB_PROPERTY);
+			if (imgtRelease == null || GLStringConstants.LATEST_HLADB.equals(imgtRelease)) {
+				imgtRelease = getLatestImgtRelease();
+				//System.setProperty(GLStringConstants.HLADB_PROPERTY, imgtRelease);
+			}
+			URL url = new URL(uri + "imgtHlaRelease=" + imgtRelease + "&typing=" + typing + "&expand=false");
+			
+			connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			
+			InputStream xml = connection.getInputStream();
+			
+			BufferedReader reader = new BufferedReader(new InputStreamReader(xml));
+			decodedValue = reader.readLine();			
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			connection.disconnect();
+		}
+		
+		return decodedValue;
+	}
+	
+	public static List<Haplotype> buildHaplotypes(LinkageDisequilibriumGenotypeList linkedGlString) {
+		String glString = linkedGlString.getGLString();
+		List<Haplotype> knownHaplotypes = new CopyOnWriteArrayList<Haplotype>();
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
+		Locus locus = null;
+		
+		if (StringUtils.countMatches(glString, GLStringConstants.GENE_PHASE_DELIMITER) > 1 && StringUtils.countMatches(glString,  GLStringConstants.GENE_COPY_DELIMITER) == 1) {
+			List<String> genes = GLStringUtilities.parse(glString,
+					GLStringConstants.GENE_DELIMITER);
+			for (String gene : genes) {
+				List<String> genotypeAmbiguities = GLStringUtilities.parse(gene,
+						GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
+				for (String genotypeAmbiguity : genotypeAmbiguities) {
+					List<String> geneCopies = GLStringUtilities.parse(
+							genotypeAmbiguity,
+							GLStringConstants.GENE_COPY_DELIMITER);
+					
+					int i=0;
+
+					for (String geneCopy : geneCopies) {
+						HashMap<Locus,SingleLocusHaplotype> singleLocusHaplotypes = new HashMap<Locus, SingleLocusHaplotype>();
+
+						List<String> genePhases = GLStringUtilities.parse(geneCopy,
+								GLStringConstants.GENE_PHASE_DELIMITER);
+						for (String genePhase : genePhases) {
+							String[] splitString = genePhase
+									.split(GLStringUtilities.ESCAPED_ASTERISK);
+							String locusVal = splitString[0];
+							
+							List<String> alleleAmbiguities = GLStringUtilities
+									.parse(genePhase,
+											GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
+							
+							if (locusMap.containsKey(locusVal)) {
+								locus = locusMap.get(locusVal);
+							}
+							else {
+								locus = Locus.normalizeLocus(Locus.lookup(locusVal));
+								locusMap.put(locusVal, locus);
+							}
+
+							SingleLocusHaplotype haplotype = new SingleLocusHaplotype(locus, alleleAmbiguities, i);
+							singleLocusHaplotypes.put(locus, haplotype);
+
+						}
+						
+						MultiLocusHaplotype multiLocusHaplotype = new MultiLocusHaplotype(singleLocusHaplotypes, linkedGlString.hasHomozygous(Locus.HLA_DRB345));
+						multiLocusHaplotype.setSequence(i + 1);
+						knownHaplotypes.add(multiLocusHaplotype);
+						
+						i++;
+					}
+				}
+			}			
+		}
+		
+		return knownHaplotypes;
+	}
 
 	public static boolean validateGLStringFormat(String glString) {
 		StringTokenizer st = new StringTokenizer(glString,
@@ -87,6 +217,11 @@ public class GLStringUtilities {
 				LOGGER.warning("Unexpected allele: " + token);
 				return false;
 			}
+			
+			if (parts[1].substring(0,1).matches(ALPHA_REGEX)) {
+				LOGGER.info("GLString contains allele codes.  These will be decoded.");
+				return false;
+			}
 		}
 
 		return true;
@@ -94,42 +229,27 @@ public class GLStringUtilities {
 
 	public static Set<String> checkCommonWellDocumented(String glString) {
 		Set<String> notCommon = new HashSet<String>();
+		
+		CommonWellDocumentedLoader loader = CommonWellDocumentedLoader.getInstance();
+		
+		Set<String> cwdAlleles = loader.getCwdAlleles();
 
-		Set<String> cwdAlleles = CommonWellDocumentedLoader.getInstance()
-				.getCwdAlleles();
+		if (cwdAlleles.size() == 0) return new HashSet<String>();
+		
+		HashMap<String, String> accessionMap = loader.getAccessionMap();
 
 		StringTokenizer st = new StringTokenizer(glString,
 				GL_STRING_DELIMITER_REGEX);
 		String token;
 		while (st.hasMoreTokens()) {
 			token = st.nextToken();
-
-			if (!checkCommonWellDocumented(cwdAlleles, token)) {
+			
+			if (!cwdAlleles.contains(accessionMap.get(token))) {
 				notCommon.add(token);
 			}
-
 		}
 
 		return notCommon;
-	}
-
-	/**
-	 * @param cwdAlleles
-	 * @param token
-	 */
-	private static boolean checkCommonWellDocumented(Set<String> cwdAlleles,
-			String allele) {
-		if (cwdAlleles.contains(allele)) {
-			return true;
-		}
-
-		for (String cwdAllele : cwdAlleles) {
-			if (allele.equals(cwdAllele)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	public static boolean fieldLevelComparison(String allele,
@@ -183,18 +303,22 @@ public class GLStringUtilities {
 			e.printStackTrace();
 		}
 		
-		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
-		
-		arsMap = instance.getArsMap();
+		HashMap<String, HashSet<String>> arsMap = instance.getArsMap();
 
-		for (String arsCode : arsMap.keySet()) {
-			if (arsCode.equals(referenceAllele)
-					&& arsMap.get(arsCode).contains(matchedValue)) {
-				return true;
-			}
-			else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
-					&& arsMap.get(arsCode).contains(matchedValue)) {
-				return true;
+		if (arsMap.containsKey(referenceAllele)) {
+			for (String arsCode : arsMap.keySet()) {
+				if (arsCode.equals(referenceAllele)
+						&& arsMap.get(arsCode).contains(matchedValue)) {
+					return true;
+				}
+				
+    			// TODO:  Not sure this accomplished anything...remove?
+
+//				else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
+//						&& arsMap.get(arsCode).contains(matchedValue)) {
+//					// TODO:  Does this ever happen?
+//					return true;
+//				}
 			}
 		}
 
@@ -253,6 +377,7 @@ public class GLStringUtilities {
 				GL_STRING_DELIMITER_REGEX, true);
 		StringBuffer sb = new StringBuffer();
 		String part;
+		String[] segments;
 		String locus = null;
 
 		while (st.hasMoreTokens()) {
@@ -270,6 +395,12 @@ public class GLStringUtilities {
 			} else {
 				part = fillLocus(Locus.lookup(locus), part);
 			}
+			
+			segments = part.split(COLON);
+			
+			if (segments[1].substring(0,1).matches(ALPHA_REGEX)) {
+				part = decodeMAC(part);
+			}
 
 			sb.append(part);
 		}
@@ -284,22 +415,26 @@ public class GLStringUtilities {
 		return segment;
 	}
 	
-	public static LinkedHashMap<String, String> readGLStringFile(String name, BufferedReader reader) {
-		LinkedHashMap<String, String> glStrings = null;
+	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String name, BufferedReader reader) {
+		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = null;
 		
 		try {
-			glStrings = parseGLStringFile(name, reader);
+			linkedGLStrings = parseGLStringFile(name, reader);
 		} catch (IOException e) {
 			LOGGER.severe("Problem reading GL String file: " + name);
 			e.printStackTrace();
 		}
+		 catch (ParserConfigurationException | SAXException e) {
+				LOGGER.severe("Couldn't parse xml file: " + name);
+				e.printStackTrace();
+		 }
 		
-		return glStrings;
+		return linkedGLStrings;
 	}
 
-	public static LinkedHashMap<String, String> readGLStringFile(String filename) {
+	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String filename) {
 		BufferedReader reader = null;
-		LinkedHashMap<String, String> glStrings = null;
+		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = null;
 
 		try {
 			InputStream stream = GLStringUtilities.class.getClassLoader()
@@ -310,13 +445,16 @@ public class GLStringUtilities {
 			
 			reader = new BufferedReader(new InputStreamReader(stream));
 
-			glStrings = parseGLStringFile(filename, reader);
+			linkedGLStrings = parseGLStringFile(filename, reader);
 			
 		} catch (FileNotFoundException e) {
 			LOGGER.severe("Couldn't find GL String file: " + filename);
 			e.printStackTrace();
 		} catch (IOException e) {
 			LOGGER.severe("Problem opening GL String file: " + filename);
+			e.printStackTrace();
+		} catch (SAXException | ParserConfigurationException e) {
+			LOGGER.severe("Couldn't parse xml file: " + filename);
 			e.printStackTrace();
 		} finally {
 			try {
@@ -326,32 +464,91 @@ public class GLStringUtilities {
 				e.printStackTrace();
 			}
 		}
-
-		return glStrings;
+		
+		return linkedGLStrings;
 	}
 
-	private static LinkedHashMap<String, String> parseGLStringFile(String filename,
+	private static List<LinkageDisequilibriumGenotypeList> parseGLStringFile(String filename,
 			BufferedReader reader)
-			throws IOException {
-		LinkedHashMap<String, String> glStrings = new LinkedHashMap<String, String>();
-		String line;
-		String[] parts = null;
-		int lineNumber = 0;
-		while ((line = reader.readLine()) != null) {
-			parts = line.split(FILE_DELIMITER_REGEX);
-			if (parts.length == 1) {
-				glStrings.put(filename + "-" + lineNumber, parts[0]);
-			} else if (parts.length == 2) {
-				glStrings.put(parts[0], parts[1]);
-			} else {
-				LOGGER.warning("Unexpected line format at line "
-						+ lineNumber + ": " + filename);
-			}
+			throws IOException, ParserConfigurationException, SAXException {
+		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = new ArrayList<LinkageDisequilibriumGenotypeList>();
 
-			lineNumber++;
+
+		if (filename.endsWith(GLStringConstants.XML) || filename.endsWith(GLStringConstants.HML)) {
+		    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		    DocumentBuilder builder = factory.newDocumentBuilder();
+		    InputSource is = new InputSource(reader);
+		    Document doc = builder.parse(is);
+		    String sampleId;
+		    Element alleleAssignment;
+
+		    NodeList nList = doc.getElementsByTagName(GLStringConstants.SAMPLE_ELEMENT);
+		    for (int i=0;i<nList.getLength();i++) {
+		    	sampleId = nList.item(i).getAttributes().getNamedItem(GLStringConstants.ID_ATTRIBUTE).getNodeValue();
+			    StringBuffer glString = new StringBuffer();
+		    	NodeList typingElements = ((Element) nList.item(i)).getElementsByTagName(GLStringConstants.TYPING_ELEMENT);
+		    	for (int j=0;j<typingElements.getLength();j++) {
+		    		alleleAssignment = (Element) ((Element) typingElements.item(j)).getElementsByTagName(GLStringConstants.ALLELE_ASSIGNMENT_ELEMENT).item(0);
+		    		if (j > 0) glString.append(GLStringConstants.GENE_DELIMITER);
+		    		glString.append(((Element) alleleAssignment.getElementsByTagName(GLStringConstants.GL_STRING_ELEMENT).item(0)).getTextContent().trim());
+		    	}
+		    	
+		    	linkedGLStrings.add(inflateGenotypeList(sampleId, glString.toString(), null));
+		    }
+		}
+		else {
+			String line;
+			String[] parts = null;
+			int lineNumber = 0;
+			String glString;
+			String id;
+			String note = null;			
+			
+			while ((line = reader.readLine()) != null) {
+				lineNumber++;
+
+				parts = line.split(FILE_DELIMITER_REGEX);
+				
+				if (parts.length == 1) {
+					id = filename + "-" + (lineNumber - 1);
+					glString = parts[0];
+				} else if (parts.length >= 2) {
+					id = parts[0];
+					glString = parts[1];
+					
+					if (parts.length == 3) note = parts[2];
+				}
+				else {
+					LOGGER.warning("Unexpected line format at line "
+							+ (lineNumber - 1) + ": " + filename);
+					
+					continue;
+				}
+				
+				linkedGLStrings.add(inflateGenotypeList(id, glString, note));
+					
+			}
+		}
+				
+		return linkedGLStrings;
+	}
+	
+	private static LinkageDisequilibriumGenotypeList inflateGenotypeList(String id, String glString, String note) {
+		LinkageDisequilibriumGenotypeList linkedGLString;
+		
+		String submittedGlString = glString;
+		
+		if (!GLStringUtilities.validateGLStringFormat(glString)) {
+			glString = GLStringUtilities.fullyQualifyGLString(glString);
 		}
 		
-		return glStrings;
+		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
+		linkedGLString = new LinkageDisequilibriumGenotypeList(id, mug);
+		
+		linkedGLString.setSubmittedGlString(submittedGlString);
+		linkedGLString.setNote(note);
+		
+		return linkedGLString;
 	}
 
 	public static MultilocusUnphasedGenotype convertToMug(String glString) {

@@ -2,9 +2,9 @@ Immunogenetic Data Tools
 =======================
 [![Build Status](https://api.travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools.svg?branch=master)](https://travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools)
 
-##Use Cases and Implementations
+## Use Cases and Implementations
 
-###1. HLA Linkage Disequilibrium
+### 1. HLA Linkage Disequilibrium
 
 [Linkage disequilibrium](http://en.wikipedia.org/wiki/Linkage_disequilibrium) is the non-random association of alleles at two or more loci, that descend from a single ancestral chromosome.  The particular linkages referenced here are relevant in the context of [HLA](http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics.
 
@@ -19,6 +19,7 @@ The results of the software should be used for supporting the evidence, but not 
 *Input:*  Genotype(s) - expressed as GL String
 
 * [GL String](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3715123/) - Genotype List String: a grammar for describing HLA and KIR genotyping results in a text string
+* HML 1.x
 * File containing GL Strings separated by newline character
 * CSV or Tab-Delimited file containing GL Strings, where first column represents an id associated with the GL String
 * [MultiLocusUnphasedGenotype](http://gl.immunogenomics.org/gl-ontology-content/MultilocusUnphasedGenotype.html)
@@ -27,7 +28,7 @@ The results of the software should be used for supporting the evidence, but not 
 
 *Future Goals:*
 
- * Support [HML 1.0](https://bioinformatics.bethematchclinical.org/HLA-Resources/HML/) as input
+ * Service enable the software and host publicly
  
 *Using the software:*
 
@@ -37,7 +38,7 @@ From the Releases section of GitHub you may grab the snapshot of the latest rele
 
 After un-zipping the software, you may run ./ld-tools-0.0.1-SNAPSHOT/bin/analyze-gl-strings -h for instructions on how to run the software.
 
-*Basic Installation Process from source code:*
+*Alternatively - Basic Installation Process from source code:*
 
 If you prefer to compile / package the software from source, follow these instructions...
 
@@ -61,12 +62,12 @@ If you prefer to compile / package the software from source, follow these instru
 + **Note:**  The 2011 NMDP Frequencies (if specifying 'nmdp') are associated with a license agreement, specifying the allowance of use for research, but disallowing re-distribution.  If you wish to use the 2011 NMDP Frequencies, you'll need to install them in your local repository by following the frequency install instructions at the bottom of this file.
 
 + **Name:**  org.dash.hladb
-+ **Value(s):**  3.25.0, 3.24.0, 3.23.0, 3.22.0, 3.21.0, 3.20.0, 3.19.0, 3.18.0, 3.15.0, 3.12.0, 3.11.0, 3.10.0, 3.9.0, 3.8.0, 3.7.0, 3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.0, 3.1.0, 3.0.0
-+ **Description:**  Specifies the HLA DB version against which to validate common well documented alleles
++ **Value(s):**  Valid HLA DB name (e.g. 3.20.0).  Older versions were not available in XML format and ars reduction logic will fall back on default logic in these instances
++ **Description:**  Specifies the HLA DB version against which to validate common well documented alleles, and informs the ARS reduction logic
 
 + **Name:**  org.dash.ars
-+ **Value(s):**  hladb
-+ **Description:**  If specified, applies the antigen recognition site mappings from the HLA DB property specified.  Otherwise, uses the antigen recognition site mappings associated with the NMDP 2011 frequencies
++ **Value(s):**  Default
++ **Description:**  If specified, applies the antigen recognition site mappings from the time of the NMDP 2011 Frequencies.  Otherwise, tries to use the antigen recognition site mappings associated with the specified HLA DB first, falling back on the default if they aren't available
 
 + **Name:**  org.dash.linkages
 + **Value(s):**  acb, cb, drb_dq, drb_dqb, drb1_dqb1, fiv_loc, six_loc
@@ -78,7 +79,7 @@ If you prefer to compile / package the software from source, follow these instru
 *Logs:*
 
 * likely haplotype pairs, sorted by relative frequencies may be found in haplotypePairs.log
-* gl strings in which a likely C/B or DR/DQ block was not found, may be found in haplotypePairWarnings.log
+* gl strings in which a likely block was not found, may be found in haplotypePairWarnings.log
 * haplotype linkage output may be found in linkages.log
 * haplotype linkage output for gl strings with missing pairs may be found in linkageWarnings.log
 * errors and basic logging in immuno.log

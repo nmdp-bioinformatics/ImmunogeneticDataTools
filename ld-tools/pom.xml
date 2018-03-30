@@ -133,6 +133,10 @@
             	<id>normalize-frequency-file</id>
             	<mainClass>org.nmdp.validation.tools.NormalizeFrequencyFile</mainClass>
             </program>
+ <!--            <program>
+            	<id>post-population-frequencies</id>
+            	<mainClass>org.nmdp.validation.tools.PostPopulationFrequencies</mainClass>
+            </program>   -->
           </programs>
         </configuration>
         <executions>

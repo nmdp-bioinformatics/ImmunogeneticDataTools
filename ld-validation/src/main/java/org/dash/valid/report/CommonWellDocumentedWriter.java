@@ -24,7 +24,6 @@ package org.dash.valid.report;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import org.dash.valid.cwd.CommonWellDocumentedLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.handler.CommonWellDocumentedFileHandler;
 
@@ -63,18 +62,13 @@ public class CommonWellDocumentedWriter {
 		StringBuffer sb = new StringBuffer("Id: " + findings.getGLId() + GLStringConstants.NEWLINE + "GL String: " + findings.getGLString());
 		sb.append(GLStringConstants.NEWLINE + GLStringConstants.NEWLINE + "HLA DB Version: " + findings.getHladb() + GLStringConstants.NEWLINE);
 		
-		CommonWellDocumentedLoader loader = CommonWellDocumentedLoader.getInstance();
-		String accession;
-		
 		for (String allele : findings.getNonCWDAlleles()) {
-			sb.append("WARNING - Allele: " + allele + " not in the CWD list for HLA DB: " + findings.getHladb());
-			accession = loader.getAccessionByAllele(allele);
-			if (accession != null) {
-				sb.append(" (Found under accession: " + accession + " in these HLA DBs: " + 
-					loader.getHlaDbsByAccession(accession) + ")");
-			}
+			sb.append("WARNING - Allele: " + allele + " not in the CWD list. ");
 			sb.append(GLStringConstants.NEWLINE);
 		}
+		
+		sb.append(GLStringConstants.NEWLINE);
+		
 		return sb.toString();
 	}
 }

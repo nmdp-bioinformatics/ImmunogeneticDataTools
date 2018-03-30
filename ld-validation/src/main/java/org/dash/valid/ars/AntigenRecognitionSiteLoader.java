@@ -24,98 +24,131 @@ package org.dash.valid.ars;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.zip.ZipInputStream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class AntigenRecognitionSiteLoader {
 	private static AntigenRecognitionSiteLoader instance = null;
-	HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
-	
-	private static final Locus[] loci = {Locus.HLA_A,
-											Locus.HLA_B, 
-											Locus.HLA_C, 
-											Locus.HLA_DRB1, 
-											Locus.HLA_DRB3,
-											Locus.HLA_DRB4,
-											Locus.HLA_DRB5,
-											Locus.HLA_DQB1};
+	HashMap<String, HashSet<String>> arsMap = new HashMap<String, HashSet<String>>();
 
     private static final Logger LOGGER = Logger.getLogger(AntigenRecognitionSiteLoader.class.getName());
     
     private static final String DEFAULT_ARS_FILE = "reference/mmc1.xls";
 	
-	private AntigenRecognitionSiteLoader(HLADatabaseVersion hladb) {
-	}
-	
 	private AntigenRecognitionSiteLoader() {
 	}
 	
-	public HashMap<String, List<String>> getArsMap() {
+	public HashMap<String, HashSet<String>> getArsMap() {
 		return this.arsMap;
 	}
 	
 	public static AntigenRecognitionSiteLoader getInstance() throws IOException, InvalidFormatException {
-		HLADatabaseVersion hladb = null;
+		String hladb = null;
 		if (instance == null) {
-			String ars = System.getProperty(HLADatabaseVersion.ARS_PROPERTY);
-			if (ars != null && ars.equals(HLADatabaseVersion.ARS_BY_HLADB)) {
-				hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
-				instance = new AntigenRecognitionSiteLoader(hladb);
-				instance.init(hladb);
+			try {
+				String ars = System.getProperty(GLStringConstants.ARS_PROPERTY);
+				if (ars != null && ars.equals(GLStringConstants.ARS_DEFAULT)) {
+					instance = new AntigenRecognitionSiteLoader();
+					instance.init();
+				}
+				else {
+					instance = new AntigenRecognitionSiteLoader();
+					hladb = System.getProperty(GLStringConstants.HLADB_PROPERTY);
+	
+					instance.init(hladb);
+				}
 			}
-			else {
-				instance = new AntigenRecognitionSiteLoader();
+			catch (IOException | ParserConfigurationException | SAXException e) {
+				LOGGER.info("Couldn't find IMGT file in the correct format for hladb: " + hladb);
 				instance.init();
+				
+				// TODO:  Make final determination - commenting this in messes up the CWD logic currently
+				//System.setProperty(GLStringConstants.HLADB_PROPERTY, "Default");
 			}
 		}
 
 		return instance;
 	}
 	
-	private void init(HLADatabaseVersion hladb) throws IOException {
-		for (Locus locus : loci) {
-			HashMap<String, List<String>> locusArsMap = loadARSData(hladb, locus);
-			this.arsMap.putAll(locusArsMap);
-		}
+	private void init(String hladb) throws IOException, ParserConfigurationException, SAXException {
+		this.arsMap.putAll(loadGGroups(hladb));
 	}
 	
 	private void init() throws InvalidFormatException, IOException {
 		this.arsMap = loadARSData();
 	}
 	
-	private static HashMap<String, List<String>> loadARSData(HLADatabaseVersion hladb, Locus locus) throws IOException {
-		BufferedReader reader = null;
-		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
-		
-		String filename = "reference/" + hladb.getCwdName() + "/" + locus.getShortName() + ".txt";
-		
-		reader = new BufferedReader(new InputStreamReader(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(filename)));
-		
-		String row;
-		
-		while ((row = reader.readLine()) != null) {
-			arsMap.putAll(assembleARSMap(row));
-		}
+	public static HashMap<String, HashSet<String>> loadGGroups(String hladb) throws MalformedURLException, IOException, ParserConfigurationException, SAXException {
+		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
+		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip");
+				
+		ZipInputStream zipStream = new ZipInputStream(url.openStream());
+		zipStream.getNextEntry();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(zipStream));
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder builder = factory.newDocumentBuilder();
+	    InputSource is = new InputSource(reader);
+	    Document doc = builder.parse(is);
+	    
+	    HashMap<String, HashSet<String>> gAlleleListMap = new HashMap<String, HashSet<String>>();
+	    String[] parts;
+	    String arsCode;
 
-		reader.close();
-		
-		return arsMap;
+	    NodeList nList = doc.getElementsByTagName("tns:gene");
+	    for (int i=0;i<nList.getLength();i++) {
+	    	NodeList gGroups = ((Element) nList.item(i)).getElementsByTagName("tns:gGroup");
+	    	
+	    	for (int j=0;j<gGroups.getLength();j++) {
+		    	HashSet<String> gAlleleList = new HashSet<String>();
+	    		String gGroup = gGroups.item(j).getAttributes().getNamedItem("name").getNodeValue();
+	    		parts = gGroup.split(GLStringUtilities.COLON);
+	    		arsCode = (gGroup.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] + "g" : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1] + "g";
+
+	    		NodeList gGroupAlleles = ((Element) gGroups.item(j)).getElementsByTagName("tns:gGroupAllele");
+	    		for (int k=0;k<gGroupAlleles.getLength();k++) {
+	    			String fullAllele = gGroupAlleles.item(k).getAttributes().getNamedItem("name").getNodeValue();
+	    			parts = fullAllele.split(GLStringUtilities.COLON);
+	    			String allele = (fullAllele.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1];
+	    			
+	    			// TODO:  Not sure this accomplished anything...keep
+	    			if (parts.length > 2 && Pattern.matches("[SNLQ]", "" + fullAllele.charAt(fullAllele.length() - 1))) {
+	    				LOGGER.finest("Found an SNLQ during the ARS load: " + fullAllele + " became: " + allele + fullAllele.charAt(fullAllele.length()-1));
+	    				allele += fullAllele.charAt(fullAllele.length()-1);
+	    			}
+	    			gAlleleList.add(allele);
+	    		}	
+		    	gAlleleListMap.put(arsCode, gAlleleList);
+
+	    	}
+	    }
+	    
+	    return gAlleleListMap;
 	}
 	
-	private static HashMap<String, List<String>> loadARSData() throws InvalidFormatException, IOException {
+	private static HashMap<String, HashSet<String>> loadARSData() throws InvalidFormatException, IOException {
 		Workbook workbook = null;
 
 		workbook = WorkbookFactory.create(AntigenRecognitionSiteLoader.class.getClassLoader().getResourceAsStream(DEFAULT_ARS_FILE));
@@ -128,12 +161,12 @@ public class AntigenRecognitionSiteLoader {
         
         String gCode;
         String alleleString;
-        List<String> alleles;
-		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
+        HashSet<String> alleles;
+		HashMap<String, HashSet<String>> arsMap = new HashMap<String, HashSet<String>>();
                 
         // Traversing over each row of XLSX file
         while (rowIterator.hasNext()) {
-        	alleles = new ArrayList<String>();
+        	alleles = new HashSet<String>();
             Row row = rowIterator.next();
             gCode = row.getCell(0).getStringCellValue();
             if (gCode.contains(GLStringConstants.ASTERISK)) {
@@ -149,44 +182,6 @@ public class AntigenRecognitionSiteLoader {
         
         workbook.close();
         
-		return arsMap;
-	}
-
-	/**
-	 * @param arsMap
-	 * @param row
-	 */
-	private static HashMap<String, List<String>> assembleARSMap(String row) {
-		String[] parts;
-		String[] columns;
-		String arsCode;
-		List<String> alleles = new ArrayList<String>();
-		String allele;
-		
-		HashMap<String, List<String>> arsMap = new HashMap<String, List<String>>();
-
-		columns = row.split(GLStringConstants.TAB);
-		parts = columns[0].split(GLStringUtilities.COLON);
-		
-		arsCode = GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1];
-		if (columns.length > 2) {
-			arsCode += "g";
-		}
-		
-		for (int i=1;i<columns.length;i++) {
-			parts = columns[i].split(GLStringUtilities.COLON);
-			allele = GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1];
-			if (parts.length > 2 && Pattern.matches("[SNLQ]", "" + columns[i].charAt(columns[i].length() - 1))) {
-				LOGGER.finest("Found an SNLQ during the ARS load: " + columns[i] + " became: " + allele + columns[i].charAt(columns[i].length()-1));
-				alleles.add(allele + columns[i].charAt(columns[i].length()-1));
-			}
-			else {
-				alleles.add(allele);
-			}
-		}
-		
-		arsMap.put(arsCode, alleles);
-		
 		return arsMap;
 	}
 }

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -60,8 +61,8 @@ public class HLAFrequenciesLoader {
 	
 	private static final String UNDERSCORE = "_";
 	
-	private static final String WIKIVERSITY_BC_FREQUENCIES = "frequencies/wikiversity/BCLinkageDisequilibrium.txt";
-	private static final String WIKIVERSITY_DRDQ_FREQUENCIES = "frequencies/wikiversity/DRDQLinkageDisequilibrium.txt";
+	public static final String WIKIVERSITY_BC_FREQUENCIES = "frequencies/wikiversity/BCLinkageDisequilibrium.txt";
+	public static final String WIKIVERSITY_DRDQ_FREQUENCIES = "frequencies/wikiversity/DRDQLinkageDisequilibrium.txt";
 	
 	public static final String NMDP_ABC_FREQUENCIES = "frequencies/nmdp/A~C~B.xlsx";
 	public static final String NMDP_BC_FREQUENCIES = "frequencies/nmdp/C~B.xlsx";
@@ -102,9 +103,9 @@ public class HLAFrequenciesLoader {
     	
     }
     
-    public static HLAFrequenciesLoader getInstance(File frequencyFile, File allelesFile) {
+    public static HLAFrequenciesLoader getInstance(Set<File> frequencyFiles, File allelesFile) {
     	instance = new HLAFrequenciesLoader();
-    	instance.init(frequencyFile, allelesFile);
+    	instance.init(frequencyFiles, allelesFile);
     	
     	return instance;
     }
@@ -146,29 +147,27 @@ public class HLAFrequenciesLoader {
 		return null;
 	}
 	
-	private void init(File frequencyFile, File allelesFile) {
+	private void init(Set<File> frequencyFiles, File allelesFile) {
+		Set<Linkages> linkages = new HashSet<Linkages>();
 		try {
-			InputStream is = new FileInputStream(frequencyFile);
-			InputStreamReader isr = new InputStreamReader(is);
-			BufferedReader reader = new BufferedReader(isr);
+			for (File frequencyFile : frequencyFiles) {
+				InputStream is = new FileInputStream(frequencyFile);
+				InputStreamReader isr = new InputStreamReader(is);
+				BufferedReader reader = new BufferedReader(isr);
+				
+				List<DisequilibriumElement> elements = loadStandardReferenceData(reader);
+				
+				EnumSet<Locus> loci = Locus.lookup(elements.iterator().next().getLoci());
+				linkages.addAll(Linkages.lookup(loci));
+				
+				this.disequilibriumElementsMap.put(loci, elements);
+			}
 			
-			List<DisequilibriumElement> elements = loadStandardReferenceData(reader);
-			
-			EnumSet<Locus> loci = Locus.lookup(elements.iterator().next().getLoci());
-			Set<Linkages> linkages = Linkages.lookup(loci);
 			LinkagesLoader.getInstance(linkages);
-			
-			this.disequilibriumElementsMap.put(loci, elements);
 			
 			if (allelesFile != null) {
 				loadIndividualLocusFrequencies(allelesFile);
 			}
-			
-//			for (Locus locus : loci) {
-//				if (locus.hasIndividualFrequencies()) {
-//					loadIndividualLocusFrequency(Frequencies.NMDP, locus);
-//				}
-//			}
 		}
 		catch (IOException e) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
@@ -357,6 +356,8 @@ public class HLAFrequenciesLoader {
 		
 		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
 		DisequilibriumElementByRace disElement;
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
+		Locus locus = null;
 		
 		for (String haplotype : frequencyMap.keySet()) {
 			String[] locusHaplotypes = haplotype.split(GLStringConstants.GENE_PHASE_DELIMITER);
@@ -366,7 +367,16 @@ public class HLAFrequenciesLoader {
 				String[] parts = locusHaplotype.split(GLStringUtilities.ESCAPED_ASTERISK);
 				List<String> val = new ArrayList<String>();
 				val.add(locusHaplotype);
-				hlaElementMap.put(Locus.normalizeLocus(Locus.lookup(parts[0])), val);
+				
+				if (locusMap.containsKey(parts[0])) {
+					locus = locusMap.get(parts[0]);
+				}
+				else {
+					locus = Locus.normalizeLocus(Locus.lookup(parts[0]));
+					locusMap.put(parts[0], locus);
+				}
+				
+				hlaElementMap.put(locus, val);
 			}
 			
 			disElement = new DisequilibriumElementByRace(hlaElementMap, frequencyMap.get(haplotype));
@@ -427,6 +437,7 @@ public class HLAFrequenciesLoader {
 	private void loadIndividualLocusFrequencies(File allelesFile) throws IOException {
 		String row;
 		String parts[];
+		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
 		Locus locus;
 		List<String> singleLocusFrequencies;
 		
@@ -437,7 +448,13 @@ public class HLAFrequenciesLoader {
 		
 		while ((row = reader.readLine()) != null) {
 			parts = row.split(GLStringUtilities.ESCAPED_ASTERISK);
-			locus = Locus.lookup(parts[0]);
+			if (locusMap.containsKey(parts[0])) {
+				locus = locusMap.get(parts[0]);
+			}
+			else {
+				locus = Locus.lookup(parts[0]);
+				locusMap.put(parts[0], locus);
+			}
 			
 			if (individualLocusFrequencies.containsKey(locus)) {
 				singleLocusFrequencies = individualLocusFrequencies.get(locus);
@@ -590,7 +607,7 @@ public class HLAFrequenciesLoader {
 		return frequenciesByRace;
 	}
 	
-	private List<DisequilibriumElement> loadLinkageReferenceData(String filename, Locus[] locusPositions) throws FileNotFoundException, IOException {
+	public List<DisequilibriumElement> loadLinkageReferenceData(String filename, Locus[] locusPositions) throws FileNotFoundException, IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename)));
 		String row;
 		String[] columns;

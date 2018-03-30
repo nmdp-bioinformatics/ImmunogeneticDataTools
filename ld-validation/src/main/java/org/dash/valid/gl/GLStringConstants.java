@@ -30,6 +30,7 @@ public class GLStringConstants {
 	public static final String ALLELE_AMBIGUITY_DELIMITER = "/";
 	public static final String HLA_DASH = "HLA-";
 	public static final String ASTERISK = "*";
+	public static final String PERIOD = ".";
 	public static final String TAB = "\t";
 	public static final String DASH = "-";
 	public static final String NEWLINE = "\n";
@@ -37,4 +38,16 @@ public class GLStringConstants {
 	public static final String SPACE = " ";
 	public static final String NNNN = "HLA-DRBX*NNNN";
 	public static final String COMMA = ",";
+	public static final String HML = "hml";
+	public static final String XML = "xml";
+	public static final String SAMPLE_ELEMENT = "sample";
+	public static final String ID_ATTRIBUTE = "id";
+	public static final String TYPING_ELEMENT = "typing";
+	public static final String ALLELE_ASSIGNMENT_ELEMENT = "allele-assignment";
+	public static final String GL_STRING_ELEMENT = "glstring";
+	
+	public static final String HLADB_PROPERTY = "org.dash.hladb";
+	public static final String ARS_PROPERTY = "org.dash.ars";
+	public static final String ARS_DEFAULT = "Default";
+	public static final String LATEST_HLADB = "Latest";
 }

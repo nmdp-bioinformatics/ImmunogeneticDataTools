@@ -146,7 +146,7 @@ public class DetectedFindingsWriter {
 		printWriter.write(detectedFindings);
 	}
 
-	public String formatDetectedFindings(DetectedLinkageFindings findings) {
+	public static String formatDetectedFindings(DetectedLinkageFindings findings) {
 		StringBuffer sb = new StringBuffer();
 			sb.append(findings.getGLId() + GLStringConstants.COMMA);
 			sb.append(findings.getAlleleCount(Locus.HLA_A) + GLStringConstants.COMMA);

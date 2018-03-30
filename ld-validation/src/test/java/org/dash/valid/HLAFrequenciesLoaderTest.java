@@ -21,27 +21,18 @@
 */
 package org.dash.valid;
 
-import junit.framework.TestCase;
+import java.util.List;
 
+import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class HLAFrequenciesLoaderTest extends TestCase {
 
-//	@Test
-//	public void testLoadNMDPLinkageReferenceData() {
-//		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP_2007.getShortName());
-//		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
-//		assertNotNull(freqLoader);
-//		// TODO:  Create valid test
-//		assertTrue(freqLoader.getDisequilibriumElements(Locus.FIVE_LOCUS) != null && freqLoader.getDisequilibriumElements(Locus.FIVE_LOCUS).size() > 0);
-//	}
-	
 	@Test
-	public void testLoadStandardReferenceData() {
-//		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance(new File("/Users/mpresteg/bin/freqs/NMDP_DRDQ_Freqs.csv"));
-//		Set<EnumSet<Locus>> loci = freqLoader.getLoci();
-//		System.out.println(loci);
-		
-		assertTrue(true);
+	public void testLoadNMDPLinkageReferenceData() throws Exception {		
+		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance().loadNMDPLinkageReferenceData(HLAFrequenciesLoader.NMDP_2007_FIVE_LOCUS_FREQUENCIES, HLAFrequenciesLoader.NMDP_FIVE_LOCUS_POS);
+		assertTrue(disElements != null && disElements.size() > 0);
 	}
 }

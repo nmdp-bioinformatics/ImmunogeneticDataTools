@@ -40,7 +40,6 @@ import javax.xml.bind.annotation.XmlType;
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.LinkageElementsSet;
 import org.dash.valid.Locus;
-import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.HaplotypePair;
 import org.dash.valid.gl.haplo.HaplotypePairComparator;
@@ -51,7 +50,7 @@ import org.dash.valid.race.RelativeFrequencyByRaceSet;
 
 
 @XmlRootElement(name="gl-freq")
-@XmlType(propOrder={"GLString", "nonCWDAlleles", "linkedPairs"})
+@XmlType(propOrder={"nonCWDAlleles", "linkedPairs", "warnings", "anomalousLinkages"})
 public class DetectedLinkageFindings {
 	public static final int EXPECTED_LINKAGES = 2;
 
@@ -59,7 +58,7 @@ public class DetectedLinkageFindings {
 	private Set<DetectedDisequilibriumElement> linkages = new LinkageElementsSet(new DisequilibriumElementComparator());
 	private Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 	private Set<String> nonCWDAlleles;
-	private HLADatabaseVersion hladb;
+	private String hladb;
 	private String frequencies;
 	
 	private HashMap<Set<Locus>, Integer> linkageCountsMap = new HashMap<Set<Locus>, Integer>();
@@ -292,10 +291,10 @@ public class DetectedLinkageFindings {
 
 	@XmlAttribute(name="hladb")
 	public String getHladb() {
-		return hladb.getArsName();
+		return this.hladb;
 	}
 	
-	public void setHladb(HLADatabaseVersion hladb) {
+	public void setHladb(String hladb) {
 		this.hladb = hladb;
 	}
 	
@@ -303,16 +302,17 @@ public class DetectedLinkageFindings {
 	public Set<String> getNonCWDAlleles() {
 		return nonCWDAlleles;
 	}
+	
 	public void setNonCWDAlleles(Set<String> nonCWDAlleles) {
 		this.nonCWDAlleles = nonCWDAlleles;
 	}
 	
-	@XmlAttribute(name="id")
+	//@XmlAttribute(name="id")
 	public String getGLId() {
 		return getGenotypeList().getId();
 	}
 	
-	@XmlElement(name="gl-string")
+	//@XmlElement(name="gl-string")
 	public String getGLString() {
 		return getGenotypeList().getGLString();
 	}
@@ -328,6 +328,13 @@ public class DetectedLinkageFindings {
 	
 	public void setGenotypeList(LinkageDisequilibriumGenotypeList genotypeList) {
 		this.genotypeList = genotypeList;
+	}
+	
+	@XmlElement(name="linkage")
+	public Set<DetectedDisequilibriumElement> getAnomalousLinkages() {
+		if (hasAnomalies()) return linkages;
+		
+		return null;
 	}
 	
 	public Set<DetectedDisequilibriumElement> getLinkages() {
@@ -355,6 +362,22 @@ public class DetectedLinkageFindings {
 	
 	public boolean hasLinkages() {
 		return this.linkages != null && this.linkages.size() > 0;
+	}
+	
+	@XmlElement(name="warning")
+	public List<String> getWarnings() {
+		List<String> warnings = new ArrayList<String>();
+		if (!hasLinkages()) {
+			warnings.add("No linkages found.");
+		}
+		
+		for (EnumSet<Locus> findingSought : this.findingsSought) {
+			if (!hasLinkedPairs(findingSought)) {
+				warnings.add("No " + findingSought + " haplotype pairs detected.");
+			}
+		}
+		
+		return warnings;
 	}
 	
 	public boolean hasAnomalies() {

@@ -22,17 +22,29 @@
 package org.dash.valid.ars;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 
-import junit.framework.TestCase;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.junit.Test;
+import org.xml.sax.SAXException;
+
+import junit.framework.TestCase;
 
 public class AntigenRecognitionSiteLoaderTest extends TestCase {
 	@Test
-	public void test() throws InvalidFormatException, IOException {
+	public void test() throws InvalidFormatException, IOException, ParserConfigurationException, SAXException {
 		AntigenRecognitionSiteLoader arsLoader = AntigenRecognitionSiteLoader.getInstance();
 		assertNotNull(arsLoader);
 		assertTrue(arsLoader.getArsMap() != null && arsLoader.getArsMap().size() > 0);
+	}
+	
+	public void testRemoteArs() throws InvalidFormatException, IOException, ParserConfigurationException, SAXException {
+		HashMap<String, HashSet<String>> gAllelesMap = AntigenRecognitionSiteLoader.loadGGroups("3.20.0");
+		
+		assertNotNull(gAllelesMap);
+		assertTrue(gAllelesMap.keySet().size() > 0);
 	}
 }

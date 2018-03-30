@@ -23,11 +23,11 @@ package org.dash.valid.cwd;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
+
+import org.dash.valid.gl.GLStringConstants;
+import org.junit.Test;
 
 import junit.framework.TestCase;
-
-import org.junit.Test;
 
 public class CommonWellDocumentedLoaderTest extends TestCase {	
 	private static final String DQA10111 = "HLA-DQA1*01:11";
@@ -41,17 +41,10 @@ public class CommonWellDocumentedLoaderTest extends TestCase {
 
 	@Test
 	public void testLoadAllCWD() throws FileNotFoundException, IOException {
+		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.25.0");
 		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
-		List<String> hladbs;
 		
-		assertTrue(cwdLoader.getCwdByAccession().containsValue(DQA10111));
-		for (String key : cwdLoader.getCwdByAccession().keySet()) {
-			if (cwdLoader.getCwdByAccession().get(key).equals(DQA10111)) {
-				assertTrue(key.equals(HLA08433));
-				hladbs = cwdLoader.getHlaDbByAccession().get(key);
-				assertNotNull(hladbs);
-				break;
-			}
-		}
+		assertTrue(cwdLoader.getAccessionMap().containsKey(DQA10111));
+		assertTrue(cwdLoader.getAccessionMap().get(DQA10111).equals(HLA08433));
 	}
 }

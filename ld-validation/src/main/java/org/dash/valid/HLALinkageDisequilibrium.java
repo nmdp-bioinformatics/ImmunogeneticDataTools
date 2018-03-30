@@ -27,11 +27,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import org.dash.valid.ars.HLADatabaseVersion;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
+import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.Haplotype;
@@ -51,32 +52,26 @@ import org.dash.valid.report.DetectedLinkageFindings;
  * http://en.wikipedia.org/wiki/Linkage_disequilibrium
  * 
  * This class leverages a specific set of linkage disequilibrium associations relevant in the context
- * of HLA (http://en.wikipedia.org/wiki/Human_leukocyte_antigen)  and immunogenetics:
- * 
- * http://en.wikiversity.org/wiki/HLA/Linkage_Disequilibrium/B-C_Blocks
- * http://en.wikiversity.org/wiki/HLA/Linkage_Disequilibrium/DR-DQ_Blocks
+ * of HLA (http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics.
  * 
  */
 
 public class HLALinkageDisequilibrium {
-	private static HLADatabaseVersion hladb;
-	
+
     private static final Logger LOGGER = Logger.getLogger(HLALinkageDisequilibrium.class.getName());
-		
-	static {
-		hladb = HLADatabaseVersion.lookup(System.getProperty(HLADatabaseVersion.HLADB_PROPERTY));
-	}
 			
-	public static DetectedLinkageFindings hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {		
+	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {	
+		Sample sample = new Sample(glString);
+		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
 				
-		DetectedLinkageFindings findings = new DetectedLinkageFindings(Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).toString());
-
+		DetectedLinkageFindings findings = new DetectedLinkageFindings(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
 		if (linkages == null) {
-			return findings;
+			sample.setFindings(findings);
+			return sample;
 		}
 						
 		for (Linkages linkage : linkages) {
@@ -92,9 +87,87 @@ public class HLALinkageDisequilibrium {
 		findings.setGenotypeList(glString);
 		findings.setLinkedPairs(linkedPairs);
 		findings.setNonCWDAlleles(notCommon);
-		findings.setHladb(hladb);
+		findings.setHladb(System.getProperty(GLStringConstants.HLADB_PROPERTY));
 		
-		return findings;
+		sample.setFindings(findings);
+		return sample;
+	}
+	
+	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString, List<Haplotype> knownHaplotypes) {		
+		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
+
+		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
+						
+		Sample sample = new Sample(glString);
+		
+		DetectedLinkageFindings findings = new DetectedLinkageFindings(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
+		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
+		if (linkages == null) {
+			sample.setFindings(findings);
+			return sample;
+		}
+						
+		for (Linkages linkage : linkages) {
+			EnumSet<Locus> loci = linkage.getLoci();
+			findings.addFindingSought(loci);
+			List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.getInstance().getDisequilibriumElements(loci);
+			List<Haplotype> enrichedHaplotypes = new ArrayList<Haplotype>();
+									
+			for (Haplotype haplotype : knownHaplotypes) {
+				Haplotype enrichedHaplotype = enrichHaplotype(loci, disequilibriumElements, haplotype);
+
+				if (enrichedHaplotype.getLinkage() != null) {
+					findings.addLinkage(enrichedHaplotype.getLinkage());
+					enrichedHaplotypes.add(enrichedHaplotype);
+				}
+			}
+			
+			if (enrichedHaplotypes.size() == 2) {
+				linkedPairs.add(new HaplotypePair(enrichedHaplotypes.get(0), enrichedHaplotypes.get(1)));
+			}
+		}		
+		
+		LOGGER.info(linkedPairs.size() + " linkedPairs");
+		
+		findings.setGenotypeList(glString);
+		findings.setLinkedPairs(linkedPairs);
+		findings.setNonCWDAlleles(notCommon);
+		findings.setHladb(System.getProperty(GLStringConstants.HLADB_PROPERTY));
+		
+		sample.setFindings(findings);
+		return sample;
+	}
+
+	public static Haplotype enrichHaplotype(EnumSet<Locus> loci, List<DisequilibriumElement> disequilibriumElements, Haplotype haplotype) {
+		MultiLocusHaplotype enrichedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(haplotype.getAlleleMap()), 
+				new HashMap<Locus, Integer>(haplotype.getHaplotypeInstanceMap()), haplotype.getDrb345Homozygous());
+		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
+		List<DisequilibriumElement> shortenedList = new ArrayList<DisequilibriumElement>(disequilibriumElements);
+
+		for (Locus locus : enrichedHaplotype.getLoci()) {
+			if (loci.contains(locus)) {
+				hlaElementMap.put(locus, enrichedHaplotype.getAlleles(locus));
+			}
+			else {
+				enrichedHaplotype.removeAlleles(locus);
+			}
+		}
+		
+		DisequilibriumElement element = new CoreDisequilibriumElement(hlaElementMap, enrichedHaplotype);
+		DetectedDisequilibriumElement detectedElement = null;
+					
+		while (shortenedList.contains(element)) {
+			int index = shortenedList.indexOf(element);
+			detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
+			detectedElement.setHaplotype(element.getHaplotype());
+			enrichedHaplotype.setLinkage(detectedElement);
+			
+			shortenedList = shortenedList.subList(index + 1, shortenedList.size());
+		}
+		
+		enrichedHaplotype.setSequence(haplotype.getSequence());
+		
+		return enrichedHaplotype;
 	}
 	
 	private static Set<HaplotypePair> findLinkedPairs(
@@ -127,8 +200,9 @@ public class HLALinkageDisequilibrium {
 						
 			while (shortenedList.contains(element)) {
 				int index = shortenedList.indexOf(element);
-				clonedHaplotype = new MultiLocusHaplotype(possibleHaplotype.getAlleleMap(), possibleHaplotype.getHaplotypeInstanceMap(), possibleHaplotype.getDrb345Homozygous());
+				clonedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(possibleHaplotype.getAlleleMap()), possibleHaplotype.getHaplotypeInstanceMap(), possibleHaplotype.getDrb345Homozygous());
 				detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
+				detectedElement.setHaplotype(element.getHaplotype());
 				clonedHaplotype.setLinkage(detectedElement);
 				linkedHaplotypes.add(clonedHaplotype);
 				detectedDisequilibriumElements.add(detectedElement);

@@ -1,13 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:element name="samples">
+	    <xs:complexType>
+			<xs:sequence>
+				<xs:element ref="sample" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="sample">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="gl-string" type="xs:string"/>
+				<xs:element ref="gl-freq" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="processed-gl-string" type="xs:string" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:string"/>
+			<xs:attribute name="note" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
     <xs:element name="gl-freq">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="gl-string" type="xs:string"/>
                 <xs:element name="non-cwd" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element ref="haplo-pair" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="warning" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="linkage" minOccurs="0" maxOccurs="unbounded"/>
              </xs:sequence>
-             <xs:attribute name="id" type="xs:string"/>
              <xs:attribute name="hladb" type="xs:string"/>
              <xs:attribute name="frequency-set" type="xs:string"/>
         </xs:complexType>
@@ -39,8 +57,18 @@
     
     <xs:element name="haplotype">
     	<xs:complexType>
+    		<xs:attribute name="seq" type="xs:integer"/>
     		<xs:attribute name="value" type="xs:string"/>
     	</xs:complexType>
     </xs:element>
-    			
+    		
+    <xs:element name="linkage">
+    	<xs:complexType>
+    		<xs:sequence>
+    			<xs:element ref="haplotype" minOccurs="0" maxOccurs="2"/>
+    			<xs:element name="frequencies" minOccurs="0" maxOccurs="unbounded"/>
+    			<xs:element name="frequency" minOccurs="0" maxOccurs="1"/>
+    		</xs:sequence>
+    	</xs:complexType>
+    </xs:element>	
 </xs:schema>

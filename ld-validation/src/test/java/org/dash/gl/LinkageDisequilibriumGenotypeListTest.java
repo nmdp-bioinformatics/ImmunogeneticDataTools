@@ -72,10 +72,10 @@ public class LinkageDisequilibriumGenotypeListTest extends TestCase {
 		}
 		
 		for (HaplotypePair pair : linkedPairs) {
-			Haplotype haplotype1 = pair.getHaplotype1();
+			Haplotype haplotype1 = pair.getHaplotypes().get(0);
 			assertTrue(haplotype1 instanceof MultiLocusHaplotype);
 			
-			Haplotype haplotype2 = pair.getHaplotype2();
+			Haplotype haplotype2 = pair.getHaplotypes().get(1);
 			assertTrue(haplotype2 instanceof MultiLocusHaplotype);
 			
 			assertTrue((haplotype1.getAlleles(Locus.HLA_B).contains(B0704) && haplotype2.getAlleles(Locus.HLA_B).contains(B4403)) ||
