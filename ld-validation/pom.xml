@@ -39,7 +39,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.targetEncoding>UTF-8</project.build.targetEncoding>
   </properties>
-  
+ 
+<!-- 
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -56,6 +57,7 @@
       <scope>compile</scope>
    </dependency>
   </dependencies>
+   -->
   
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
