@@ -32,5 +32,4 @@ public class AnalyzeGLStringsTest extends TestCase {
 		assertNotNull(samplesList);
 		assertTrue(samplesList.size() > 0);
 	}
-
 }

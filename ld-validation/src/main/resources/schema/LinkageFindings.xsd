@@ -47,9 +47,9 @@
     			<xs:element name="frequency" type="xs:double"/>
     			<xs:element name="relative-frequency" type="xs:float"/>
     			<xs:element name="hap1-frequency" type="xs:double"/>
-    			<xs:element name="hap1-rank" type="xs:string"/>
+    			<xs:element name="hap1-rank" minOccurs="0" maxOccurs="1" type="xs:string"/>
     			<xs:element name="hap2-frequency" type="xs:double"/>
-    			<xs:element name="hap2-rank" type="xs:string"/>
+    			<xs:element name="hap2-rank" minOccurs="0" maxOccurs="1" type="xs:string"/>
     		</xs:sequence>
     		<xs:attribute name="race" type="xs:string"/>
     	</xs:complexType>

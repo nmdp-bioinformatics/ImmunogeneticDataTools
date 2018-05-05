@@ -25,15 +25,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
-
-import org.dash.valid.DisequilibriumElementComparator;
-import org.dash.valid.Locus;
 import org.dash.valid.base.BaseDisequilibriumElement;
 import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.report.DetectedDisequilibriumElement;
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class DisequilibriumElementComparatorTest extends TestCase {
 

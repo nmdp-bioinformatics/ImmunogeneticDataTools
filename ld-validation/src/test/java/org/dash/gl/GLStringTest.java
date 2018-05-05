@@ -71,33 +71,33 @@ public class GLStringTest extends TestCase {
 		assertTrue(homozygousCString.hasHomozygous(Locus.HLA_C));
 	}
 	
-	@Test
-	public void testHttpClient() {
-		BufferedReader reader = null;
-		String glString = null;
-		
-		HttpClient glClient = new RestAssuredHttpClient();
-		String id = glClient.post("https://gl.nmdp.org/nonstrict/multilocus-unphased-genotype", STRICT_GL_STRING);
-		
-		InputStream in = glClient.get(id);
-		
-		try {
-			reader = new BufferedReader(new InputStreamReader(in));
-			
-			while ((glString = reader.readLine()) != null) {
-				assertTrue(STRICT_GL_STRING.equals(glString));
-			}
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		finally {
-			try {
-				reader.close();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+//	@Test
+//	public void testHttpClient() {
+//		BufferedReader reader = null;
+//		String glString = null;
+//		
+//		HttpClient glClient = new RestAssuredHttpClient();
+//		String id = glClient.post("https://gl.nmdp.org/nonstrict/multilocus-unphased-genotype", STRICT_GL_STRING);
+//		
+//		InputStream in = glClient.get(id);
+//		
+//		try {
+//			reader = new BufferedReader(new InputStreamReader(in));
+//			
+//			while ((glString = reader.readLine()) != null) {
+//				assertTrue(STRICT_GL_STRING.equals(glString));
+//			}
+//		}
+//		catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		finally {
+//			try {
+//				reader.close();
+//			}
+//			catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 }
