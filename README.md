@@ -2,15 +2,12 @@ Immunogenetic Data Tools
 =======================
 [![Build Status](https://api.travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools.svg?branch=master)](https://travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools)
 
-## Use Cases and Implementations
-
-### 1. HLA Linkage Disequilibrium
-
+#### HLA Linkage Disequilibrium
 [Linkage disequilibrium](http://en.wikipedia.org/wiki/Linkage_disequilibrium) is the non-random association of alleles at two or more loci, that descend from a single ancestral chromosome.  The particular linkages referenced here are relevant in the context of [HLA](http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics.
 
 HLA typing using Next Generation Sequencing (NGS) is becoming common practice in research and clinical lab settings. HLA typing miss-call occurs when DNA sequences from one of the alleles drop out. 
 
-HLA Linkage Disequilibrium Validation software was developed to identify common linkages between HLA-B and HLA-C, and HLA-DRB1, HLA-DRB3/4/5, HLA-DQA1 and HLA-DQB1. This information is useful when HLA typing from NGS is reviewed. The software not only validates known linkages, but also sends warning messages when unusual linkage was found. 
+HLAHapV[1] software was developed to identify common linkages between HLA-B and HLA-C, and HLA-DRB1, HLA-DRB3/4/5, HLA-DQA1 and HLA-DQB1. This information is useful when HLA typing from NGS is reviewed. The software not only validates known linkages, but also sends warning messages when unusual linkage was found. 
 
 The software user can find stronger evidences of the accuracy of his/her HLA typing results when common linkages are found. Also the user can focus on reviewing the unusual HLA linkages whether these are true or likely generated from DNA sequencing drop-outs. 
 
@@ -30,8 +27,7 @@ The results of the software should be used for supporting the evidence, but not 
 
  * Service enable the software and host publicly
  
-*Using the software:*
-
+#### Using the software:
 As of release .7, the ability to download the software package and make use of command line tools is available.
 
 From the Releases section of GitHub you may grab the snapshot of the latest release.  E.g:  ld-tools-0.0.1-SNAPSHOT-bin.zip from release .7 at [Releases](https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools/releases)
@@ -100,4 +96,6 @@ If you prefer to compile / package the software from source, follow these instru
 + After using the tool to convert the frequency files, the newly formatted files may be passed into analyze-gl-strings as a command line argument
 + If preferring to run using mvn (w/o command line tools), the newly formatted frequency files can be dropped into resources/frequencies/std and invoked by specifying nmdp-std as the frequency type
 
- 
+## References:
+1.  K. Osoegawa et al., HLA Haplotype Validator for quality assessments of HLA typing, Hum. Immunol. (2015),
+[http://dx.doi.org/10.1016/j.humimm.2015.10.018](http://dx.doi.org/10.1016/j.humimm.2015.10.018)
