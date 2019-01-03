@@ -103,9 +103,9 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 	public void runAnalysis(BufferedReader reader) throws IOException {
 		List<Sample> samplesList;
 		
-    	samplesList = performAnalysis(reader);
-    	
-    	writeOutput(samplesList);
+	    	samplesList = performAnalysis(reader);
+	    	
+	    	writeOutput(samplesList);
 	}
 
 	public List<Sample> performAnalysis(BufferedReader reader) throws IOException {
@@ -126,34 +126,34 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 
 	private void writeOutput(List<Sample> samplesList) throws IOException {
 		PrintWriter writer = null;
-    	PrintWriter summaryWriter = null;
-    	PrintWriter pairWriter = null;
-    	PrintWriter pairWarningsWriter = null;
-    	PrintWriter linkageWriter = null;
-    	PrintWriter linkageWarningsWriter = null;
-    	PrintWriter nonCwdWriter = null;
-    	PrintWriter detectedFindingsWriter = null;
-    	
-    	boolean writeToDir = false;
-    	
-    	if (outputFile != null && outputFile.isDirectory()) {
-    		writeToDir = true;
-    		
-    		summaryWriter = writer(new File(outputFile + "/" + SummaryWriter.SUMMARY_XML_FILE), true);
-    		pairWriter = writer(new File(outputFile + "/" + HaplotypePairFileHandler.HAPLOTYPE_PAIRS_LOG), true);
-    		pairWarningsWriter = writer(new File(outputFile + "/" + HaplotypePairWarningFileHandler.HAPLOTYPE_PAIRS_WARNING_LOG), true);
-    		linkageWriter = writer(new File(outputFile + "/" + LinkageDisequilibriumFileHandler.LINKAGES_LOG), true);
-    		linkageWarningsWriter = writer(new File(outputFile + "/" + LinkageWarningFileHandler.LINKAGE_WARNINGS_LOG), true);
-    		nonCwdWriter = writer(new File(outputFile + "/" + CommonWellDocumentedFileHandler.NON_CWD_WARNINGS_LOG), true);
-    		detectedFindingsWriter = writer(new File(outputFile + "/" + DetectedFindingsWriter.DETECTED_FINDINGS_CSV), true);
-    	}
-    	else {
-    		writer = writer(outputFile, true);
-    	}
-    	
-    	SamplesList allSamples = new SamplesList();
-    	allSamples.setSamples(samplesList);
-    	String summaryFindings = SummaryWriter.formatDetectedLinkages(allSamples);
+	    	PrintWriter summaryWriter = null;
+	    	PrintWriter pairWriter = null;
+	    	PrintWriter pairWarningsWriter = null;
+	    	PrintWriter linkageWriter = null;
+	    	PrintWriter linkageWarningsWriter = null;
+	    	PrintWriter nonCwdWriter = null;
+	    	PrintWriter detectedFindingsWriter = null;
+	    	
+	    	boolean writeToDir = false;
+	    	
+	    	if (outputFile != null && outputFile.isDirectory()) {
+	    		writeToDir = true;
+	    		
+	    		summaryWriter = writer(new File(outputFile + "/" + SummaryWriter.SUMMARY_XML_FILE), true);
+	    		pairWriter = writer(new File(outputFile + "/" + HaplotypePairFileHandler.HAPLOTYPE_PAIRS_LOG), true);
+	    		pairWarningsWriter = writer(new File(outputFile + "/" + HaplotypePairWarningFileHandler.HAPLOTYPE_PAIRS_WARNING_LOG), true);
+	    		linkageWriter = writer(new File(outputFile + "/" + LinkageDisequilibriumFileHandler.LINKAGES_LOG), true);
+	    		linkageWarningsWriter = writer(new File(outputFile + "/" + LinkageWarningFileHandler.LINKAGE_WARNINGS_LOG), true);
+	    		nonCwdWriter = writer(new File(outputFile + "/" + CommonWellDocumentedFileHandler.NON_CWD_WARNINGS_LOG), true);
+	    		detectedFindingsWriter = writer(new File(outputFile + "/" + DetectedFindingsWriter.DETECTED_FINDINGS_CSV), true);
+	    	}
+	    	else {
+	    		writer = writer(outputFile, true);
+	    	}
+	    	
+	    	SamplesList allSamples = new SamplesList();
+	    	allSamples.setSamples(samplesList);
+	    	String summaryFindings = SummaryWriter.formatDetectedLinkages(allSamples);
     	
 		for (Sample sample : samplesList) {
 			DetectedLinkageFindings findings = sample.getFindings();

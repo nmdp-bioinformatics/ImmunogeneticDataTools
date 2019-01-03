@@ -302,7 +302,7 @@ public class LinkageDisequilibriumGenotypeList {
 			for (String allele : alleleAmbiguities) {
 				alleleWithFrequency = freqLoader.hasFrequency(locus, allele);
 				if (alleleWithFrequency == null) {
-					LOGGER.finest("Removing allele with no frequency: " + allele);
+					LOGGER.info("Removing allele with no frequency: " + allele);
 				}
 				else {
 					if (!replacementAlleles.contains(alleleWithFrequency)) {

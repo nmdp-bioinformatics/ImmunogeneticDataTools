@@ -157,6 +157,8 @@ public class HLAFrequenciesLoader {
 				
 				List<DisequilibriumElement> elements = loadStandardReferenceData(reader);
 				
+				//List<DisequilibriumElement> elements = loadPhycusData();
+				
 				EnumSet<Locus> loci = Locus.lookup(elements.iterator().next().getLoci());
 				linkages.addAll(Linkages.lookup(loci));
 				
@@ -169,7 +171,7 @@ public class HLAFrequenciesLoader {
 				loadIndividualLocusFrequencies(allelesFile);
 			}
 		}
-		catch (IOException e) {
+		catch (IOException e) { //| ApiException e) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
 			e.printStackTrace();
 			
@@ -239,6 +241,7 @@ public class HLAFrequenciesLoader {
 						break;
 					case FIVE_LOCUS:
 						this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadStandardReferenceData(NMDP_2007_STD_FIVELOCUS_FREQUENCIES));
+						//this.disequilibriumElementsMap.put(Locus.FIVE_LOCUS, loadPhycusData());
 						break;
 					default:
 						break;
@@ -288,7 +291,7 @@ public class HLAFrequenciesLoader {
 				break;
 			}			
 		}
-		catch (IOException | InvalidFormatException ioe) {
+		catch (IOException | InvalidFormatException ioe) { // | ApiException ioe) {
 			if (Frequencies.NMDP.equals(freq)) {
 				LOGGER.warning("2011 NMDP Frequencies are not included by default.  Please be sure you've loaded them according to the instructions in the README.");
 			}
@@ -315,6 +318,72 @@ public class HLAFrequenciesLoader {
 		return individualLocusFrequencies;
 	}
 	
+//	private List<DisequilibriumElement> loadPhycusData() throws ApiException {
+//		HashMap<String, List<FrequencyByRace>> frequencyMap = new HashMap<String, List<FrequencyByRace>>();
+//
+//		ApiClient apiClient = new ApiClient();
+//		apiClient.setBasePath("http://localhost:8080");
+//		DefaultApi api = new DefaultApi(apiClient);
+//		
+//		HaplotypeFrequencyData freqData = null;
+//				
+//		for (long submissionId=1;submissionId<5;submissionId++) {
+//			PopulationData popData = null;
+//			popData = api.hfcSubmissionIdPopulationGet(submissionId);
+//			
+//			String race = popData.getName();
+//			freqData = api.hfcSubmissionIdHaplotypesGet(submissionId);
+//			
+//			for (HaplotypeFrequency haplotypeFrequency : freqData.getHaplotypeFrequencyList()) {
+//				Double frequency = haplotypeFrequency.getFrequency();
+//				String haplotype = haplotypeFrequency.getHaplotypeString();
+//				
+//				List<FrequencyByRace> freqList = frequencyMap.get(haplotype);
+//				
+//				if (freqList == null) {
+//					freqList = new ArrayList<FrequencyByRace>();
+//				}
+//				
+//				FrequencyByRace frequencyByRace = new FrequencyByRace(frequency, null, race);
+//				freqList.add(frequencyByRace);
+//				
+//				frequencyMap.put(haplotypeFrequency.getHaplotypeString(), freqList);
+//			}
+//		}
+//		
+//		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
+//		DisequilibriumElementByRace disElement;
+//		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
+//		Locus locus = null;
+//		
+//		for (String haplotype : frequencyMap.keySet()) {
+//			String[] locusHaplotypes = haplotype.split(GLStringConstants.GENE_PHASE_DELIMITER);
+//			
+//			HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
+//			for (String locusHaplotype : locusHaplotypes) {
+//				String[] parts = locusHaplotype.split(GLStringUtilities.ESCAPED_ASTERISK);
+//				List<String> val = new ArrayList<String>();
+//				val.add(locusHaplotype);
+//				
+//				if (locusMap.containsKey(parts[0])) {
+//					locus = locusMap.get(parts[0]);
+//				}
+//				else {
+//					locus = Locus.normalizeLocus(Locus.lookup(parts[0]));
+//					locusMap.put(parts[0], locus);
+//				}
+//				
+//				hlaElementMap.put(locus, val);
+//			}
+//			
+//			disElement = new DisequilibriumElementByRace(hlaElementMap, frequencyMap.get(haplotype));
+//			
+//			disequilibriumElements.add(disElement);			
+//		}
+//		
+//		return disequilibriumElements;
+//	}
+	
 	private List<DisequilibriumElement> loadStandardReferenceData(String filename) throws IOException, InvalidFormatException {
 		InputStream inStream = HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename);
 		
@@ -340,8 +409,10 @@ public class HLAFrequenciesLoader {
 			String race = columns[0];
 			String haplotype = columns[1];
 			Double frequency = new Double(columns[2]);
-			String rank = columns[3];
-												
+			String rank = null;
+			
+			if (columns.length == 4) rank = columns[3];
+			
 			List<FrequencyByRace> freqList = frequencyMap.get(haplotype);
 			
 			if (freqList == null) {

@@ -398,7 +398,7 @@ public class GLStringUtilities {
 			
 			segments = part.split(COLON);
 			
-			if (segments[1].substring(0,1).matches(ALPHA_REGEX)) {
+			if (segments.length > 1 && segments[1].substring(0,1).matches(ALPHA_REGEX)) {
 				part = decodeMAC(part);
 			}
 

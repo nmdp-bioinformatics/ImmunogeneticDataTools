@@ -68,7 +68,10 @@ public enum Linkages {
 			return EnumSet.of(Linkages.FIVE_LOCUS);
 		}
 		else {
+			// TODO:  Temporary re-routing towards Phycus Five Locus
 			return EnumSet.of(Linkages.B_C, Linkages.DRB_DQ);
+			//return EnumSet.of(Linkages.FIVE_LOCUS);
+
 		}
 	}
 	

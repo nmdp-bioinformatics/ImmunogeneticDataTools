@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
@@ -36,6 +34,8 @@ import org.dash.valid.gl.haplo.HaplotypePairComparator;
 import org.dash.valid.gl.haplo.HaplotypePairSet;
 import org.dash.valid.gl.haplo.MultiLocusHaplotype;
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class LinkageDisequilibriumGenotypeListTest extends TestCase {
 	private static final String B0704 = "HLA-B*07:04";

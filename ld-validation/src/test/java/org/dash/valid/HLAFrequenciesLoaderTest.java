@@ -1,5 +1,6 @@
 /*
 
+
     Copyright (c) 2014-2015 National Marrow Donor Program (NMDP)
 
     This library is free software; you can redistribute it and/or modify it
@@ -21,7 +22,11 @@
 */
 package org.dash.valid;
 
+import java.io.File;
+import java.net.URI;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.junit.Test;
@@ -33,6 +38,16 @@ public class HLAFrequenciesLoaderTest extends TestCase {
 	@Test
 	public void testLoadNMDPLinkageReferenceData() throws Exception {		
 		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance().loadNMDPLinkageReferenceData(HLAFrequenciesLoader.NMDP_2007_FIVE_LOCUS_FREQUENCIES, HLAFrequenciesLoader.NMDP_FIVE_LOCUS_POS);
+		assertTrue(disElements != null && disElements.size() > 0);
+	}
+	
+	@Test
+	public void testLoadStandardFrequenciesNoRank() throws Exception {
+		URI uri = HLAFrequenciesLoaderTest.class.getClassLoader().getResource("frequencies/NMDP_2007_FiveLocus_Freqs_NoRank.csv").toURI();
+		Set<File> noRankFreqs = new HashSet<File>();
+		noRankFreqs.add(new File(uri));
+		
+		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(noRankFreqs, null).getDisequilibriumElements(Linkages.FIVE_LOCUS.getLoci());
 		assertTrue(disElements != null && disElements.size() > 0);
 	}
 }

@@ -104,7 +104,8 @@ public class AntigenRecognitionSiteLoader {
 	public static HashMap<String, HashSet<String>> loadGGroups(String hladb) throws MalformedURLException, IOException, ParserConfigurationException, SAXException {
 		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
 		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip");
-				
+			
+		System.out.println(url.toString());
 		ZipInputStream zipStream = new ZipInputStream(url.openStream());
 		zipStream.getNextEntry();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(zipStream));
@@ -122,11 +123,16 @@ public class AntigenRecognitionSiteLoader {
 	    	NodeList gGroups = ((Element) nList.item(i)).getElementsByTagName("tns:gGroup");
 	    	
 	    	for (int j=0;j<gGroups.getLength();j++) {
-		    	HashSet<String> gAlleleList = new HashSet<String>();
 	    		String gGroup = gGroups.item(j).getAttributes().getNamedItem("name").getNodeValue();
 	    		parts = gGroup.split(GLStringUtilities.COLON);
 	    		arsCode = (gGroup.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] + "g" : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1] + "g";
-
+	    		
+	    		// TODO:  decide on g group logic
+	    		// currently implementing NMDP 'hack' to deal with historical typings associated with re-named allele - consistent with HaploStats
+	    		if (arsCode.equals("HLA-C*02:10g")) arsCode = "HLA-C*02:02g";
+	    		
+	    		HashSet<String> gAlleleList = gAlleleListMap.containsKey(arsCode) ? gAlleleListMap.get(arsCode) : new HashSet<String>();
+	    		
 	    		NodeList gGroupAlleles = ((Element) gGroups.item(j)).getElementsByTagName("tns:gGroupAllele");
 	    		for (int k=0;k<gGroupAlleles.getLength();k++) {
 	    			String fullAllele = gGroupAlleles.item(k).getAttributes().getNamedItem("name").getNodeValue();
