@@ -59,7 +59,6 @@
     <jodatime-version>2.9.9</jodatime-version>
   </properties>
   <build>
-
    <pluginManagement>
      <plugins>
        <plugin>
