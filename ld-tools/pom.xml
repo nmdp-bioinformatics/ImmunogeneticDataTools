@@ -33,9 +33,9 @@
   <name>ld-tools</name>
   <url>http://maven.apache.org</url>
   <properties>
-    <maven.compile.source>1.7</maven.compile.source>
-    <maven.compile.target>1.7</maven.compile.target>
-    <maven.enforcer.jdk-version>[1.7,)</maven.enforcer.jdk-version>
+    <maven.compile.source>${java.version}</maven.compile.source>
+    <maven.compile.target>${java.version}</maven.compile.target>
+    <maven.enforcer.jdk-version>[${java.version},)</maven.enforcer.jdk-version>
     <maven.enforcer.maven-version>[3.0.4,)</maven.enforcer.maven-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.targetEncoding>UTF-8</project.build.targetEncoding>
@@ -133,10 +133,6 @@
             	<id>normalize-frequency-file</id>
             	<mainClass>org.nmdp.validation.tools.NormalizeFrequencyFile</mainClass>
             </program>
- <!--            <program>
-            	<id>post-population-frequencies</id>
-            	<mainClass>org.nmdp.validation.tools.PostPopulationFrequencies</mainClass>
-            </program>   -->
           </programs>
         </configuration>
         <executions>
@@ -212,5 +208,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

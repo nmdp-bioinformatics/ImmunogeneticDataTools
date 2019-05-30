@@ -138,7 +138,7 @@ public class LinkageDisequilibriumAnalyzer {
 
 			}
 			else {	
-				boolean homozygousOnly = Boolean.TRUE.equals(System.getProperty("org.dash.homozygous")) ? Boolean.TRUE : Boolean.FALSE;
+				boolean homozygousOnly = Boolean.TRUE.equals(new Boolean(System.getProperty("org.dash.homozygous"))) ? Boolean.TRUE : Boolean.FALSE;
 				
 				// TODO:  Actually implement by skipping the record
 				if (!linkedGLString.checkAmbiguitiesThresholds()) {

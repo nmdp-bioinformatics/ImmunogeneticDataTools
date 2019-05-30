@@ -1,0 +1,144 @@
+swagger: '2.0'
+info:
+  description: |
+    This is a HLAHapV Server.  You can find 
+    out more about HLAHapV at 
+    [http://github.com/nmdp-bioinformatics/ImmunogeneticDataTools](http://github.com/nmdp-bioinformatics/ImmunogeneticDataTools).
+  version: 1.0.0
+  title: Swagger HLAHapV
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: mpresteg@nmdp.org
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+# basePath: /v2
+tags:
+- name: genotypes
+  description: Genotypes to be evaluated
+# schemes:
+# - http
+paths:
+  /genotypes:
+    post:
+      tags:
+      - genotypes
+      summary: Submit a set of genotypes for evaluation
+      operationId: submitGenotypes
+      consumes:
+      - application/json
+      - application/xml
+      produces:
+      - application/json
+      - application/xml
+      parameters:
+      - in: body
+        name: body
+        description: Genotypes object that needs to be evaluated
+        required: true
+        schema:
+          $ref: '#/definitions/Genotypes'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/Samples'
+        405:
+          description: Invalid input
+definitions:
+  Genotypes:
+    type: object
+    required:
+    - genotype
+    properties:
+      genotype:
+        type: array
+        xml:
+          name: genotype
+          wrapped: true
+        items:
+          $ref: '#/definitions/Genotype'
+    xml:
+      name: genotypes
+  Genotype:
+    type: object
+    required:
+    - id
+    - glString
+    properties:
+      id:
+        type: string
+      glString:
+        type: string
+    xml:
+      name: genotype
+  Samples:
+    type: object
+    required:
+    - sampleData
+    properties:
+      sample:
+        type: array
+        xml:
+          name: sampleData
+          wrapped: true
+        items:
+          $ref: '#/definitions/SampleData'
+    xml:
+      name: samples  
+  SampleData:
+    type: object
+    required:
+    - id
+    - glString
+    properties:
+      id:  
+        type: string
+      glString:
+        type: string
+      processedGlString:
+        type: string
+      haplotypePair:
+        type: array
+        xml:
+          name: haplotypePair
+          wrapped: true
+        items:
+          $ref: '#/definitions/HaplotypePairData'
+    xml:
+      name: sample
+  FindingData:
+    type: object
+    properties:
+      frequency:
+        type: number
+      relativeFrequency:
+        type: number
+      haplotype1Frequency:
+        type: number
+      haplotype2Frequency:
+        type: number
+      race:
+        type: string
+    xml:
+      name: finding 
+  HaplotypePairData:
+    type: object
+    properties:
+      haplotype1:
+        type: string
+      haplotype2:
+        type: string
+      finding:
+        type:  array
+        xml:
+          name: finding
+          wrapped: true
+        items:
+          $ref: '#/definitions/FindingData'
+            
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /mpresteg/HLAHapV/1.0.0
+schemes:
+ - https

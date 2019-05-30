@@ -25,10 +25,10 @@
   <packaging>pom</packaging>
 
   <parent>
-  	<groupId>org.sonatype.oss</groupId>
-  	<artifactId>oss-parent</artifactId>
-  	<version>9</version>
-  	<relativePath/>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.5.RELEASE</version>
+    <relativePath/>
   </parent>
   <groupId>org.nmdp.validation</groupId>
   <artifactId>ld-multimodule</artifactId>
@@ -43,11 +43,14 @@
   <modules>
     <module>ld-validation</module>
     <module>ld-tools</module>
+    <module>ld-service</module>
   </modules>
   <properties>
-    <maven.compile.source>1.7</maven.compile.source>
-    <maven.compile.target>1.7</maven.compile.target>
-    <maven.enforcer.jdk-version>[1.7,)</maven.enforcer.jdk-version>
+    <java.version>1.8</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <maven.enforcer.jdk-version>[${java.version},]</maven.enforcer.jdk-version>
+    <springfox-version>2.7.0</springfox-version>
     <maven.enforcer.maven-version>[3.0.4,)</maven.enforcer.maven-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.targetEncoding>UTF-8</project.build.targetEncoding>
@@ -57,153 +60,151 @@
   </properties>
   <build>
 
-    <pluginManagement>
-    
-      <plugins>
-        <plugin>
-          <artifactId>jdeb</artifactId>
-          <groupId>org.vafer</groupId>
-          <version>1.3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.cxf</groupId>
-          <artifactId>cxf-xjc-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-archetype-plugin</artifactId>
-          <version>2.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.5.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>2.6.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.3</version>
-          <configuration>
-            <source>${maven.compile.source}</source>
-            <target>${maven.compile.target}</target>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.4</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.18.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-gpg-plugin</artifactId>
-          <version>1.6</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>2.5.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.9.1</version>
-          <configuration>
-            <detectLinks>true</detectLinks>
-            <quiet>true</quiet>
-            <source>${maven.compile.source}</source>
-            <linksource>true</linksource>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.7</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.4</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>appassembler-maven-plugin</artifactId>
-          <version>1.8.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>clirr-maven-plugin</artifactId>
-          <version>2.6.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>javacc-maven-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>templating-maven-plugin</artifactId>
-          <version>1.0-alpha-3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>xml-maven-plugin</artifactId>
-          <version>1.0</version>
-        </plugin>
-        <plugin>
-          <groupId>pl.project13.maven</groupId>
-          <artifactId>git-commit-id-plugin</artifactId>
-          <version>2.1.11</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <configuration>
-            <argLine>-Xmx2G</argLine>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>2.3</version>
-          <executions>
-            <execution>
-              <id>attach-sources</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>jar-no-fork</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
+   <pluginManagement>
+     <plugins>
+       <plugin>
+         <artifactId>jdeb</artifactId>
+         <groupId>org.vafer</groupId>
+         <version>1.3</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.cxf</groupId>
+         <artifactId>cxf-xjc-plugin</artifactId>
+         <version>3.0.2</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-archetype-plugin</artifactId>
+         <version>2.2</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-assembly-plugin</artifactId>
+         <version>2.5.1</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-clean-plugin</artifactId>
+         <version>2.6.1</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-compiler-plugin</artifactId>
+         <version>3.3</version>
+         <configuration>
+           <source>${maven.compile.source}</source>
+           <target>${maven.compile.target}</target>
+         </configuration>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-deploy-plugin</artifactId>
+         <version>2.8.2</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-enforcer-plugin</artifactId>
+         <version>1.4</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-failsafe-plugin</artifactId>
+         <version>2.18.1</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-gpg-plugin</artifactId>
+         <version>1.6</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-install-plugin</artifactId>
+         <version>2.5.2</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-jar-plugin</artifactId>
+         <version>2.6</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-javadoc-plugin</artifactId>
+         <version>2.9.1</version>
+         <configuration>
+           <detectLinks>true</detectLinks>
+           <quiet>true</quiet>
+           <source>${maven.compile.source}</source>
+           <linksource>true</linksource>
+         </configuration>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-resources-plugin</artifactId>
+         <version>2.7</version>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-site-plugin</artifactId>
+         <version>3.4</version>
+       </plugin>
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+         <artifactId>appassembler-maven-plugin</artifactId>
+         <version>1.8.1</version>
+       </plugin>
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+         <artifactId>clirr-maven-plugin</artifactId>
+         <version>2.6.1</version>
+       </plugin>
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+         <artifactId>javacc-maven-plugin</artifactId>
+         <version>2.6</version>
+       </plugin>
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+         <artifactId>templating-maven-plugin</artifactId>
+         <version>1.0-alpha-3</version>
+       </plugin>
+       <plugin>
+         <groupId>org.codehaus.mojo</groupId>
+         <artifactId>xml-maven-plugin</artifactId>
+         <version>1.0</version>
+       </plugin>
+       <plugin>
+         <groupId>pl.project13.maven</groupId>
+         <artifactId>git-commit-id-plugin</artifactId>
+         <version>2.1.11</version>
+       </plugin>
+       <plugin>
+         <artifactId>maven-surefire-plugin</artifactId>
+         <configuration>
+           <argLine>-Xmx4G</argLine>
+         </configuration>
+       </plugin>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-source-plugin</artifactId>
+         <version>2.3</version>
+         <executions>
+           <execution>
+             <id>attach-sources</id>
+             <phase>verify</phase>
+             <goals>
+               <goal>jar-no-fork</goal>
+             </goals>
+           </execution>
+         </executions>
+       </plugin>
+     </plugins>
+   </pluginManagement>
  </build>
   <dependencies>
   	<dependency>
   		<groupId>junit</groupId>
   		<artifactId>junit</artifactId>
-  		<version>4.12</version>
-  	</dependency>
+  		</dependency>
   	<dependency>
   		<groupId>com.google.inject</groupId>
   		<artifactId>guice</artifactId>
@@ -272,13 +273,51 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>${gson-version}</version>
-    </dependency>
+      </dependency>
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
-      <version>${jodatime-version}</version>
-    </dependency>
+      </dependency> 
+              <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-web</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>mysql</groupId>
+          <artifactId>mysql-connector-java</artifactId>
+          <scope>runtime</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.springframework.data</groupId>
+          <artifactId>spring-data-jpa</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-data-jpa</artifactId>
+      </dependency>
+      <!--SpringFox dependencies -->
+      <dependency>
+          <groupId>io.springfox</groupId>
+          <artifactId>springfox-swagger2</artifactId>
+          <version>${springfox-version}</version>
+      </dependency>
+      <dependency>
+          <groupId>io.springfox</groupId>
+          <artifactId>springfox-swagger-ui</artifactId>
+          <version>${springfox-version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.fasterxml.jackson.datatype</groupId>
+          <artifactId>jackson-datatype-jsr310</artifactId>
+      </dependency>
+      <!-- Bean Validation API support -->
+      <dependency>
+          <groupId>javax.validation</groupId>
+          <artifactId>validation-api</artifactId>
+          <version>1.1.0.Final</version>
+          <scope>provided</scope>
+      </dependency>     
   </dependencies>
 
   <description>Tools for exploring Linkage Disequilibrium, HLA, GL Strings</description>

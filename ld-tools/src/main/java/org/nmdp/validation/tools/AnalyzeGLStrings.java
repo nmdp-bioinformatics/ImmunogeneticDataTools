@@ -161,9 +161,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     			continue;
     		}
     		
-        	if (writeToDir) {
-        		//summaryWriter.write(SummaryWriter.formatDetectedLinkages(findings));
-        		
+        	if (writeToDir) {        		
         		if (sample.getFindings().hasAnomalies()) {
         			pairWarningsWriter.write(HaplotypePairWriter.formatDetectedLinkages(findings));
         			linkageWarningsWriter.write(LinkageDisequilibriumWriter.formatDetectedLinkages(findings));
@@ -174,11 +172,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         			nonCwdWriter.write(CommonWellDocumentedWriter.formatCommonWellDocumented(findings));
         			detectedFindingsWriter.write(DetectedFindingsWriter.formatDetectedFindings(findings));
         		}
-        	}
-        	else {
-        		//writer.write(SummaryWriter.formatDetectedLinkages(findings));
-        	}
-        		
+        	}       		
 		}
     	
 		if (writeToDir) {
