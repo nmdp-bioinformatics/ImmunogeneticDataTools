@@ -12,12 +12,13 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="ld-validation/src/main/resources"/>
+	<classpathentry kind="src" path="ld-service/target/generated-sources/swagger"/>
 	<classpathentry kind="src" path="ld-validation/src/main/java"/>
 	<classpathentry kind="src" path="ld-validation/src/test/java"/>
 	<classpathentry kind="src" path="ld-validation/src/test/resources"/>
 	<classpathentry kind="src" path="ld-tools/src/main/java-templates"/>
 	<classpathentry kind="src" path="ld-tools/src/main/java"/>
 	<classpathentry kind="src" path="ld-tools/src/test/java"/>
-	<classpathentry kind="lib" path="/service-haplotype-frequency-curation/client/java/freq-client/target/swagger-java-client-1.0.0.jar"/>
+	<classpathentry kind="src" path="ld-service/src/main/java"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

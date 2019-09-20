@@ -1,0 +1,11 @@
+version: '3.1'
+
+services:
+  web:
+    image: mpresteg/hlahapv:latest
+    container_name: hlahapv-interface
+    restart: always
+    ports:
+      - 8080:8080
+    command:
+      - /app/bash-start-java-tomcat.sh

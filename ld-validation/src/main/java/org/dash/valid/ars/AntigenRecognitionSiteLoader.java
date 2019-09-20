@@ -125,6 +125,8 @@ public class AntigenRecognitionSiteLoader {
 	    	for (int j=0;j<gGroups.getLength();j++) {
 	    		String gGroup = gGroups.item(j).getAttributes().getNamedItem("name").getNodeValue();
 	    		parts = gGroup.split(GLStringUtilities.COLON);
+	    		
+	    		if (parts.length < 2) continue;
 	    		arsCode = (gGroup.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] + "g" : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1] + "g";
 	    		
 	    		// TODO:  decide on g group logic

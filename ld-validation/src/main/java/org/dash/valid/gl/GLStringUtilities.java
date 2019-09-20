@@ -212,7 +212,7 @@ public class GLStringUtilities {
 						+ GLStringConstants.HLA_DASH + " for segment: " + token);
 				return false;
 			}
-			if (parts.length < P_GROUP_LEVEL && !GLStringConstants.NNNN.equals(parts)) {
+			if (parts.length < P_GROUP_LEVEL && !GLStringConstants.NNNN.equals(parts[0])) {
 				LOGGER.warning("GLString is invalid: " + glString);
 				LOGGER.warning("Unexpected allele: " + token);
 				return false;
@@ -533,7 +533,7 @@ public class GLStringUtilities {
 		return linkedGLStrings;
 	}
 	
-	private static LinkageDisequilibriumGenotypeList inflateGenotypeList(String id, String glString, String note) {
+	public static LinkageDisequilibriumGenotypeList inflateGenotypeList(String id, String glString, String note) {
 		LinkageDisequilibriumGenotypeList linkedGLString;
 		
 		String submittedGlString = glString;
