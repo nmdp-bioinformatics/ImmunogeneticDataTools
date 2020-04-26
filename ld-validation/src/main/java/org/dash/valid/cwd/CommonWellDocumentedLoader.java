@@ -51,14 +51,18 @@ public class CommonWellDocumentedLoader {
 	
 	private Set<String> cwdAlleles = new HashSet<String>();
 	private HashMap<String, String> accessionMap = new HashMap<String, String>();
+	private static String instanceHladb;
 
 	private CommonWellDocumentedLoader(String hladb) {
 		init(hladb);
 	}
 	
 	public static CommonWellDocumentedLoader getInstance() {
-		if (instance == null) {
-			String hladb = System.getProperty(GLStringConstants.HLADB_PROPERTY);
+		String hladb = System.getProperty(GLStringConstants.HLADB_PROPERTY);
+		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
+
+		if (instance == null || !hladb.equals(instanceHladb)) {
+			instanceHladb = hladb;
 			instance = new CommonWellDocumentedLoader(hladb);
 		}
 		
@@ -78,7 +82,6 @@ public class CommonWellDocumentedLoader {
 	public HashMap<String, String> loadFromIMGT(String hladb) throws IOException, ParserConfigurationException, SAXException {
 		HashMap<String, String> accessionMap = new HashMap<String, String>();
 
-		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
 		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla.xml.zip");
 				
 		ZipInputStream zipStream = new ZipInputStream(url.openStream());
@@ -150,6 +153,7 @@ public class CommonWellDocumentedLoader {
 			}
 			else {
 				cwdSet.add(columns[0]);
+				// TODO:  if (accessionLoaded) continue??
 				if (!accessionLoaded) {
 					accessionMap.put(GLStringConstants.HLA_DASH + columns[hladbIdx], columns[0]);
 				}
