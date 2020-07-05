@@ -156,4 +156,30 @@ public class MultiLocusHaplotype extends Haplotype {
 		}
 		return sb.substring(0, sb.length() - 1);
 	}
+	
+	@Override
+	public String getFullHaplotypeString() {
+		StringBuffer fullValue = new StringBuffer();
+		Set<Locus> loci = new LocusSet(new LocusComparator());
+
+		if  (this.linkage != null) {
+			Haplotype haplotype = linkage.getHaplotype();
+			loci.addAll(haplotype.getLoci());
+			
+			for (Locus locus : loci) {
+				for (String allele : haplotype.getAlleles(locus)) {
+					fullValue.append(allele);
+					fullValue.append(GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
+				}
+				fullValue.replace(fullValue.length() - 1, fullValue.length(), GLStringConstants.GENE_PHASE_DELIMITER);
+			}
+		}
+		
+		if (fullValue.length() > 0) {
+			return fullValue.substring(0, fullValue.length() - 1);			
+		}
+		
+		return fullValue.toString();
+	}
+
 }
