@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.dash.valid.Sample;
+import org.junit.Test;
 
 import junit.framework.TestCase;
 
 public class AnalyzeGLStringsTest extends TestCase {
 
+	@Test
 	public void testAnalyzeGLString() throws Exception {
 		InputStream is = AnalyzeGLStringsTest.class.getClassLoader().getResourceAsStream("fullyQualifiedExample.txt");
 		

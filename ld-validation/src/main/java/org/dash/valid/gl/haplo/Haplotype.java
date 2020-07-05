@@ -64,6 +64,9 @@ public abstract class Haplotype {
 	@XmlAttribute(name="value")
 	public abstract String getHaplotypeString();
 	
+	@XmlAttribute(name="fullValue")
+	public abstract String getFullHaplotypeString();
+	
 	public abstract List<String> getAlleles();
 	public abstract Map<Locus, List<String>> getAlleleMap();
 	public abstract HashMap<Locus, Integer> getHaplotypeInstanceMap();

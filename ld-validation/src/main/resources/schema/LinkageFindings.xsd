@@ -59,6 +59,7 @@
     	<xs:complexType>
     		<xs:attribute name="seq" type="xs:integer"/>
     		<xs:attribute name="value" type="xs:string"/>
+    		<xs:attribute name="fullValue"  type="xs:string"/>
     	</xs:complexType>
     </xs:element>
     		

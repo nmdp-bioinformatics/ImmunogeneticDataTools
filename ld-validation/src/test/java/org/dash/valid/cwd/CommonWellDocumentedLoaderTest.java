@@ -34,6 +34,7 @@ public class CommonWellDocumentedLoaderTest extends TestCase {
 	private static final String HLA08433 = "HLA08433";
 	@Test
 	public void test() {
+		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.25.0");
 		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
 		assertNotNull(cwdLoader);
 		assertTrue(cwdLoader.getCwdAlleles() != null && cwdLoader.getCwdAlleles().size() > 0);
@@ -44,6 +45,7 @@ public class CommonWellDocumentedLoaderTest extends TestCase {
 		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.25.0");
 		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
 		
+		//TODO:  Test failing on DQA10111 - something up with switching the HLA DB - individual test might run, but doesn't when the full suite is run??
 		assertTrue(cwdLoader.getAccessionMap().containsKey(DQA10111));
 		assertTrue(cwdLoader.getAccessionMap().get(DQA10111).equals(HLA08433));
 	}

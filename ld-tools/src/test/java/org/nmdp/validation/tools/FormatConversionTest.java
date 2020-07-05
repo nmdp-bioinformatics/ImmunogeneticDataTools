@@ -2,10 +2,12 @@ package org.nmdp.validation.tools;
 
 import java.io.IOException;
 
+import org.junit.Test;
+
 import junit.framework.TestCase;
 
 public class FormatConversionTest extends TestCase {
-	
+	@Test
 	public void testCSVToJSON() throws IOException {
 		//BufferedReader reader = new BufferedReader(new InputStreamReader(
 		//		FormatConversionTest.class.getResourceAsStream("fullyQualifiedExample.txt")));
