@@ -66,6 +66,7 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
     static {
     	LOCUS_POSITION_MAP.put(Locus.A_C_B_LOCI, HLAFrequenciesLoader.NMDP_ABC_LOCI_POS);
     	LOCUS_POSITION_MAP.put(Locus.C_B_LOCI, HLAFrequenciesLoader.NMDP_BC_LOCI_POS);
+    	LOCUS_POSITION_MAP.put(Locus.DRB1_DQB1_LOCI, HLAFrequenciesLoader.NMDP_DRB1DQB1_LOCI_POS);
     	LOCUS_POSITION_MAP.put(Locus.DRB_DQB_LOCI, HLAFrequenciesLoader.NMDP_DRDQB1_LOCI_POS);
     	LOCUS_POSITION_MAP.put(Locus.FIVE_LOCUS, HLAFrequenciesLoader.NMDP_FIVE_LOCUS_POS);
     	LOCUS_POSITION_MAP.put(Locus.SIX_LOCUS, HLAFrequenciesLoader.NMDP_SIX_LOCUS_POS);
@@ -137,9 +138,9 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
     public static void main(final String[] args) {
         Switch about = new Switch("a", "about", "display about message");
         Switch help  = new Switch("h", "help", "display help message");
-        FileArgument inputFile = new FileArgument("i", "input-file", "input file, default stdin", true);
-        StringArgument frequencies = new StringArgument("f", "frequencies", "frequencies (acb, cb, drb_dqb, five_loc, six_loc, single), default five_loc", true);
-        FileArgument outputFile   = new FileArgument("o", "output-file", "output allele assignment file, default stdout", true);
+        FileArgument inputFile = new FileArgument("i", "input-file", "input file, default stdin", false);
+        StringArgument frequencies = new StringArgument("f", "frequencies", "frequencies (acb, cb, drb1_dqb1, drb_dqb, five_loc, six_loc, single), default five_loc", false);
+        FileArgument outputFile   = new FileArgument("o", "output-file", "output allele assignment file, default stdout", false);
 
         ArgumentList arguments  = new ArgumentList(about, help, inputFile, frequencies, outputFile);
         CommandLine commandLine = new CommandLine(args);
