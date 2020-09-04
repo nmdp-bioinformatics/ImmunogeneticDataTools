@@ -489,8 +489,9 @@ public class GLStringUtilities {
 		    	NodeList typingElements = ((Element) nList.item(i)).getElementsByTagName(GLStringConstants.TYPING_ELEMENT);
 		    	for (int j=0;j<typingElements.getLength();j++) {
 		    		alleleAssignment = (Element) ((Element) typingElements.item(j)).getElementsByTagName(GLStringConstants.ALLELE_ASSIGNMENT_ELEMENT).item(0);
-		    		if (j > 0) glString.append(GLStringConstants.GENE_DELIMITER);
-		    		glString.append(((Element) alleleAssignment.getElementsByTagName(GLStringConstants.GL_STRING_ELEMENT).item(0)).getTextContent().trim());
+		    		String glValue = ((Element) alleleAssignment.getElementsByTagName(GLStringConstants.GL_STRING_ELEMENT).item(0)).getTextContent().trim();
+		    		if (j > 0 && glValue != null && glValue.length() > 0 && glString.length() > 0) glString.append(GLStringConstants.GENE_DELIMITER);
+		    		glString.append(glValue);
 		    	}
 		    	
 		    	linkedGLStrings.add(inflateGenotypeList(sampleId, glString.toString(), null));
