@@ -64,6 +64,7 @@ public class DetectedDisequilibriumElement {
     
     public void setHaplotype(Haplotype haplotype) {
     	this.haplotype = haplotype;
+    	haplotype.setLinkage(this);
     }
     
     @XmlElement(name="frequency")
