@@ -40,6 +40,7 @@
     <maven.enforcer.maven-version>[3.0.4,)</maven.enforcer.maven-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.targetEncoding>UTF-8</project.build.targetEncoding>
+    <springfox-version>2.7.0</springfox-version>
   </properties>
     <dependencyManagement>
     <dependencies>
@@ -61,7 +62,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
       <dependency>
@@ -87,21 +88,6 @@
           <artifactId>spring-boot-starter-data-jpa</artifactId>
       </dependency>
       <!--SpringFox dependencies -->
-      <dependency>
-          <groupId>io.springfox</groupId>
-          <artifactId>springfox-swagger2</artifactId>
-          <version>${springfox-version}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.springfox</groupId>
-          <artifactId>springfox-swagger-ui</artifactId>
-          <version>${springfox-version}</version>
-      </dependency>
-
-      <dependency>
-          <groupId>com.fasterxml.jackson.datatype</groupId>
-          <artifactId>jackson-datatype-jsr310</artifactId>
-      </dependency>
       <!-- Bean Validation API support -->
       <dependency>
           <groupId>javax.validation</groupId>
@@ -126,7 +112,7 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>1.2.3</version>
-        </dependency>   
+        </dependency>
   </dependencies>
 
 
