@@ -29,6 +29,7 @@ import java.util.Set;
 import org.dash.valid.DisequilibriumElementComparator;
 import org.dash.valid.LinkageElementsSet;
 import org.dash.valid.Locus;
+import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.report.DetectedDisequilibriumElement;
@@ -40,6 +41,7 @@ public class LinkageElementsMapTest extends TestCase {
 
 	@Test
 	public void test() {
+		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.20.0");
 		List<FrequencyByRace> frequenciesByRace = new ArrayList<FrequencyByRace>();
 		FrequencyByRace freq = new FrequencyByRace(new Double(.2), "1","AAFA");
 		frequenciesByRace.add(freq);
