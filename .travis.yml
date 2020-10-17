@@ -1,5 +1,3 @@
-install: travis_wait 20 mvn install
-
 language:  java
 
 jdk:

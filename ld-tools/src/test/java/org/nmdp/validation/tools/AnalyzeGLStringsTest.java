@@ -22,7 +22,7 @@ public class AnalyzeGLStringsTest extends TestCase {
 		
 		File inputFile = null;
 		File outputFile = null;
-		String hladb = null;
+		String hladb = "3.20.0";
 		String freq = null;
 		Boolean warnings = null;
 		Set<File> frequencyFiles = null;
