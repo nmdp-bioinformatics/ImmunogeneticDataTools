@@ -27,24 +27,25 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 public enum Locus {
-	HLA_A ("HLA-A", "A", "A"),
-	HLA_C ("HLA-C", "C", "C"),
-	HLA_B ("HLA-B", "B", "B"),
-	HLA_DRB3 ("HLA-DRB3", "DRB3", null),
-	HLA_DRB4 ("HLA-DRB4", "DRB4", null),
-	HLA_DRB5 ("HLA-DRB5", "DRB5", null),
-	HLA_DRB345 ("HLA-DRB345", "DRB345", "DRB3-4-5"),
-	HLA_DRBX ("HLA-DRBX", "DRBX", null),
-	HLA_DRB1 ("HLA-DRB1", "DRB1", "DRB1"),
-	HLA_DQB1 ("HLA-DQB1", "DQB1", "DQB1"),
-	HLA_DQA1 ("HLA-DQA1", "DQA1", null),
-	HLA_DPB1 ("HLA-DPB1", "DPB1", null),
-	HLA_DPA1 ("HLA-DPA1", "DPA1", null);
+	HLA_A ("HLA-A", "A", "A", "A"),
+	HLA_C ("HLA-C", "C", "C", "Cw"),
+	HLA_B ("HLA-B", "B", "B", "B"),
+	HLA_DRB3 ("HLA-DRB3", "DRB3", null, null),
+	HLA_DRB4 ("HLA-DRB4", "DRB4", null, null),
+	HLA_DRB5 ("HLA-DRB5", "DRB5", null, null),
+	HLA_DRB345 ("HLA-DRB345", "DRB345", "DRB3-4-5", null),
+	HLA_DRBX ("HLA-DRBX", "DRBX", null, null),
+	HLA_DRB1 ("HLA-DRB1", "DRB1", "DRB1", "DR"),
+	HLA_DQB1 ("HLA-DQB1", "DQB1", "DQB1", "DQ"),
+	HLA_DQA1 ("HLA-DQA1", "DQA1", null, null),
+	HLA_DPB1 ("HLA-DPB1", "DPB1", null, null),
+	HLA_DPA1 ("HLA-DPA1", "DPA1", null, null);
 
 	
 	String fullName;
 	String shortName;
 	String freqName;
+	String serologicName;
 	
 	public static final EnumSet<Locus> A_C_B_LOCI = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B);
 	public static final EnumSet<Locus> C_B_LOCI = EnumSet.of(Locus.HLA_C, Locus.HLA_B);	
@@ -58,13 +59,14 @@ public enum Locus {
 	
 	private static final Logger LOGGER = Logger.getLogger(Locus.class.getName());
 	
-	private Locus(String fullName, String shortName, String freqName) {
+	private Locus(String fullName, String shortName, String freqName, String serologicName) {
 		this.fullName = fullName;
 		this.shortName = shortName;
 		this.freqName = freqName;
+		this.serologicName = serologicName;
 	}
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "unlikely-arg-type" })
 	public static EnumSet<Locus> lookup(Set<Locus> loci) {
 		Set<Locus> normalizedLoci = normalizeLoci(loci);
 		for (int i=0;i<LOCI_ARRAY.length;i++) {
@@ -86,6 +88,10 @@ public enum Locus {
 	
 	public String getFrequencyName() {
 		return freqName;
+	}
+	
+	public String getSerologicName() {
+		return serologicName;
 	}
 	
 	public static Set<Locus> normalizeLoci(Set<Locus> loci) {
@@ -124,7 +130,9 @@ public enum Locus {
 	
 	public static Locus lookup(String value) {
 		for (Locus locus : values()) {
-			if (locus.getFullName().equals(value) || locus.getShortName().equals(value) || (locus.getFrequencyName() != null && locus.getFrequencyName().equals(value))) {
+			if (locus.getFullName().equals(value) || locus.getShortName().equals(value) || 
+					(locus.getFrequencyName() != null && locus.getFrequencyName().equals(value)) ||
+					(locus.getSerologicName() != null && locus.getSerologicName().equals(value))) {
 				return locus;
 			}			
 		}

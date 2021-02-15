@@ -59,7 +59,7 @@ If you prefer to compile / package the software from source, follow these instru
 
 + **Name:**  org.dash.hladb
 + **Value(s):**  Valid HLA DB name (e.g. 3.20.0).  Older versions were not available in XML format and ars reduction logic will fall back on default logic in these instances
-+ **Description:**  Specifies the HLA DB version against which to validate common well documented alleles, and informs the ARS reduction logic
++ **Description:**  Specifies the HLA DB version against which to validate common well documented alleles (using CWD 2.0).  If that HLADB version is not available in the CWD 2.0 reference file, then the latest available HLADB version within the reference file is used.  This property also informs the ARS reduction logic
 
 + **Name:**  org.dash.ars
 + **Value(s):**  Default
@@ -78,8 +78,12 @@ If you prefer to compile / package the software from source, follow these instru
 * gl strings in which a likely block was not found, may be found in haplotypePairWarnings.log
 * haplotype linkage output may be found in linkages.log
 * haplotype linkage output for gl strings with missing pairs may be found in linkageWarnings.log
+* a consolidation of all of the information contained in the above logs may be found in summary.xml, for easy parsing
 * errors and basic logging in immuno.log
 
+*Common Well Documented 2.0 and Common Intermediate Well Documented 3.0 Behavior:*
+
++ In order to cut down on the amount of warnings produced for ambiguous alleles, the CWD 2.0 and CIWD 3.0 validations are performed only at the protein level
 
 *2011 NMDP Frequency Install Instructions:*
  

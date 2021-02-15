@@ -66,6 +66,7 @@ public class HLALinkageDisequilibrium {
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 		
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
+		Set<String> notCIWD = GLStringUtilities.checkCommonIntermediateWellDocumented(glString.getGLString());
 				
 		DetectedLinkageFindings findings = new DetectedLinkageFindings(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
 		Set<Linkages> linkages = LinkagesLoader.getInstance().getLinkages();
@@ -87,6 +88,7 @@ public class HLALinkageDisequilibrium {
 		findings.setGenotypeList(glString);
 		findings.setLinkedPairs(linkedPairs);
 		findings.setNonCWDAlleles(notCommon);
+		findings.setNonCIWDAlleles(notCIWD);
 		findings.setHladb(System.getProperty(GLStringConstants.HLADB_PROPERTY));
 		
 		sample.setFindings(findings);
@@ -97,6 +99,7 @@ public class HLALinkageDisequilibrium {
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
+		Set<String> notCIWD = GLStringUtilities.checkCommonIntermediateWellDocumented(glString.getGLString());
 						
 		Sample sample = new Sample(glString);
 		
@@ -132,6 +135,7 @@ public class HLALinkageDisequilibrium {
 		findings.setGenotypeList(glString);
 		findings.setLinkedPairs(linkedPairs);
 		findings.setNonCWDAlleles(notCommon);
+		findings.setNonCIWDAlleles(notCIWD);
 		findings.setHladb(System.getProperty(GLStringConstants.HLADB_PROPERTY));
 		
 		sample.setFindings(findings);

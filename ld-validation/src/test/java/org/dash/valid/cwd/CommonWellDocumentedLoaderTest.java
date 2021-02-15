@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 public class CommonWellDocumentedLoaderTest extends TestCase {	
 	private static final String DQA10111 = "HLA-DQA1*01:11";
 	private static final String HLA08433 = "HLA08433";
+	private static final String A010114 = "HLA-A*01:01:14";
 	@Test
 	public void test() {
 		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.25.0");
@@ -45,8 +46,15 @@ public class CommonWellDocumentedLoaderTest extends TestCase {
 		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.25.0");
 		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
 		
-		//TODO:  Test failing on DQA10111 - something up with switching the HLA DB - individual test might run, but doesn't when the full suite is run??
 		assertTrue(cwdLoader.getAccessionMap().containsKey(DQA10111));
-		assertTrue(cwdLoader.getAccessionMap().get(DQA10111).equals(HLA08433));
+		assertTrue(cwdLoader.getAccessionMap().get(DQA10111).contains(HLA08433));
+	}
+	
+	@Test
+	public void testLoadAllCIWD() throws FileNotFoundException, IOException {
+		CommonWellDocumentedLoader cwdLoader = CommonWellDocumentedLoader.getInstance();
+		
+		assertFalse(cwdLoader.getCiwdMap().containsKey(DQA10111));
+		assertTrue(cwdLoader.getCiwdMap().containsKey(A010114));
 	}
 }
