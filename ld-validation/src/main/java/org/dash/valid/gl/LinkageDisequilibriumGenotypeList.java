@@ -297,6 +297,11 @@ public class LinkageDisequilibriumGenotypeList {
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		List<String> replacementAlleles = new ArrayList<String>();
 		
+		// TODO: Implement low res conversion here...
+		if (!alleleAmbiguities.contains(GLStringUtilities.COLON)) {
+			//alleleAmbiguities = GLStringUtilities.convertLowResToAlleleAmbiguities(Locus locus, List<String> alleleAmbiguities);
+		}
+		
 		if (freqLoader.hasIndividualFrequency(locus)) {
 			String alleleWithFrequency;
 			for (String allele : alleleAmbiguities) {

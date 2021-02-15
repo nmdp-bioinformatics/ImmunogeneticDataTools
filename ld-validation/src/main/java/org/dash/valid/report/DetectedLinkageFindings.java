@@ -50,7 +50,7 @@ import org.dash.valid.race.RelativeFrequencyByRaceSet;
 
 
 @XmlRootElement(name="gl-freq")
-@XmlType(propOrder={"nonCWDAlleles", "linkedPairs", "warnings", "anomalousLinkages"})
+@XmlType(propOrder={"nonCWDAlleles", "nonCIWDAlleles", "linkedPairs", "warnings", "anomalousLinkages"})
 public class DetectedLinkageFindings {
 	public static final int EXPECTED_LINKAGES = 2;
 
@@ -58,6 +58,7 @@ public class DetectedLinkageFindings {
 	private Set<DetectedDisequilibriumElement> linkages = new LinkageElementsSet(new DisequilibriumElementComparator());
 	private Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 	private Set<String> nonCWDAlleles;
+	private Set<String> nonCIWDAlleles;
 	private String hladb;
 	private String frequencies;
 	
@@ -305,6 +306,15 @@ public class DetectedLinkageFindings {
 	
 	public void setNonCWDAlleles(Set<String> nonCWDAlleles) {
 		this.nonCWDAlleles = nonCWDAlleles;
+	}
+	
+	@XmlElement(name="non-ciwd")
+	public Set<String> getNonCIWDAlleles() {
+		return nonCIWDAlleles;
+	}
+
+	public void setNonCIWDAlleles(Set<String> nonCIWDAlleles) {
+		this.nonCIWDAlleles = nonCIWDAlleles;
 	}
 	
 	//@XmlAttribute(name="id")

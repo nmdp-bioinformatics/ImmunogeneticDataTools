@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -45,6 +46,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
 import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.cwd.CommonWellDocumentedLoader;
@@ -228,7 +230,7 @@ public class GLStringUtilities {
 	}
 
 	public static Set<String> checkCommonWellDocumented(String glString) {
-		Set<String> notCommon = new HashSet<String>();
+		Set<String> notCommon = new TreeSet<String>();
 		
 		CommonWellDocumentedLoader loader = CommonWellDocumentedLoader.getInstance();
 		
@@ -236,20 +238,75 @@ public class GLStringUtilities {
 
 		if (cwdAlleles.size() == 0) return new HashSet<String>();
 		
-		HashMap<String, String> accessionMap = loader.getAccessionMap();
+		HashMap<String, List<String>> accessionMap = loader.getAccessionMap();
 
-		StringTokenizer st = new StringTokenizer(glString,
-				GL_STRING_DELIMITER_REGEX);
+		StringTokenizer st = new StringTokenizer(glString, GL_STRING_DELIMITER_REGEX);
 		String token;
+		String[] tokenParts;
+		
 		while (st.hasMoreTokens()) {
 			token = st.nextToken();
 			
-			if (!cwdAlleles.contains(accessionMap.get(token))) {
+			Set<Locus> loci = LinkagesLoader.getInstance().getLoci();
+			
+			tokenParts = token.split(ESCAPED_ASTERISK);
+			
+			// only report for loci we are actually looking for
+			if (!loci.contains(Locus.lookup(tokenParts[0]))) continue;
+			
+			// TODO:  Confirm with Kazu - protein level or full comparison
+
+			//if (!cwdAlleles.contains(accessionMap.get(token))) {
+			//if (!cwdAlleles.contains(accessionMap.get(convertToProteinLevel(token)))) {
+			//if (!cwdAlleles.contains(convertToProteinLevel(token))) {
+			
+			List<String> accessions = accessionMap.get(convertToProteinLevel(token));
+			
+			if (accessions == null) {
+				notCommon.add(token);
+				continue;
+			}
+			for (String accession : accessions) {
+				if (cwdAlleles.contains(accession)) {
+					break;
+				}
 				notCommon.add(token);
 			}
 		}
 
 		return notCommon;
+	}
+	
+	public static Set<String> checkCommonIntermediateWellDocumented(String glString) {
+		Set<String> notCIWD = new TreeSet<String>();
+		
+		CommonWellDocumentedLoader loader = CommonWellDocumentedLoader.getInstance();
+		
+		// This map contains all rows and columns in the file - currently reporting is just done at the protein level
+		//HashMap<String, HashMap<String, String>> CIWDMap = loader.getCiwdMap();
+		
+		Set<String> ciwdAlleles = loader.getCiwdAlleles();
+
+		StringTokenizer st = new StringTokenizer(glString, GL_STRING_DELIMITER_REGEX);
+		String token;
+		String[] tokenParts;
+		
+		while (st.hasMoreTokens()) {
+			token = st.nextToken();
+			
+			Set<Locus> loci = LinkagesLoader.getInstance().getLoci();
+			
+			tokenParts = token.split(ESCAPED_ASTERISK);
+			
+			// only report for loci we are actually looking for
+			if (!loci.contains(Locus.lookup(tokenParts[0]))) continue;
+			
+			//if (!CIWDMap.containsKey(token)) {
+			if (!ciwdAlleles.contains(convertToProteinLevel(token))) {
+				notCIWD.add(convertToProteinLevel(token));
+			}
+		}
+		return notCIWD;
 	}
 
 	public static boolean fieldLevelComparison(String allele,
@@ -311,14 +368,6 @@ public class GLStringUtilities {
 						&& arsMap.get(arsCode).contains(matchedValue)) {
 					return true;
 				}
-				
-    			// TODO:  Not sure this accomplished anything...remove?
-
-//				else if (arsCode.substring(0, arsCode.length() - 1).equals(referenceAllele)
-//						&& arsMap.get(arsCode).contains(matchedValue)) {
-//					// TODO:  Does this ever happen?
-//					return true;
-//				}
 			}
 		}
 

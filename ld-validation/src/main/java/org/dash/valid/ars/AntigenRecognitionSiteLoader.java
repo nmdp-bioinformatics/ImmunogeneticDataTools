@@ -84,9 +84,6 @@ public class AntigenRecognitionSiteLoader {
 			catch (IOException | ParserConfigurationException | SAXException e) {
 				LOGGER.info("Couldn't find IMGT file in the correct format for hladb: " + hladb);
 				instance.init();
-				
-				// TODO:  Make final determination - commenting this in messes up the CWD logic currently
-				//System.setProperty(GLStringConstants.HLADB_PROPERTY, "Default");
 			}
 		}
 
@@ -129,7 +126,6 @@ public class AntigenRecognitionSiteLoader {
 	    		if (parts.length < 2) continue;
 	    		arsCode = (gGroup.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] + "g" : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1] + "g";
 	    		
-	    		// TODO:  decide on g group logic
 	    		// currently implementing NMDP 'hack' to deal with historical typings associated with re-named allele - consistent with HaploStats
 	    		if (arsCode.equals("HLA-C*02:10g")) arsCode = "HLA-C*02:02g";
 	    		
@@ -141,7 +137,6 @@ public class AntigenRecognitionSiteLoader {
 	    			parts = fullAllele.split(GLStringUtilities.COLON);
 	    			String allele = (fullAllele.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1];
 	    			
-	    			// TODO:  Not sure this accomplished anything...keep
 	    			if (parts.length > 2 && Pattern.matches("[SNLQ]", "" + fullAllele.charAt(fullAllele.length() - 1))) {
 	    				LOGGER.finest("Found an SNLQ during the ARS load: " + fullAllele + " became: " + allele + fullAllele.charAt(fullAllele.length()-1));
 	    				allele += fullAllele.charAt(fullAllele.length()-1);

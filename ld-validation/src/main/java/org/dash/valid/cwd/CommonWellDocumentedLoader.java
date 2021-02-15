@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +40,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.dash.valid.gl.GLStringConstants;
+import org.dash.valid.gl.GLStringUtilities;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -50,7 +52,11 @@ public class CommonWellDocumentedLoader {
 	private static CommonWellDocumentedLoader instance = null;
 	
 	private Set<String> cwdAlleles = new HashSet<String>();
-	private HashMap<String, String> accessionMap = new HashMap<String, String>();
+	private Set<String> ciwdAlleles = new HashSet<String>();
+
+	private HashMap<String, List<String>> accessionMap = new HashMap<String, List<String>>();
+	private HashMap<String, HashMap<String, String>> ciwdMap = new HashMap<String, HashMap<String, String>>();
+
 	private static String instanceHladb;
 
 	private CommonWellDocumentedLoader(String hladb) {
@@ -72,6 +78,7 @@ public class CommonWellDocumentedLoader {
 	private void init(String hladb) {
 		try {
 			loadCommonWellDocumentedAlleles(hladb);
+			loadCommonIntermediateWellDocumentedAlleles();
 		}
 		catch (IOException e) {
 			e.printStackTrace();
@@ -79,8 +86,8 @@ public class CommonWellDocumentedLoader {
 
 	}
 	
-	public HashMap<String, String> loadFromIMGT(String hladb) throws IOException, ParserConfigurationException, SAXException {
-		HashMap<String, String> accessionMap = new HashMap<String, String>();
+	public HashMap<String, List<String>> loadFromIMGT(String hladb) throws IOException, ParserConfigurationException, SAXException {
+		HashMap<String, List<String>> accessionMap = new HashMap<String, List<String>>();
 
 		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla.xml.zip");
 				
@@ -94,12 +101,22 @@ public class CommonWellDocumentedLoader {
 	    
 	    String name;
 	    String accession;
+	    List<String> accessionList;
 
 	    NodeList nList = doc.getElementsByTagName("allele");
 	    for (int i=0;i<nList.getLength();i++) {
 	    	name = nList.item(i).getAttributes().getNamedItem("name").getNodeValue();
 	    	accession = nList.item(i).getAttributes().getNamedItem("id").getNodeValue();
-	    	accessionMap.put(name,  accession);
+	    	
+	    	if (accessionMap.containsKey(GLStringUtilities.convertToProteinLevel(name))) {
+	    		accessionList = accessionMap.get(GLStringUtilities.convertToProteinLevel(name));
+	    	}
+	    	else {
+	    		accessionList = new ArrayList<String>();
+	    	}
+
+	    	accessionList.add(accession);
+	    	accessionMap.put(GLStringUtilities.convertToProteinLevel(name), accessionList);	    	
 	    }
 	    
 	    return accessionMap;
@@ -107,11 +124,10 @@ public class CommonWellDocumentedLoader {
 	
 	public void loadCommonWellDocumentedAlleles(String hladb) throws IOException, FileNotFoundException {
 		Set<String> cwdSet = new HashSet<String>();
-		HashMap<String, String> accessionMap = null;
+		HashMap<String, List<String>> accessionMap = null;
 		boolean accessionLoaded = false;
-		
-		//if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
-		
+				
+		// TODO:  Why bailing on LATEST HLADB here?
 		if (hladb == null || GLStringConstants.LATEST_HLADB.equals(hladb)) return;
 
 		try {
@@ -125,7 +141,7 @@ public class CommonWellDocumentedLoader {
 			accessionLoaded = true;
 		}
 		else {
-			accessionMap = new HashMap<String, String>();
+			accessionMap = new HashMap<String, List<String>>();
 		}
 		
 		String filename = "reference/CWD.txt";
@@ -137,7 +153,8 @@ public class CommonWellDocumentedLoader {
 		
 		int hladbIdx = -1;
 		List<String> headers = null;
-						
+		List<String> accessionList;		
+		
 		while ((row = reader.readLine()) != null) {
 			columns = row.split(GLStringConstants.TAB);
 
@@ -153,9 +170,17 @@ public class CommonWellDocumentedLoader {
 			}
 			else {
 				cwdSet.add(columns[0]);
-				// TODO:  if (accessionLoaded) continue??
 				if (!accessionLoaded) {
-					accessionMap.put(GLStringConstants.HLA_DASH + columns[hladbIdx], columns[0]);
+					
+			    	if (accessionMap.containsKey(GLStringUtilities.convertToProteinLevel(GLStringConstants.HLA_DASH + columns[hladbIdx]))) {
+			    		accessionList = accessionMap.get(GLStringUtilities.convertToProteinLevel(GLStringConstants.HLA_DASH + columns[hladbIdx]));
+			    	}
+			    	else {
+			    		accessionList = new ArrayList<String>();
+			    	}
+			    	
+			    	accessionList.add(columns[0]);
+			    	accessionMap.put(GLStringUtilities.convertToProteinLevel(GLStringConstants.HLA_DASH + columns[hladbIdx]), accessionList);
 				}
 			}
 			
@@ -168,6 +193,49 @@ public class CommonWellDocumentedLoader {
 		reader.close();
 	}
 	
+	public void loadCommonIntermediateWellDocumentedAlleles() throws IOException, FileNotFoundException {
+		HashMap<String, HashMap<String, String>> ciwdMap = new HashMap<String, HashMap<String, String>>();
+		Set<String> ciwdAlleles = new HashSet<String>();
+		
+		String filename = "reference/CIWD.txt";
+				
+		BufferedReader reader = new BufferedReader(new InputStreamReader(CommonWellDocumentedLoader.class.getClassLoader().getResourceAsStream(filename)));
+		String row;
+		String[] columns;
+		int idx = 0;
+		
+		String[] headers = null;
+		HashMap<String, String> singleAlleleCiwdMap;
+		
+		while ((row = reader.readLine()) != null) {
+			columns = row.split(GLStringConstants.COMMA);
+
+			if (idx < 1) {
+				headers = columns;
+			}
+			else {
+				singleAlleleCiwdMap = new HashMap<String, String>();
+				
+				for (int i=1;i<columns.length;i++) {
+					singleAlleleCiwdMap.put(headers[i], columns[i]);	
+				}
+				
+				// This map will be populated with all alleles and the columns associated - in case fuller reporting is desired - not currently implemented...
+				ciwdMap.put(GLStringConstants.HLA_DASH + columns[0], singleAlleleCiwdMap);
+				
+				// This set will be populated with just the protein level values
+				ciwdAlleles.add(GLStringUtilities.convertToProteinLevel(GLStringConstants.HLA_DASH + columns[0]));
+			}
+			
+			idx++;
+		}
+		
+		setCiwdMap(ciwdMap);
+		setCiwdAlleles(ciwdAlleles);
+				
+		reader.close();
+	}
+	
 	public Set<String> getCwdAlleles() {
 		return this.cwdAlleles;
 	}
@@ -176,11 +244,27 @@ public class CommonWellDocumentedLoader {
 		this.cwdAlleles = cwdAlleles;
 	}
 	
-	public HashMap<String, String> getAccessionMap() {
+	public Set<String> getCiwdAlleles() {
+		return this.ciwdAlleles;
+	}
+
+	private void setCiwdAlleles(Set<String> ciwdAlleles) {
+		this.ciwdAlleles = ciwdAlleles;
+	}
+	
+	public HashMap<String, List<String>> getAccessionMap() {
 		return this.accessionMap;
 	}
 	
-	private void setAccessionMap(HashMap<String, String> accessionMap) {
+	private void setAccessionMap(HashMap<String, List<String>> accessionMap) {
 		this.accessionMap = accessionMap;
+	}
+	
+	public HashMap<String, HashMap<String, String>> getCiwdMap() {
+		return ciwdMap;
+	}
+
+	private void setCiwdMap(HashMap<String, HashMap<String, String>> ciwdMap) {
+		this.ciwdMap = ciwdMap;
 	}
 }
