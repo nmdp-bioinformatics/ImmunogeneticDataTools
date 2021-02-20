@@ -170,7 +170,6 @@ public class CommonWellDocumentedLoader {
 			}
 			else {
 				cwdSet.add(columns[0]);
-				// TODO:  if (accessionLoaded) continue??
 				if (!accessionLoaded) {
 					
 			    	if (accessionMap.containsKey(GLStringUtilities.convertToProteinLevel(GLStringConstants.HLA_DASH + columns[hladbIdx]))) {
