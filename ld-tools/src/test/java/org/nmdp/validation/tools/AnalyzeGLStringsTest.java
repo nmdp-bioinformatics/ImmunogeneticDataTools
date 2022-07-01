@@ -1,5 +1,8 @@
 package org.nmdp.validation.tools;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
@@ -8,11 +11,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.dash.valid.Sample;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class AnalyzeGLStringsTest extends TestCase {
+public class AnalyzeGLStringsTest {
 
 	@Test
 	public void testAnalyzeGLString() throws Exception {

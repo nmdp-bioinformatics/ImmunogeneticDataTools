@@ -22,6 +22,8 @@
 */
 package org.dash.valid;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.net.URI;
 import java.util.HashSet;
@@ -29,11 +31,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.dash.valid.freq.HLAFrequenciesLoader;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class HLAFrequenciesLoaderTest extends TestCase {
+public class HLAFrequenciesLoaderTest {
 
 	@Test
 	public void testLoadNMDPLinkageReferenceData() throws Exception {		

@@ -21,19 +21,19 @@
 */
 package org.dash.valid.race;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
-public class FrequencyByRaceComparatorTest extends TestCase {
+public class FrequencyByRaceComparatorTest {
 
 	@Test
 	public void testFrequencyByRaceComparator() {
 		FrequencyByRaceComparator comparator = new FrequencyByRaceComparator();
 		
-		FrequencyByRace freq1 = new FrequencyByRace(new Double(.3), "2", BroadRace.CAU.toString());
-		FrequencyByRace freq2 = new FrequencyByRace(new Double(.4), "3", BroadRace.API.toString());
-		FrequencyByRace freq3 = new FrequencyByRace(new Double(.5), "4", "AAFA");
+		FrequencyByRace freq1 = new FrequencyByRace(.3, "2", BroadRace.CAU.toString());
+		FrequencyByRace freq2 = new FrequencyByRace(.4, "3", BroadRace.API.toString());
+		FrequencyByRace freq3 = new FrequencyByRace(.5, "4", "AAFA");
 		
 		assertTrue(comparator.compare(freq1, freq2) > 0);
 		assertTrue(comparator.compare(freq2, freq3) < 0);

@@ -21,22 +21,22 @@
 */
 package org.dash.gl;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
-import org.dash.valid.Linkages;
 import org.dash.valid.Locus;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
-import org.junit.Test;
-import org.nmdp.gl.MultilocusUnphasedGenotype;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class GLStringUtilitiesTest extends TestCase {
+public class GLStringUtilitiesTest {
 	private static final String BOGUS_ALLELE = "HLA-A*QI:UD";
 	private static final String HLA_DQB10202 = "HLA-DQB1*02:02";
 	private static final String HLA_DQA10111 = "HLA-DQA1*01:11";
@@ -163,12 +163,12 @@ public class GLStringUtilitiesTest extends TestCase {
 		assertTrue(VALID_GL_STRING_MAC.equals(fullyQualifiedGLString));
 	}
 	
-	@Test
-	public void testConvertToMug() {
-		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(VALID_GL_STRING);
-		
-		assertNotNull(mug);
-	}
+//	@Test
+//	public void testConvertToMug() {
+//		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(VALID_GL_STRING);
+//		
+//		assertNotNull(mug);
+//	}
 	
 	@Test
 	public void testCommonWellDocumented() {

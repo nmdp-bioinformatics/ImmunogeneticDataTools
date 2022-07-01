@@ -21,31 +21,28 @@
 */
 package org.dash.gl;
 
-import java.io.BufferedReader;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
-import org.junit.Before;
-import org.junit.Test;
-import org.nmdp.gl.client.http.HttpClient;
-import org.nmdp.gl.client.http.restassured.RestAssuredHttpClient;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class GLStringTest extends TestCase {	
+public class GLStringTest {	
 	private static final String SIMPLE_DRB4_STRING = "HLA-DRB4*01:01:01:01";
 	private static final String HOMOZYGOUS_C_STRING = "HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34";
 	private static String STRICT_GL_STRING;
 
-	private LinkageDisequilibriumGenotypeList glString;
+	private static LinkageDisequilibriumGenotypeList glString;
 	
-	@Before
-	public void setUp() throws IOException {
+	@BeforeAll
+	public static void setUp() throws IOException {
 		List<LinkageDisequilibriumGenotypeList> validGLStrings = GLStringUtilities.readGLStringFile("fullyQualifiedExample.txt");
 				
 		glString = validGLStrings.get(0);
@@ -53,6 +50,8 @@ public class GLStringTest extends TestCase {
 		List<LinkageDisequilibriumGenotypeList> strictGLStrings = GLStringUtilities.readGLStringFile("strictExample.txt");
 		
 		STRICT_GL_STRING = strictGLStrings.get(0).getGLString();
+		
+		assertNotNull(STRICT_GL_STRING);
 	}
 	
 	@Test
@@ -70,34 +69,4 @@ public class GLStringTest extends TestCase {
 		LinkageDisequilibriumGenotypeList homozygousCString = new LinkageDisequilibriumGenotypeList("HOMOZYGOUS-C", HOMOZYGOUS_C_STRING);
 		assertTrue(homozygousCString.hasHomozygous(Locus.HLA_C));
 	}
-	
-//	@Test
-//	public void testHttpClient() {
-//		BufferedReader reader = null;
-//		String glString = null;
-//		
-//		HttpClient glClient = new RestAssuredHttpClient();
-//		String id = glClient.post("https://gl.nmdp.org/nonstrict/multilocus-unphased-genotype", STRICT_GL_STRING);
-//		
-//		InputStream in = glClient.get(id);
-//		
-//		try {
-//			reader = new BufferedReader(new InputStreamReader(in));
-//			
-//			while ((glString = reader.readLine()) != null) {
-//				assertTrue(STRICT_GL_STRING.equals(glString));
-//			}
-//		}
-//		catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		finally {
-//			try {
-//				reader.close();
-//			}
-//			catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
 }

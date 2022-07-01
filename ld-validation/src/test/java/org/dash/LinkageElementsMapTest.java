@@ -21,6 +21,8 @@
 */
 package org.dash;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,17 +35,15 @@ import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.report.DetectedDisequilibriumElement;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class LinkageElementsMapTest extends TestCase {
+public class LinkageElementsMapTest {
 
 	@Test
 	public void test() {
 		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.20.0");
 		List<FrequencyByRace> frequenciesByRace = new ArrayList<FrequencyByRace>();
-		FrequencyByRace freq = new FrequencyByRace(new Double(.2), "1","AAFA");
+		FrequencyByRace freq = new FrequencyByRace(.2, "1","AAFA");
 		frequenciesByRace.add(freq);
 		
 		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
@@ -59,9 +59,9 @@ public class LinkageElementsMapTest extends TestCase {
 		
 		frequenciesByRace = new ArrayList<FrequencyByRace>();
 		
-		freq = new FrequencyByRace(new Double(.3), "2", "CAU");
+		freq = new FrequencyByRace(.3, "2", "CAU");
 		frequenciesByRace.add(freq);
-		freq = new FrequencyByRace(new Double(.4), "3", "API");
+		freq = new FrequencyByRace(.4, "3", "API");
 		frequenciesByRace.add(freq);
 		
 		hlaElementMap = new HashMap<Locus, List<String>>();

@@ -21,15 +21,17 @@
 */
 package org.dash.valid.cwd;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.dash.valid.gl.GLStringConstants;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class CommonWellDocumentedLoaderTest extends TestCase {	
+public class CommonWellDocumentedLoaderTest {	
 	private static final String DQA10111 = "HLA-DQA1*01:11";
 	private static final String HLA08433 = "HLA08433";
 	private static final String A010114 = "HLA-A*01:01:14";

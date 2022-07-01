@@ -44,7 +44,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
@@ -53,10 +53,6 @@ import org.dash.valid.cwd.CommonWellDocumentedLoader;
 import org.dash.valid.gl.haplo.Haplotype;
 import org.dash.valid.gl.haplo.MultiLocusHaplotype;
 import org.dash.valid.gl.haplo.SingleLocusHaplotype;
-import org.nmdp.gl.MultilocusUnphasedGenotype;
-import org.nmdp.gl.client.GlClient;
-import org.nmdp.gl.client.GlClientException;
-import org.nmdp.gl.client.local.LocalGlClient;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -592,8 +588,7 @@ public class GLStringUtilities {
 			glString = GLStringUtilities.fullyQualifyGLString(glString);
 		}
 		
-		MultilocusUnphasedGenotype mug = GLStringUtilities.convertToMug(glString);
-		linkedGLString = new LinkageDisequilibriumGenotypeList(id, mug);
+		linkedGLString = new LinkageDisequilibriumGenotypeList(id, glString);
 		
 		linkedGLString.setSubmittedGlString(submittedGlString);
 		linkedGLString.setNote(note);
@@ -601,21 +596,21 @@ public class GLStringUtilities {
 		return linkedGLString;
 	}
 
-	public static MultilocusUnphasedGenotype convertToMug(String glString) {
-		MultilocusUnphasedGenotype mug = null;
-
-		try {
-			// TODO: should use strict but example GL Strings are missing intron
-			// variants in some cases (HLA-DQB1*02:02)
-			// GlClient glClient = LocalGlClient.createStrict();
-
-			GlClient glClient = LocalGlClient.create();
-			mug = glClient.createMultilocusUnphasedGenotype(glString);
-		} catch (GlClientException e) {
-			LOGGER.severe("Couldn't convert GLString to MultiLocusUnphasedGenotype");
-			e.printStackTrace();
-		}
-
-		return mug;
-	}
+//	public static MultilocusUnphasedGenotype convertToMug(String glString) {
+//		MultilocusUnphasedGenotype mug = null;
+//
+//		try {
+//			// TODO: should use strict but example GL Strings are missing intron
+//			// variants in some cases (HLA-DQB1*02:02)
+//			// GlClient glClient = LocalGlClient.createStrict();
+//
+//			GlClient glClient = LocalGlClient.create();
+//			mug = glClient.createMultilocusUnphasedGenotype(glString);
+//		} catch (GlClientException e) {
+//			LOGGER.severe("Couldn't convert GLString to MultiLocusUnphasedGenotype");
+//			e.printStackTrace();
+//		}
+//
+//		return mug;
+//	}
 }

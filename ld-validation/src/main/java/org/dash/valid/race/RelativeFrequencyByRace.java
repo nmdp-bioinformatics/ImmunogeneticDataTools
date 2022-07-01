@@ -29,8 +29,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name="linkage")
 @XmlType(propOrder={"frequency", "relativeFrequency", "hap1Frequency", "hap1Rank", "hap2Frequency", "hap2Rank"})
 public class RelativeFrequencyByRace implements RaceFrequency {
-	Float relativeFrequency;
-	Double frequency;
+	double relativeFrequency;
+	double frequency;
 	String race;
 	FrequencyByRace hap1Frequency;
 	FrequencyByRace hap2Frequency;
@@ -64,7 +64,7 @@ public class RelativeFrequencyByRace implements RaceFrequency {
 	}
 	
 	@XmlElement(name="relative-frequency")
-	public Float getRelativeFrequency() {
+	public Double getRelativeFrequency() {
 		return relativeFrequency;
 	}
 	
@@ -73,7 +73,7 @@ public class RelativeFrequencyByRace implements RaceFrequency {
 		return formattedString;
 	}
 
-	public void setRelativeFrequency(Float relativeFrequency) {
+	public void setRelativeFrequency(double relativeFrequency) {
 		this.relativeFrequency = relativeFrequency;
 	}
 	
