@@ -1,6 +1,7 @@
 Immunogenetic Data Tools (HLAHapV)
 =======================
-[![Build Status](https://api.travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools.svg?branch=master)](https://travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools)
+
+[![mpresteg](https://circleci.com/gh/mpresteg/ImmunogeneticDataTools.svg?style=svg)](https://app.circleci.com/pipelines/github/mpresteg/ImmunogeneticDataTools)
 
 #### HLA Linkage Disequilibrium
 [Linkage disequilibrium](http://en.wikipedia.org/wiki/Linkage_disequilibrium) is the non-random association of alleles at two or more loci, that descend from a single ancestral chromosome.  The particular linkages referenced here are relevant in the context of [HLA](http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics.
