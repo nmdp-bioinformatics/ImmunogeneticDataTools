@@ -36,20 +36,12 @@ import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.haplo.MultiLocusHaplotype;
 import org.dash.valid.gl.haplo.SingleLocusHaplotype;
-import org.nmdp.gl.Allele;
-import org.nmdp.gl.AlleleList;
-import org.nmdp.gl.Genotype;
-import org.nmdp.gl.GenotypeList;
-import org.nmdp.gl.Haplotype;
-import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumGenotypeList {
 	private String id;
 	private String glString;
 	private String note;
 	private String submittedGlString;
-
-	private MultilocusUnphasedGenotype mug;
 	
 	private HashMap<Locus, List<List<String>>> allelesMap = new HashMap<Locus, List<List<String>>>();
 	private HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>> possibleHaplotypeMap = new HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>>();
@@ -70,12 +62,12 @@ public class LinkageDisequilibriumGenotypeList {
 		String alleleAmbiguityThreshold;
 		if ((alleleAmbiguityThreshold = System
 				.getProperty("org.dash.ambThreshold")) != null) {
-			ALLELE_AMBIGUITY_THRESHOLD = new Integer(alleleAmbiguityThreshold);
+			ALLELE_AMBIGUITY_THRESHOLD = Integer.parseInt(alleleAmbiguityThreshold);
 		}
 
 		String proteinThreshold;
 		if ((proteinThreshold = System.getProperty("org.dash.proteinThreshold")) != null) {
-			PROTEIN_THRESHOLD = new Integer(proteinThreshold);
+			PROTEIN_THRESHOLD = Integer.parseInt(proteinThreshold);
 		}
 	}
 	
@@ -94,17 +86,7 @@ public class LinkageDisequilibriumGenotypeList {
 		}
 	}
 	
-	public LinkageDisequilibriumGenotypeList(String id, MultilocusUnphasedGenotype mug) {
-		this.mug = mug;
-		this.glString = mug.getGlstring();
-		this.id = id;
-		decomposeMug();
-		postParseInit();
 
-		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
-			setPossibleHaplotypes(linkage.getLoci());
-		}
-	}
 	
 	public String getNote() {
 		return note;
@@ -165,7 +147,7 @@ public class LinkageDisequilibriumGenotypeList {
 		
 		for (List<String> locusHaplotypeAlleles : locusAlleles) {
 			if (locusHaplotypeAlleles.containsAll(alleles)) {
-				return new Integer(i);
+				return i;
 			}
 			i++;
 		}
@@ -259,39 +241,7 @@ public class LinkageDisequilibriumGenotypeList {
 		}
 	}
 
-	private void decomposeMug() {
-		String locusVal = null;
-		Locus locus = null;
-		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
 
-		List<GenotypeList> genotypeLists = mug.getGenotypeLists();
-		for (GenotypeList gl : genotypeLists) {
-			List<Genotype> genotypes = gl.getGenotypes();
-			for (Genotype genotype : genotypes) {
-				List<Haplotype> haplotypes = genotype.getHaplotypes();
-				for (Haplotype haplotype : haplotypes) {
-					List<AlleleList> alleleLists = haplotype.getAlleleLists();
-					for (AlleleList alleleList : alleleLists) {
-						List<Allele> alleles = alleleList.getAlleles();
-						List<String> alleleStrings = new ArrayList<String>();
-						for (Allele allele : alleles) {
-							alleleStrings.add(allele.getGlstring());
-							locusVal = allele.getLocus().toString();
-						}
-						
-						if (locusMap.containsKey(locusVal)) {
-							locus = locusMap.get(locusVal);
-						}
-						else {
-							locus = Locus.normalizeLocus(Locus.lookup(locusVal));
-							locusMap.put(locusVal, locus);
-						}
-						setAlleles(locus, alleleStrings);
-					}
-				}
-			}
-		}
-	}
 
 	private void setAlleles(Locus locus, List<String> alleleAmbiguities) {
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();

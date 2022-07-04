@@ -408,7 +408,7 @@ public class HLAFrequenciesLoader {
 						
 			String race = columns[0];
 			String haplotype = columns[1];
-			Double frequency = new Double(columns[2]);
+			double frequency = Double.parseDouble(columns[2]);
 			String rank = null;
 			
 			if (columns.length == 4) rank = columns[3];

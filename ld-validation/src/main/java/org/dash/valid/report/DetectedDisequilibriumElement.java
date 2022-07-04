@@ -25,11 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-
 import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.DisequilibriumElement;
 import org.dash.valid.Locus;
@@ -39,6 +34,11 @@ import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.haplo.Haplotype;
 import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 
 
 @XmlRootElement(name="linkage")

@@ -25,12 +25,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name="linkage")
 public class DisequilibriumElementByRace extends CoreDisequilibriumElement {

@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.dash.valid.Locus;
+import org.dash.valid.report.DetectedDisequilibriumElement;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-
-import org.dash.valid.Locus;
-import org.dash.valid.report.DetectedDisequilibriumElement;
 
 @XmlRootElement(name="haplotype")
 @XmlType(propOrder={"sequence", "haplotypeString"})

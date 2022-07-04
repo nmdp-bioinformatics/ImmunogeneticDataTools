@@ -30,14 +30,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
-
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 
-public class WMDASerLoader {
-    private static final Logger LOGGER = Logger.getLogger(WMDASerLoader.class.getName());
-    
+public class WMDASerLoader {    
     private static final String HASH = "#";
     private static final String SEMICOLON = ";";
 

@@ -2,11 +2,9 @@ package org.nmdp.validation.tools;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class FormatConversionTest extends TestCase {
+public class FormatConversionTest {
 	@Test
 	public void testCSVToJSON() throws IOException {
 		//BufferedReader reader = new BufferedReader(new InputStreamReader(

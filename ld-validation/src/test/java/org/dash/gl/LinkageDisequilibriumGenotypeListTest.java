@@ -21,6 +21,9 @@
 */
 package org.dash.gl;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,11 +36,9 @@ import org.dash.valid.gl.haplo.HaplotypePair;
 import org.dash.valid.gl.haplo.HaplotypePairComparator;
 import org.dash.valid.gl.haplo.HaplotypePairSet;
 import org.dash.valid.gl.haplo.MultiLocusHaplotype;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class LinkageDisequilibriumGenotypeListTest extends TestCase {
+public class LinkageDisequilibriumGenotypeListTest {
 	private static final String B0704 = "HLA-B*07:04";
 	private static final String B4403 = "HLA-B*44:03";
 	private static final String C0702 = "HLA-C*07:02";

@@ -40,7 +40,6 @@ import org.dash.valid.report.HaplotypePairWriter;
 import org.dash.valid.report.LinkageDisequilibriumWriter;
 import org.dash.valid.report.SamplesList;
 import org.dash.valid.report.SummaryWriter;
-import org.nmdp.gl.MultilocusUnphasedGenotype;
 
 public class LinkageDisequilibriumAnalyzer {		
     private static final Logger LOGGER = Logger.getLogger(LinkageDisequilibriumAnalyzer.class.getName());
@@ -138,7 +137,7 @@ public class LinkageDisequilibriumAnalyzer {
 
 			}
 			else {	
-				boolean homozygousOnly = Boolean.TRUE.equals(new Boolean(System.getProperty("org.dash.homozygous"))) ? Boolean.TRUE : Boolean.FALSE;
+				boolean homozygousOnly = Boolean.parseBoolean(System.getProperty("org.dash.homozygous")) == Boolean.TRUE ? Boolean.TRUE : Boolean.FALSE;
 				
 				if (!linkedGLString.checkAmbiguitiesThresholds()) {
 					LOGGER.info("GL String contains an unusual number of ambiguities, proteins and/or uncommon alleles");
@@ -156,12 +155,12 @@ public class LinkageDisequilibriumAnalyzer {
 		return samplesList;
 	}
 	
-	public static Sample detectLinkages(MultilocusUnphasedGenotype mug) {
-		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug.getId(), mug);
-		Sample sample = detectLinkages(linkedGLString);
-
-		return sample;
-	}
+//	public static Sample detectLinkages(MultilocusUnphasedGenotype mug) {
+//		LinkageDisequilibriumGenotypeList linkedGLString = new LinkageDisequilibriumGenotypeList(mug.getId(), mug);
+//		Sample sample = detectLinkages(linkedGLString);
+//
+//		return sample;
+//	}
 
 	public static Sample detectLinkages(LinkageDisequilibriumGenotypeList linkedGLString) {
 		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(linkedGLString);

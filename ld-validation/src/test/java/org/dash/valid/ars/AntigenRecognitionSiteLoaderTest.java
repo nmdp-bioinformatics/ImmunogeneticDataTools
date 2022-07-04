@@ -21,6 +21,9 @@
 */
 package org.dash.valid.ars;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,12 +32,10 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.dash.valid.gl.GLStringConstants;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
-import junit.framework.TestCase;
-
-public class AntigenRecognitionSiteLoaderTest extends TestCase {
+public class AntigenRecognitionSiteLoaderTest {
 	@Test
 	public void test() throws InvalidFormatException, IOException, ParserConfigurationException, SAXException {
 		System.setProperty(GLStringConstants.HLADB_PROPERTY, "3.20.0");

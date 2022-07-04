@@ -1,6 +1,7 @@
 Immunogenetic Data Tools (HLAHapV)
 =======================
-[![Build Status](https://api.travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools.svg?branch=master)](https://travis-ci.org/nmdp-bioinformatics/ImmunogeneticDataTools)
+
+[![mpresteg](https://circleci.com/gh/mpresteg/ImmunogeneticDataTools.svg?style=svg)](https://app.circleci.com/pipelines/github/mpresteg/ImmunogeneticDataTools)
 
 #### HLA Linkage Disequilibrium
 [Linkage disequilibrium](http://en.wikipedia.org/wiki/Linkage_disequilibrium) is the non-random association of alleles at two or more loci, that descend from a single ancestral chromosome.  The particular linkages referenced here are relevant in the context of [HLA](http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics.
@@ -19,13 +20,12 @@ The results of the software should be used for supporting the evidence, but not 
 * HML 1.x
 * File containing GL Strings separated by newline character
 * CSV or Tab-Delimited file containing GL Strings, where first column represents an id associated with the GL String
-* [MultiLocusUnphasedGenotype](http://gl.immunogenomics.org/gl-ontology-content/MultilocusUnphasedGenotype.html)
  
 *Output:*  Linked alleles by locus, a frequency and any additional notes, accompanied by GL String and Id (either assigned or generated)
 
 *Future Goals:*
 
- * Service enable the software and host publicly
+ * Host publicly
  
 #### Using the software:
 As of release .7, the ability to download the software package and make use of command line tools is available.

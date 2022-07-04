@@ -28,16 +28,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 import org.dash.valid.Locus;
 import org.dash.valid.base.BaseDisequilibriumElement;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.race.DisequilibriumElementByRace;
 import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.race.RelativeFrequencyByRace;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name="haplo-pair")
 @XmlType(propOrder={"haplotypes", "frequencies", "frequency"})
@@ -130,7 +130,7 @@ public class HaplotypePair {
 				for (FrequencyByRace haplo2Freqs : ((DisequilibriumElementByRace) haplotypes.get(1).getLinkage().getDisequilibriumElement()).getFrequenciesByRace()) {
 					if (haplo1Freqs.getRace().equals(haplo2Freqs.getRace())) {
 						pairFrequency = haplo1Freqs.getFrequency() * haplo2Freqs.getFrequency();
-						freqByRace = new RelativeFrequencyByRace(new Double(pairFrequency), haplo1Freqs.getRace(), haplo1Freqs, haplo2Freqs);
+						freqByRace = new RelativeFrequencyByRace(pairFrequency, haplo1Freqs.getRace(), haplo1Freqs, haplo2Freqs);
 								
 						frequenciesByRaceList.add(freqByRace);
 					}

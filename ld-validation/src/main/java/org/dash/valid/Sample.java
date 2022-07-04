@@ -1,13 +1,13 @@
 package org.dash.valid;
 
+import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
+import org.dash.valid.report.DetectedLinkageFindings;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-
-import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
-import org.dash.valid.report.DetectedLinkageFindings;
 
 @XmlRootElement(name="sample")
 @XmlType(propOrder={"glString", "findings", "processedGlString"})
