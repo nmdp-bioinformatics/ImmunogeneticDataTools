@@ -64,6 +64,13 @@
          		<version>3.0.0-M7</version>
          		<configuration>
            			<argLine>-Xmx4G</argLine>
+           			<systemPropertyVariables>
+                    <!-- Hardcoded default property -->
+                    <org.dash.hladb>3.10.0</org.dash.hladb>
+                    
+                    <!-- Dynamically read from a Maven property -->
+                    <app.environment>${maven.env.property}</app.environment>
+                </systemPropertyVariables>
          		</configuration>
        		</plugin>
   		</plugins>
