@@ -34,6 +34,8 @@ import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class GLStringUtilitiesTest {
@@ -63,6 +65,23 @@ public class GLStringUtilitiesTest {
 	private static final String TAB_DELIMITED = "TAB_DELIMITED";
 	private static final String COMMA_DELIMITED = "COMMA_DELIMITED";
 	private static final String MY_NOTE = "My Note";
+	private String originalHlaDb;
+	
+	@BeforeEach
+	public void setUp() {
+		originalHlaDb = System.getProperty("org.dash.hladb");
+		System.setProperty("org.dash.hladb", "3.10.0");
+	}
+	
+    @AfterEach
+    void tearDown() {
+        // Restore the system state cleanly
+        if (originalHlaDb != null) {
+            System.setProperty("org.dash.hladb", originalHlaDb);
+        } else {
+            System.clearProperty("org.dash.hladb");
+        }
+    }
 	
 	@Test
 	public void testParse() {
