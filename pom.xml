@@ -80,7 +80,7 @@
   	<dependency>
   		<groupId>com.google.guava</groupId>
   		<artifactId>guava</artifactId>
-  		<version>31.1-jre</version>
+  		<version>33.7.1-jre</version>
   	</dependency>
   	<!-- API, java.xml.bind module -->
 	<dependency>
@@ -90,12 +90,12 @@
   	<dependency>
   		<groupId>org.apache.poi</groupId>
   		<artifactId>poi-ooxml</artifactId>
-  		<version>5.2.2</version>
+  		<version>5.5.1</version>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.poi</groupId>
   		<artifactId>poi</artifactId>
-  		<version>5.2.2</version>
+  		<version>5.5.1</version>
   	</dependency>
       <dependency>
         <groupId>org.dishevelled</groupId>
