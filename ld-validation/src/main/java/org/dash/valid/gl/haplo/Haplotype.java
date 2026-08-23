@@ -82,14 +82,33 @@ public abstract class Haplotype {
 		return getHaplotypeString();
 	}
 	
+	// Was: required getHaplotypeInstances() to match (a List<Integer> built from
+	// HashMap<Locus, Integer>.values() -- unordered, so List.equals() on it varies with
+	// hash-bucket iteration order, itself not guaranteed stable across JVM runs since
+	// Locus enum constants use identity hashCode); getAlleles().containsAll() (asymmetric
+	// -- true if this's list is a superset of the other's, not mutual containment); and a
+	// getLinkage() check that returned true whenever *this* object's linkage was null,
+	// regardless of the other side's linkage (also asymmetric). All three meant
+	// haplotype1.equals(haplotype2) could disagree with haplotype2.equals(haplotype1), and
+	// results depended on HashSet iteration order -- which varies run to run. Confirmed via
+	// running the same input twice and diffing output: identical code, different results.
+	//
+	// getHaplotypeString() is already the canonical, order-stable representation (built via
+	// LocusSet/LocusComparator, not raw HashMap iteration) -- it alone is sufficient and
+	// gives a properly symmetric, deterministic equals()/hashCode() pair.
 	@Override
-	public boolean equals(Object element1) {		
-		if (getHaplotypeInstances().equals(((Haplotype) element1).getHaplotypeInstances()) && getAlleles().containsAll(((Haplotype) element1).getAlleles()) &&
-				getHaplotypeString().equals(((Haplotype) element1).getHaplotypeString()) && 
-				(getLinkage() == null || (getLinkage() != null && getLinkage().equals(((Haplotype) element1).getLinkage())))) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
-		
-		return false;
+		if (!(obj instanceof Haplotype)) {
+			return false;
+		}
+		return getHaplotypeString().equals(((Haplotype) obj).getHaplotypeString());
+	}
+
+	@Override
+	public int hashCode() {
+		return getHaplotypeString().hashCode();
 	}
 }
