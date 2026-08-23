@@ -24,7 +24,6 @@ package org.dash.valid;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -202,8 +201,6 @@ public class HLALinkageDisequilibrium {
 		// fullValue wins) instead of leaving it to HashSet iteration order.
 		Map<String, MultiLocusHaplotype> linkedHaplotypesByValue = new LinkedHashMap<String, MultiLocusHaplotype>();
 
-		Set<DetectedDisequilibriumElement> detectedDisequilibriumElements = new HashSet<DetectedDisequilibriumElement>();
-
 		MultiLocusHaplotype clonedHaplotype = null;
 
 		for (MultiLocusHaplotype possibleHaplotype : glString.getPossibleHaplotypes(loci)) {
@@ -240,13 +237,36 @@ public class HLALinkageDisequilibrium {
 					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
 				}
 
-				detectedDisequilibriumElements.add(detectedElement);
-
 				shortenedList = shortenedList.subList(index + 1, shortenedList.size());
 			}
 		}
 
 		Set<MultiLocusHaplotype> linkedHaplotypes = new LinkedHashSet<MultiLocusHaplotype>(linkedHaplotypesByValue.values());
+
+		// Was: a separate Set<DetectedDisequilibriumElement> detectedDisequilibriumElements =
+		// new HashSet<>(), added to unconditionally inside the while loop above (once per
+		// reference-row match, so once per tied candidate too), then merged into
+		// findings.linkages -- a LinkageElementsSet (TreeSet) ordered by
+		// DisequilibriumElementComparator, whose compare() starts with
+		// DetectedDisequilibriumElement#equals(), which is true for any two matches of the
+		// same reference row regardless of which raw-allele candidate matched it. That made
+		// the TreeSet treat tied candidates as duplicates and silently keep whichever the
+		// *source* HashSet happened to iterate first -- but DetectedDisequilibriumElement
+		// overrides equals() without overriding hashCode(), so that HashSet's iteration order
+		// was governed by default (identity-based) hashCode(), which is JVM-launch-random.
+		// Confirmed via instrumented tracing: the in-memory linkedHaplotypesByValue tie-break
+		// above was already fully deterministic and identical across JVM launches, yet the
+		// final report still varied -- because this separate, parallel structure was never
+		// touched by that fix and re-introduced the same class of bug one level up. Deriving
+		// the linkages directly from linkedHaplotypesByValue's already-deterministic winners
+		// (each winning clonedHaplotype's own linkage is exactly the DetectedDisequilibriumElement
+		// that should represent its reference row) sidesteps the broken equals()/hashCode()
+		// pair entirely, and keeps the <linkage> report section consistent with which
+		// candidate's fullValue is reported as the haplotype pair.
+		Set<DetectedDisequilibriumElement> detectedDisequilibriumElements = new LinkedHashSet<DetectedDisequilibriumElement>();
+		for (MultiLocusHaplotype winner : linkedHaplotypes) {
+			detectedDisequilibriumElements.add(winner.getLinkage());
+		}
 
 		findings.addLinkages(detectedDisequilibriumElements);
 
