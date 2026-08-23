@@ -3,11 +3,11 @@ package org.dash.valid;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.report.DetectedLinkageFindings;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name="sample")
 @XmlType(propOrder={"glString", "findings", "processedGlString"})
