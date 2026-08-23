@@ -60,6 +60,21 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-starter-web</artifactId>
       </dependency>
+      <!-- Overrides the stale 2.1.2 pulled transitively via springfox-swagger2 (which
+           doesn't support Schema.requiredMode(), needed by openapi-generator 7.x's
+           generated models). Becomes a direct, non-transitive need once springfox is
+           replaced in Phase 3b. -->
+      <dependency>
+          <groupId>io.swagger.core.v3</groupId>
+          <artifactId>swagger-annotations</artifactId>
+          <version>2.2.54</version>
+      </dependency>
+      <!-- Backs the JsonNullable<T> wrapper openapi-generator uses in generated models. -->
+      <dependency>
+          <groupId>org.openapitools</groupId>
+          <artifactId>jackson-databind-nullable</artifactId>
+          <version>0.2.11</version>
+      </dependency>
       <dependency>
           <groupId>mysql</groupId>
           <artifactId>mysql-connector-java</artifactId>
@@ -122,11 +137,16 @@
           </execution>
         </executions>
       </plugin>
-             <!--Swagger Codegen Plugin-->
+             <!--OpenAPI Generator Plugin (replaces the abandoned swagger-codegen-maven-plugin,
+                 last released 2017). Still targeting javax (useJakartaEe=false) to match the
+                 current Boot 2.7.1/javax stack; the jakarta switch happens in Phase 3c
+                 alongside the Spring Boot 3 parent bump. Package names kept identical
+                 (io.swagger.api / io.swagger.model) so GenotypesApiController.java and
+                 HLAHapVServiceApplication.java need no changes.-->
        <plugin>
-           <groupId>io.swagger</groupId>
-           <artifactId>swagger-codegen-maven-plugin</artifactId>
-           <version>2.3.1</version>
+           <groupId>org.openapitools</groupId>
+           <artifactId>openapi-generator-maven-plugin</artifactId>
+           <version>7.24.0</version>
            <executions>
                <execution>
                    <goals>
@@ -134,24 +154,17 @@
                    </goals>
                    <configuration>
                        <inputSpec>${project.basedir}/hlahapv-swagger-spec.yaml</inputSpec>
-                       <!--Generate Spring API compatible APIs-->
-                       <language>spring</language>
-                       <!--Don't generate extra files except source files-->
-                       <generateSupportingFiles>true</generateSupportingFiles>
+                       <generatorName>spring</generatorName>
+                       <apiPackage>io.swagger.api</apiPackage>
+                       <modelPackage>io.swagger.model</modelPackage>
                        <output>${project.build.directory}/generated-sources</output>
                        <configOptions>
-                           <!--Source goes in target/generated-sources/swagger-->
                            <sourceFolder>swagger</sourceFolder>
-                           <java8>true</java8>
-                           <serializableModel>true</serializableModel>
-                       </configOptions>
-                       <environmentVariables>
-                           <!--Generate Models-->
-                           <models/>
-                           <!--Generate APIs-->
-                           <apis></apis>
                            <interfaceOnly>true</interfaceOnly>
-                       </environmentVariables>
+                           <serializableModel>true</serializableModel>
+                           <useJakartaEe>false</useJakartaEe>
+                           <useSpringBoot3>false</useSpringBoot3>
+                       </configOptions>
                    </configuration>
                </execution>
            </executions>
