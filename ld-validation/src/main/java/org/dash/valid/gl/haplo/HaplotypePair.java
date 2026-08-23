@@ -153,14 +153,23 @@ public class HaplotypePair {
 		if (haplotypePair == null) {
 			return false;
 		}
-		else if ((haplotypes.get(0).equals(((HaplotypePair) haplotypePair).haplotypes.get(0)) && 
+		else if ((haplotypes.get(0).equals(((HaplotypePair) haplotypePair).haplotypes.get(0)) &&
 				haplotypes.get(1).equals(((HaplotypePair) haplotypePair).haplotypes.get(1))) ||
-				(haplotypes.get(0).equals(((HaplotypePair) haplotypePair).haplotypes.get(1)) && 
+				(haplotypes.get(0).equals(((HaplotypePair) haplotypePair).haplotypes.get(1)) &&
 				haplotypes.get(1).equals(((HaplotypePair) haplotypePair).haplotypes.get(0)))) {
 			return true;
 		}
-		
+
 		return false;
+	}
+
+	// Was missing entirely -- HaplotypePair overrode equals() but not hashCode(), breaking
+	// contract for any HashSet/HashMap usage (e.g. DetectedLinkageFindings' noRaceOverlapPairs).
+	// Order-independent (sum, not concatenation) since equals() above accepts either
+	// (hap1,hap2) or (hap2,hap1) ordering as equal.
+	@Override
+	public int hashCode() {
+		return haplotypes.get(0).hashCode() + haplotypes.get(1).hashCode();
 	}
 	
 	@Override
