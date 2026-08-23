@@ -143,14 +143,31 @@ public class GLStringUtilitiesTest {
 	}
 	
 	@Test
-	public void testFieldLevelComparison() {		
+	public void testFieldLevelComparison() {
 		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A010101));
-		
+
 		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0101));
-		
+
 		assertTrue(GLStringUtilities.fieldLevelComparison(HLA_A010101, HLA_A01010101));
-		
-		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102));	
+
+		assertFalse(GLStringUtilities.fieldLevelComparison(HLA_A01010101, HLA_A0102));
+	}
+
+	// #124 rewrote convertToProteinLevel()'s SNLQ-suffix check from a regex Matcher to a direct
+	// char comparison; this exercises that branch directly (previously only reached indirectly
+	// via checkAntigenRecognitionSite(), and no existing allele fixture in this file has an
+	// SNLQ suffix), plus the plain-truncation and NNNN paths.
+	@Test
+	public void testConvertToProteinLevel() {
+		// 4-field allele, no variant suffix -> plain 2-field truncation.
+		assertTrue(HLA_A0101.equals(GLStringUtilities.convertToProteinLevel(HLA_A01010101)));
+
+		// 3+ fields ending in a recognized IMGT/HLA suffix letter (S/N/L/Q) -> 2-field
+		// truncation with the suffix letter preserved.
+		assertTrue("HLA-DRB4*01:03N".equals(GLStringUtilities.convertToProteinLevel("HLA-DRB4*01:03:01:02N")));
+
+		// Single-field NNNN is the documented "no call" placeholder -- silently null, not a warning.
+		assertNull(GLStringUtilities.convertToProteinLevel(GLStringConstants.NNNN));
 	}
 
 	@Test

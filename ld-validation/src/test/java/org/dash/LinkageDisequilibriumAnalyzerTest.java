@@ -22,6 +22,7 @@
 package org.dash;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -65,18 +66,39 @@ public class LinkageDisequilibriumAnalyzerTest {
 //		}
 //	}
 	
+	// This genotype is fully phased via "~" chains with zero "^" characters (per the published
+	// GL String spec, Milius et al., PMC3715123, that's legal). Before #120, parseGLString()
+	// derived the locus once per outer "^"-delimited block instead of once per inner phased
+	// segment, so an all-"~"-no-"^" genotype like this one silently collapsed every gene's
+	// alleles onto whichever locus was named first (HLA-A here) -- no error, just every other
+	// locus left empty. Only assertNotNull(sample) was checked before, which the bug still
+	// passed; asserting each locus actually got its own allele(s) is what would have caught it.
 	@Test
 	public void testPhasedGenotypeList() throws IOException {
 		System.setProperty(Frequencies.FREQUENCIES_PROPERTY, Frequencies.NMDP.getShortName());
 		String fullyQualified = GLStringUtilities.fullyQualifyGLString("HLA-A*24:02:01:01~HLA-C*04:01:01:06~HLA-B*35:02:01~HLA-DRB3*02:02:01:02~HLA-DRB1*11:01:01:01~HLA-DQA1*05:05:01:01/HLA-DQA1*05:05:01:02~HLA-DQB1*03:01:01:03~HLA-DPA1*01:03:01:01~HLA-DPB1*05:01:01+HLA-A*11:01:01:01~HLA-C*12:03:01:01~HLA-B*35:03:01~HLA-DRB3*02:02:01:01~HLA-DRB1*13:01:01:01/HLA-DRB1*13:01:01:02~HLA-DQA1*01:03:01:02~HLA-DQB1*06:03:01~HLA-DPA1*02:01:01:01~HLA-DPB1*13:01:01/HLA-DPB1*107:01");
-		
+
 		LinkageDisequilibriumGenotypeList glString = new LinkageDisequilibriumGenotypeList("SBCFMW0003", fullyQualified);
 
+		// The bug's exact symptom: every one of these 7 non-first loci ended up with an empty
+		// allele list, with everything piled onto HLA_A instead. (DRB3 normalizes to the
+		// combined HLA_DRB345 pseudo-locus, so that's what's checked here, not HLA_DRB3 itself.)
+		for (Locus locus : new Locus[] {Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB345, Locus.HLA_DRB1,
+				Locus.HLA_DQA1, Locus.HLA_DQB1, Locus.HLA_DPA1, Locus.HLA_DPB1}) {
+			assertFalse(glString.getAlleles(locus).isEmpty(),
+					"Expected locus " + locus + " to have its own allele(s), not be left empty by mis-bucketed phasing");
+		}
+
+		// HLA_A itself should have exactly the 2 phased copies' worth of alleles (one entry per
+		// "+"-separated copy), not every gene's alleles piled on top of it.
+		assertEquals(2, glString.getAlleles(Locus.HLA_A).size(),
+				"Expected HLA_A to have exactly 2 allele-ambiguity groups (one per phased copy), not every locus's alleles collapsed onto it");
+
 		List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(glString);
-		
+
 		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(glString, knownHaplotypes);
-		
-		assertNotNull(sample);		
+
+		assertNotNull(sample);
 	}
 	
 	@Test
