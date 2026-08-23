@@ -539,7 +539,12 @@ public class GLStringUtilities {
 		    		glString.append(glValue);
 		    	}
 		    	
-		    	linkedGLStrings.add(inflateGenotypeList(sampleId, glString.toString(), null));
+		    	try {
+		    		linkedGLStrings.add(inflateGenotypeList(sampleId, glString.toString(), null));
+		    	}
+		    	catch (AmbiguousGenotypeException e) {
+		    		LOGGER.warning("Skipping id: " + sampleId + " in " + filename + " -- " + e.getMessage());
+		    	}
 		    }
 		}
 		else {
@@ -571,8 +576,14 @@ public class GLStringUtilities {
 					continue;
 				}
 				
-				linkedGLStrings.add(inflateGenotypeList(id, glString, note));
-					
+				try {
+					linkedGLStrings.add(inflateGenotypeList(id, glString, note));
+				}
+				catch (AmbiguousGenotypeException e) {
+					LOGGER.warning("Skipping id: " + id + " at line " + (lineNumber - 1)
+							+ " in " + filename + " -- " + e.getMessage());
+				}
+
 			}
 		}
 				

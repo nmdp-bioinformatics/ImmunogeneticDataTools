@@ -167,7 +167,7 @@ public class LinkageDisequilibriumGenotypeList {
 							+ locus.getFullName());
 					return false;
 				}
-	
+
 				if (getProteinCount(locus) > PROTEIN_THRESHOLD) {
 					LOGGER.warning("Exceeded the protein threshold of : "
 							+ PROTEIN_THRESHOLD + " at locus: "
@@ -178,6 +178,32 @@ public class LinkageDisequilibriumGenotypeList {
 		}
 
 		return true;
+	}
+
+	// Guards constructPossibleHaplotypes() before it computes a cartesian product across
+	// every ambiguous allele at every locus in loci: for a genuinely ambiguous genotype
+	// (e.g. from shallow/low-resolution NGS typing), that product can reach into the
+	// billions and effectively hang. checkAmbiguitiesThresholds() above already detects
+	// this same condition but only logs a warning and lets processing continue anyway --
+	// this throws instead, so the expensive computation never starts.
+	private void checkAmbiguityThresholds(Set<Locus> loci) {
+		for (Locus locus : loci) {
+			int alleleCount = getAlleleCount(locus);
+			if (alleleCount > ALLELE_AMBIGUITY_THRESHOLD) {
+				throw new AmbiguousGenotypeException("GL string " + id + " has " + alleleCount
+						+ " ambiguous alleles at locus " + locus.getFullName()
+						+ ", exceeding the allele ambiguity threshold of " + ALLELE_AMBIGUITY_THRESHOLD
+						+ " (adjust with -Dorg.dash.ambThreshold). Too ambiguous to enumerate possible haplotypes.");
+			}
+
+			int proteinCount = getProteinCount(locus);
+			if (proteinCount > PROTEIN_THRESHOLD) {
+				throw new AmbiguousGenotypeException("GL string " + id + " has " + proteinCount
+						+ " distinct proteins at locus " + locus.getFullName()
+						+ ", exceeding the protein threshold of " + PROTEIN_THRESHOLD
+						+ " (adjust with -Dorg.dash.proteinThreshold). Too ambiguous to enumerate possible haplotypes.");
+			}
+		}
 	}
 
 	public int getAlleleCount(Locus locus) {
@@ -202,17 +228,21 @@ public class LinkageDisequilibriumGenotypeList {
 		return proteins.size();
 	}
 
+	// Locus is derived per genePhase (the innermost, actual allele-bearing segment --
+	// each one carries its own "HLA-X*..." locus prefix), not once per outer ^-delimited
+	// gene block. Per the GL String spec (Milius et al., PMC3715123), ^ separates loci
+	// in an *unphased* multilocus genotype, while ~ ("phased genes" in the spec's own
+	// delimiter table) phases alleles across genes -- a fully phased genotype can
+	// legitimately have zero ^ characters at all, chaining every gene with ~ instead.
+	// Deriving locus from the outer gene block meant that case silently collapsed every
+	// gene's alleles onto whichever locus was named first in the string, with no error.
 	private void parseGLString() {
 		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
 		Locus locus = null;
-		
+
 		List<String> genes = GLStringUtilities.parse(glString,
 				GLStringConstants.GENE_DELIMITER);
 		for (String gene : genes) {
-			String[] splitString = gene
-					.split(GLStringUtilities.ESCAPED_ASTERISK);
-			String locusVal = splitString[0];
-
 			List<String> genotypeAmbiguities = GLStringUtilities.parse(gene,
 					GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
 			for (String genotypeAmbiguity : genotypeAmbiguities) {
@@ -223,10 +253,14 @@ public class LinkageDisequilibriumGenotypeList {
 					List<String> genePhases = GLStringUtilities.parse(geneCopy,
 							GLStringConstants.GENE_PHASE_DELIMITER);
 					for (String genePhase : genePhases) {
+						String[] splitString = genePhase
+								.split(GLStringUtilities.ESCAPED_ASTERISK);
+						String locusVal = splitString[0];
+
 						List<String> alleleAmbiguities = GLStringUtilities
 								.parse(genePhase,
 										GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
-						
+
 						if (locusMap.containsKey(locusVal)) {
 							locus = locusMap.get(locusVal);
 						}
@@ -318,6 +352,8 @@ public class LinkageDisequilibriumGenotypeList {
 
 	@SuppressWarnings("unchecked")
 	public Set<MultiLocusHaplotype> constructPossibleHaplotypes(Set<Locus> loci) {
+		checkAmbiguityThresholds(loci);
+
 		HashMap<Locus, SingleLocusHaplotype> singleLocusHaplotypes = new HashMap<Locus, SingleLocusHaplotype>();
 		Set<MultiLocusHaplotype> possibleHaplotypes = new HashSet<MultiLocusHaplotype>();
 
