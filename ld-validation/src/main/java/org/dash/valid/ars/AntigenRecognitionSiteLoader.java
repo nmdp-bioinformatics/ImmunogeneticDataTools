@@ -33,9 +33,11 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.zip.ZipInputStream;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Row;
@@ -44,10 +46,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class AntigenRecognitionSiteLoader {
@@ -98,57 +96,89 @@ public class AntigenRecognitionSiteLoader {
 		this.arsMap = loadARSData();
 	}
 	
+	// Streams the IMGT/HLA ambiguity XML with StAX (XMLStreamReader) instead of parsing it
+	// into a full DOM tree -- same fix, same reason as CommonWellDocumentedLoader.
+	// loadFromIMGT: hla_ambigs.xml.zip is even larger than hla.xml.zip (~39MB compressed
+	// at the time of writing) and only two attributes per element are actually needed.
+	// gGroup/gGroupAllele elements don't nest inside each other (only inside gene, whose
+	// own attributes are never used), so tracking "are we inside a gGroup" as a single flag
+	// while streaming is enough to reproduce the original nesting-scoped behavior.
 	public static HashMap<String, HashSet<String>> loadGGroups(String hladb) throws MalformedURLException, IOException, ParserConfigurationException, SAXException {
 		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
 		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip");
-			
+
 		System.out.println(url.toString());
-		ZipInputStream zipStream = new ZipInputStream(url.openStream());
-		zipStream.getNextEntry();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(zipStream));
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    InputSource is = new InputSource(reader);
-	    Document doc = builder.parse(is);
-	    
-	    HashMap<String, HashSet<String>> gAlleleListMap = new HashMap<String, HashSet<String>>();
-	    String[] parts;
-	    String arsCode;
 
-	    NodeList nList = doc.getElementsByTagName("tns:gene");
-	    for (int i=0;i<nList.getLength();i++) {
-	    	NodeList gGroups = ((Element) nList.item(i)).getElementsByTagName("tns:gGroup");
-	    	
-	    	for (int j=0;j<gGroups.getLength();j++) {
-	    		String gGroup = gGroups.item(j).getAttributes().getNamedItem("name").getNodeValue();
-	    		parts = gGroup.split(GLStringUtilities.COLON);
-	    		
-	    		if (parts.length < 2) continue;
-	    		arsCode = (gGroup.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] + "g" : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1] + "g";
-	    		
-	    		// currently implementing NMDP 'hack' to deal with historical typings associated with re-named allele - consistent with HaploStats
-	    		if (arsCode.equals("HLA-C*02:10g")) arsCode = "HLA-C*02:02g";
-	    		
-	    		HashSet<String> gAlleleList = gAlleleListMap.containsKey(arsCode) ? gAlleleListMap.get(arsCode) : new HashSet<String>();
-	    		
-	    		NodeList gGroupAlleles = ((Element) gGroups.item(j)).getElementsByTagName("tns:gGroupAllele");
-	    		for (int k=0;k<gGroupAlleles.getLength();k++) {
-	    			String fullAllele = gGroupAlleles.item(k).getAttributes().getNamedItem("name").getNodeValue();
-	    			parts = fullAllele.split(GLStringUtilities.COLON);
-	    			String allele = (fullAllele.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1];
-	    			
-	    			if (parts.length > 2 && Pattern.matches("[SNLQ]", "" + fullAllele.charAt(fullAllele.length() - 1))) {
-	    				LOGGER.finest("Found an SNLQ during the ARS load: " + fullAllele + " became: " + allele + fullAllele.charAt(fullAllele.length()-1));
-	    				allele += fullAllele.charAt(fullAllele.length()-1);
-	    			}
-	    			gAlleleList.add(allele);
-	    		}	
-		    	gAlleleListMap.put(arsCode, gAlleleList);
+		HashMap<String, HashSet<String>> gAlleleListMap = new HashMap<String, HashSet<String>>();
 
-	    	}
-	    }
-	    
-	    return gAlleleListMap;
+		try (ZipInputStream zipStream = new ZipInputStream(url.openStream())) {
+			zipStream.getNextEntry();
+
+			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+			inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+			inputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+			// StAX defaults to namespace-aware parsing, which would strip the "tns:" prefix
+			// off getLocalName(). The original DOM parser here used the JDK default (non
+			// namespace-aware), matching "tns:gGroup" etc. as one literal tag name -- kept
+			// that same matching behavior rather than resolving the namespace properly, to
+			// keep this a pure parsing-strategy change with no behavior difference.
+			inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false);
+			XMLStreamReader reader = inputFactory.createXMLStreamReader(zipStream);
+
+			try {
+				String[] parts;
+				String arsCode = null;
+				HashSet<String> gAlleleList = null;
+
+				while (reader.hasNext()) {
+					int event = reader.next();
+
+					if (event == XMLStreamConstants.START_ELEMENT && "tns:gGroup".equals(reader.getLocalName())) {
+						String gGroup = reader.getAttributeValue(null, "name");
+						parts = gGroup.split(GLStringUtilities.COLON);
+
+						if (parts.length < 2) {
+							arsCode = null;
+							gAlleleList = null;
+							continue;
+						}
+
+						arsCode = (gGroup.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] + "g" : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1] + "g";
+
+						// currently implementing NMDP 'hack' to deal with historical typings associated with re-named allele - consistent with HaploStats
+						if (arsCode.equals("HLA-C*02:10g")) arsCode = "HLA-C*02:02g";
+
+						gAlleleList = gAlleleListMap.containsKey(arsCode) ? gAlleleListMap.get(arsCode) : new HashSet<String>();
+					}
+					else if (event == XMLStreamConstants.START_ELEMENT && "tns:gGroupAllele".equals(reader.getLocalName()) && gAlleleList != null) {
+						String fullAllele = reader.getAttributeValue(null, "name");
+						parts = fullAllele.split(GLStringUtilities.COLON);
+						String allele = (fullAllele.startsWith(GLStringConstants.HLA_DASH)) ? parts[0] + GLStringUtilities.COLON + parts[1] : GLStringConstants.HLA_DASH + parts[0] + GLStringUtilities.COLON + parts[1];
+
+						if (parts.length > 2 && Pattern.matches("[SNLQ]", "" + fullAllele.charAt(fullAllele.length() - 1))) {
+							LOGGER.finest("Found an SNLQ during the ARS load: " + fullAllele + " became: " + allele + fullAllele.charAt(fullAllele.length()-1));
+							allele += fullAllele.charAt(fullAllele.length()-1);
+						}
+						gAlleleList.add(allele);
+					}
+					else if (event == XMLStreamConstants.END_ELEMENT && "tns:gGroup".equals(reader.getLocalName())) {
+						if (arsCode != null) {
+							gAlleleListMap.put(arsCode, gAlleleList);
+						}
+						arsCode = null;
+						gAlleleList = null;
+					}
+				}
+			}
+			finally {
+				reader.close();
+			}
+		}
+		catch (XMLStreamException e) {
+			throw new IOException("Problem streaming IMGT/HLA ambiguity XML for hladb: " + hladb, e);
+		}
+
+		return gAlleleListMap;
 	}
 	
 	private static HashMap<String, HashSet<String>> loadARSData() throws InvalidFormatException, IOException {
