@@ -25,7 +25,10 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -181,12 +184,28 @@ public class HLALinkageDisequilibrium {
 			DetectedLinkageFindings findings) {
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 
-		Set<MultiLocusHaplotype> linkedHaplotypes = new HashSet<MultiLocusHaplotype>();
-		
+		// Was: Set<MultiLocusHaplotype> linkedHaplotypes = new HashSet<>(), added to via a bare
+		// linkedHaplotypes.add(clonedHaplotype). Multiple raw allele combinations enumerated from
+		// the genotype's own ambiguity can independently match the SAME reference disequilibrium
+		// element (they all belong to the same G-group, and reference lookups are G-group/ARS
+		// based, not exact-string), so more than one clonedHaplotype can carry the identical
+		// G-group-level getHaplotypeString() -- that's the "value" -- while differing only in
+		// getFullHaplotypeString() ("fullValue"). Since equals()/hashCode() are (correctly)
+		// based on getHaplotypeString() alone, a plain HashSet.add() silently drops whichever
+		// candidate it encounters second, and which one that is depends on HashSet iteration
+		// order, which is not guaranteed stable across JVM runs -- confirmed via run-twice-diff.
+		// The reference disequilibrium data is loaded with exactly one entry per unique G-group
+		// string (see HLAFrequenciesLoader#loadStandardReferenceData), so any two candidates
+		// tied at the G-group level necessarily matched that identical single reference entry --
+		// the frequency/linkage evidence they carry is the same either way. Keying explicitly by
+		// getHaplotypeString() lets us detect the tie and choose deterministically (smaller
+		// fullValue wins) instead of leaving it to HashSet iteration order.
+		Map<String, MultiLocusHaplotype> linkedHaplotypesByValue = new LinkedHashMap<String, MultiLocusHaplotype>();
+
 		Set<DetectedDisequilibriumElement> detectedDisequilibriumElements = new HashSet<DetectedDisequilibriumElement>();
-		
+
 		MultiLocusHaplotype clonedHaplotype = null;
-				
+
 		for (MultiLocusHaplotype possibleHaplotype : glString.getPossibleHaplotypes(loci)) {
 			List<DisequilibriumElement> shortenedList = new ArrayList<DisequilibriumElement>(disequilibriumElements);
 
@@ -194,30 +213,44 @@ public class HLALinkageDisequilibrium {
 
 			for (Locus locus : possibleHaplotype.getLoci()) {
 				if (loci.contains(locus)) {
-					
+
 					hlaElementMap.put(locus, possibleHaplotype.getAlleles(locus));
 				}
 			}
-			
+
 			DisequilibriumElement element = new CoreDisequilibriumElement(hlaElementMap, possibleHaplotype);
 			DetectedDisequilibriumElement detectedElement = null;
-						
+
 			while (shortenedList.contains(element)) {
 				int index = shortenedList.indexOf(element);
 				clonedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(possibleHaplotype.getAlleleMap()), possibleHaplotype.getHaplotypeInstanceMap(), possibleHaplotype.getDrb345Homozygous());
 				detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
 				detectedElement.setHaplotype(element.getHaplotype());
 				clonedHaplotype.setLinkage(detectedElement);
-				linkedHaplotypes.add(clonedHaplotype);
+
+				String haplotypeValue = clonedHaplotype.getHaplotypeString();
+				MultiLocusHaplotype existingHaplotype = linkedHaplotypesByValue.get(haplotypeValue);
+
+				if (existingHaplotype == null) {
+					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
+				}
+				else if (clonedHaplotype.getFullHaplotypeString().compareTo(existingHaplotype.getFullHaplotypeString()) < 0) {
+					LOGGER.fine("Multiple raw allele candidates tie at G-group " + haplotypeValue + ": keeping "
+							+ clonedHaplotype.getFullHaplotypeString() + " over " + existingHaplotype.getFullHaplotypeString());
+					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
+				}
+
 				detectedDisequilibriumElements.add(detectedElement);
-				
+
 				shortenedList = shortenedList.subList(index + 1, shortenedList.size());
 			}
 		}
-		
+
+		Set<MultiLocusHaplotype> linkedHaplotypes = new LinkedHashSet<MultiLocusHaplotype>(linkedHaplotypesByValue.values());
+
 		findings.addLinkages(detectedDisequilibriumElements);
-		
-		for (Haplotype haplotype1 : linkedHaplotypes) {	
+
+		for (Haplotype haplotype1 : linkedHaplotypes) {
 			for (Haplotype haplotype2 : linkedHaplotypes) {
 				int idx = 0;
 				for (Locus locus : loci) {
