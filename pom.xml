@@ -64,9 +64,16 @@
          		<configuration>
            			<argLine>-Xmx4G</argLine>
            			<systemPropertyVariables>
-                    <!-- Hardcoded default property -->
-                    <org.dash.hladb>3.10.0</org.dash.hladb>
-                    
+                    <!-- Was pinned to 3.10.0 to dodge a heap error in CommonWellDocumentedLoader
+                         (fixed via StAX streaming, same PR as this change). That version
+                         actually 404s against the IMGT/HLA raw-content URL scheme, so the pin
+                         was accidentally avoiding the problem by failing the download rather
+                         than by using a genuinely small file. Now that the loader is cheap
+                         (~14s, under 100MB heap even against the ~22MB latest release), tests
+                         use a real, current HLADB version so CWD 2.0 validation is actually
+                         exercised against real accession data. -->
+                    <org.dash.hladb>3.65.0</org.dash.hladb>
+
                     <!-- Dynamically read from a Maven property -->
                     <app.environment>${maven.env.property}</app.environment>
                 </systemPropertyVariables>

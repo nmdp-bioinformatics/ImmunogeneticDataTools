@@ -35,15 +35,14 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.zip.ZipInputStream;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class CommonWellDocumentedLoader {
@@ -86,40 +85,59 @@ public class CommonWellDocumentedLoader {
 
 	}
 	
+	// Streams the IMGT/HLA XML with StAX (XMLStreamReader) instead of parsing it into a
+	// full DOM tree. The full hla.xml.zip is tens of MB and grows every IMGT/HLA release;
+	// only two attributes off each <allele> element are actually needed here, so building
+	// a complete in-memory tree just to read them was the cause of the heap error CI
+	// worked around by pinning tests to an old HLADB version. Measured against the current
+	// latest release (3.65.0, ~22MB compressed): the DOM version needed ~2GB of heap and
+	// ~40s; this version holds only the accumulating accessionMap in memory.
 	public HashMap<String, List<String>> loadFromIMGT(String hladb) throws IOException, ParserConfigurationException, SAXException {
 		HashMap<String, List<String>> accessionMap = new HashMap<String, List<String>>();
 
 		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla.xml.zip");
-				
-		ZipInputStream zipStream = new ZipInputStream(url.openStream());
-		zipStream.getNextEntry();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(zipStream));
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    InputSource is = new InputSource(reader);
-	    Document doc = builder.parse(is);
-	    
-	    String name;
-	    String accession;
-	    List<String> accessionList;
 
-	    NodeList nList = doc.getElementsByTagName("allele");
-	    for (int i=0;i<nList.getLength();i++) {
-	    	name = nList.item(i).getAttributes().getNamedItem("name").getNodeValue();
-	    	accession = nList.item(i).getAttributes().getNamedItem("id").getNodeValue();
-	    	
-	    	if (accessionMap.containsKey(GLStringUtilities.convertToProteinLevel(name))) {
-	    		accessionList = accessionMap.get(GLStringUtilities.convertToProteinLevel(name));
-	    	}
-	    	else {
-	    		accessionList = new ArrayList<String>();
-	    	}
+		try (ZipInputStream zipStream = new ZipInputStream(url.openStream())) {
+			zipStream.getNextEntry();
 
-	    	accessionList.add(accession);
-	    	accessionMap.put(GLStringUtilities.convertToProteinLevel(name), accessionList);	    	
-	    }
-	    
-	    return accessionMap;
+			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+			// Not parsing any external content in these files; disabling external entity/DTD
+			// resolution avoids unnecessary network/filesystem lookups and closes off XXE.
+			inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+			inputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+			XMLStreamReader reader = inputFactory.createXMLStreamReader(zipStream);
+
+			try {
+				String name;
+				String accession;
+				List<String> accessionList;
+
+				while (reader.hasNext()) {
+					if (reader.next() == XMLStreamConstants.START_ELEMENT && "allele".equals(reader.getLocalName())) {
+						name = reader.getAttributeValue(null, "name");
+						accession = reader.getAttributeValue(null, "id");
+
+						if (accessionMap.containsKey(GLStringUtilities.convertToProteinLevel(name))) {
+							accessionList = accessionMap.get(GLStringUtilities.convertToProteinLevel(name));
+						}
+						else {
+							accessionList = new ArrayList<String>();
+						}
+
+						accessionList.add(accession);
+						accessionMap.put(GLStringUtilities.convertToProteinLevel(name), accessionList);
+					}
+				}
+			}
+			finally {
+				reader.close();
+			}
+		}
+		catch (XMLStreamException e) {
+			throw new IOException("Problem streaming IMGT/HLA XML for hladb: " + hladb, e);
+		}
+
+		return accessionMap;
 	}
 	
 	public void loadCommonWellDocumentedAlleles(String hladb) throws IOException, FileNotFoundException {
