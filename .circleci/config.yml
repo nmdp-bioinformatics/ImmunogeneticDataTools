@@ -23,10 +23,15 @@ jobs:
       - run:
           name: Build
           command: mvn -B -DskipTests clean package
-      # Then run your tests!
+      # Then run your tests! verify (not just test) so ld-validation's jacoco:report
+      # execution -- bound to the verify phase -- actually runs and produces a coverage
+      # report; reporting only, doesn't fail the build on a coverage number.
       - run:
           name: Test
-          command: mvn test
+          command: mvn verify
+      - store_artifacts:
+          path: ld-validation/target/site/jacoco
+          destination: coverage/ld-validation
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
