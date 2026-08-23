@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.api.GenotypesApi;
 import io.swagger.model.FindingData;
 import io.swagger.model.Genotype;
@@ -27,7 +27,7 @@ import io.swagger.model.Samples;
 @Controller
 public class GenotypesApiController implements GenotypesApi {
     @Override
-    public ResponseEntity<Samples> submitGenotypes(@ApiParam(value = "Genotypes" ,required=true )  @Valid @RequestBody Genotypes genotypes) {
+    public ResponseEntity<Samples> submitGenotypes(@Parameter(description = "Genotypes", required = true)  @Valid @RequestBody Genotypes genotypes) {
         List<Genotype> genotypeList = genotypes.getGenotype();
         Samples samples = new Samples();
         SampleData sampleData = null;
