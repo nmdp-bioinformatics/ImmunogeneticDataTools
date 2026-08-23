@@ -29,8 +29,8 @@ import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.Locus;
 import org.dash.valid.gl.GLStringConstants;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name="linkage")
 public class DisequilibriumElementByRace extends CoreDisequilibriumElement {

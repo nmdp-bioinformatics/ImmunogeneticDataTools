@@ -3,7 +3,7 @@ package org.nmdp.validation.controller;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Sample;

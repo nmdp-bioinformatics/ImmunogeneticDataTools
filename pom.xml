@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.1</version>
+    <version>3.5.16</version>
     <relativePath/>
   </parent>
   <groupId>org.nmdp.validation</groupId>
@@ -117,8 +117,8 @@
       </dependency>
       <!-- Bean Validation API support -->
       <dependency>
-          <groupId>javax.validation</groupId>
-          <artifactId>validation-api</artifactId>
+          <groupId>jakarta.validation</groupId>
+          <artifactId>jakarta.validation-api</artifactId>
           <scope>provided</scope>
       </dependency>
       <dependency>
