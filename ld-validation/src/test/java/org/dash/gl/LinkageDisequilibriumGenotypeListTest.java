@@ -22,6 +22,7 @@
 package org.dash.gl;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.dash.valid.Locus;
+import org.dash.valid.gl.AmbiguousGenotypeException;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.Haplotype;
@@ -93,5 +95,55 @@ public class LinkageDisequilibriumGenotypeListTest {
 			
 			assertFalse(haplotype1.getAlleles(Locus.HLA_C).contains(C1203) && haplotype2.getAlleles(Locus.HLA_C).contains(C1203));
 		}
+	}
+
+	// Regression tests for #120: constructPossibleHaplotypes() cartesian-products every
+	// ambiguous allele across every locus, which can reach into the billions (and effectively
+	// hang) for a pathologically ambiguous genotype -- checkAmbiguityThresholds() is supposed
+	// to reject those up front instead. Neither the rejection itself nor its below-threshold
+	// non-interference had a direct test before now; the fix was previously verified only by
+	// timing a real 32,757-character line from a user-supplied file, not by the test suite.
+	@Test
+	public void testAmbiguityThresholdThrows() throws ReflectiveOperationException {
+		// LinkagesLoader is a process-wide singleton whose getInstance() is a no-op once
+		// already initialized, and other tests in this same forked JVM may initialize it
+		// first with a Linkages set that doesn't cover HLA_B. Reset it so this test's
+		// assumption (some loaded linkage set includes HLA_B) actually holds regardless of
+		// what ran before it.
+		java.lang.reflect.Field instanceField = org.dash.valid.LinkagesLoader.class.getDeclaredField("instance");
+		instanceField.setAccessible(true);
+		instanceField.set(null, null);
+		org.dash.valid.LinkagesLoader.getInstance(org.dash.valid.Linkages.lookup(org.dash.valid.Locus.C_B_LOCI));
+
+		StringBuilder alleleAmbiguities = new StringBuilder("HLA-B*07:01");
+		for (int i = 2; i <= 21; i++) {
+			alleleAmbiguities.append(GLStringConstants.ALLELE_AMBIGUITY_DELIMITER)
+					.append(String.format("HLA-B*07:%02d", i));
+		}
+		String glString = "HLA-A*01:01" + GLStringConstants.GENE_DELIMITER + alleleAmbiguities;
+
+		// The constructor itself eagerly calls constructPossibleHaplotypes() for whichever
+		// Linkages set(s) are currently loaded, so with 21 ambiguous alleles at HLA_B,
+		// construction itself is expected to throw -- this is also a more realistic test of
+		// the actual rejection path (GLStringUtilities' batch-file processing catches exactly
+		// this exception per-line).
+		assertThrows(AmbiguousGenotypeException.class,
+				() -> new LinkageDisequilibriumGenotypeList("AmbiguityThreshold", glString),
+				"Expected constructing a genotype with 21 ambiguous alleles at one locus to be rejected");
+	}
+
+	@Test
+	public void testBelowAmbiguityThresholdDoesNotThrow() {
+		LinkageDisequilibriumGenotypeList genotypeList = new LinkageDisequilibriumGenotypeList("BelowThreshold", TEST_BC_PAIRS);
+
+		Set<Locus> loci = new HashSet<Locus>();
+		loci.add(Locus.HLA_B);
+		loci.add(Locus.HLA_C);
+
+		// Well under the threshold -- asserts the check isn't over-eager (e.g. counting
+		// something other than actual allele ambiguity count) and doesn't regress the
+		// ordinary, non-pathological case.
+		Set<MultiLocusHaplotype> possibleHaplotypes = genotypeList.constructPossibleHaplotypes(loci);
+		assertTrue(possibleHaplotypes.size() > 0);
 	}
 }
