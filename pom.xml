@@ -75,66 +75,19 @@
   		</plugins>
   	</pluginManagement>
  </build>
+  <!-- Only genuinely shared dependencies live here. Module-specific dependencies
+       (guava, poi, dsh-commandline/dsh-compress, jaxb-runtime, spring-boot-starter-web,
+       jakarta.validation-api) moved down to whichever module actually uses them, see
+       Phase 3.5 in the modernization plan. Also removed here: ngs-hml (confirmed zero
+       usage anywhere; HML file support is real, in GLStringUtilities, but implemented
+       via generic DOM parsing, never used ngs-hml's JAXB classes) and log4j-core/
+       log4j-api (zero direct usage anywhere in the reactor: ld-tools/ld-validation log
+       via java.util.logging, ld-service via logback). -->
   <dependencies>
-  	<dependency>
-  		<groupId>com.google.guava</groupId>
-  		<artifactId>guava</artifactId>
-  		<version>33.7.1-jre</version>
-  	</dependency>
-  	<!-- API, java.xml.bind module -->
-	<dependency>
-		<groupId>org.glassfish.jaxb</groupId>
-		<artifactId>jaxb-runtime</artifactId>
-	</dependency>
-  	<dependency>
-  		<groupId>org.apache.poi</groupId>
-  		<artifactId>poi-ooxml</artifactId>
-  		<version>5.5.1</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.apache.poi</groupId>
-  		<artifactId>poi</artifactId>
-  		<version>5.5.1</version>
-  	</dependency>
-      <dependency>
-        <groupId>org.dishevelled</groupId>
-        <artifactId>dsh-commandline</artifactId>
-        <version>1.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.dishevelled</groupId>
-        <artifactId>dsh-compress</artifactId>
-        <version>1.6</version>
-      </dependency>
-     <dependency>
-      <groupId>org.nmdp.ngs</groupId>
-      <artifactId>ngs-hml</artifactId>
-      <version>1.8.3</version>
-    </dependency>
-     <dependency>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-web</artifactId>
-      </dependency>
-      <!-- Bean Validation API support -->
-      <dependency>
-          <groupId>jakarta.validation</groupId>
-          <artifactId>jakarta.validation-api</artifactId>
-          <scope>provided</scope>
-      </dependency>
       <dependency>
       	<groupId>org.junit.jupiter</groupId>
       	<artifactId>junit-jupiter-api</artifactId>
       </dependency>
-      <dependency>
-      	<groupId>org.apache.logging.log4j</groupId>
-      	<artifactId>log4j-core</artifactId>
-      </dependency>
-
-            <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api -->
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-api</artifactId>
-            </dependency>
   </dependencies>
 
   <description>Tools for exploring Linkage Disequilibrium, HLA, GL Strings</description>

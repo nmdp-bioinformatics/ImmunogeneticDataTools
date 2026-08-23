@@ -49,18 +49,32 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <!-- guava and dsh-commandline/dsh-compress moved down from the root pom (Phase 3.5),
+       used directly here (About.java, AnalyzeGLStrings.java, NormalizeFrequencyFile.java).
+       ngs-hml removed: confirmed zero usage anywhere despite being declared both here and
+       at the root. HML file support is real (in ld-validation's GLStringUtilities) but
+       implemented via generic DOM parsing, never used ngs-hml's JAXB classes. -->
   <dependencies>
       <dependency>
         <groupId>org.nmdp.validation</groupId>
         <artifactId>ld-validation</artifactId>
         <scope>compile</scope>
       </dependency>
-     <dependency>
-      <groupId>org.nmdp.ngs</groupId>
-      <artifactId>ngs-hml</artifactId>
-      <version>1.8.3</version>
-      <scope>compile</scope>
-    </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>33.7.1-jre</version>
+      </dependency>
+      <dependency>
+        <groupId>org.dishevelled</groupId>
+        <artifactId>dsh-commandline</artifactId>
+        <version>1.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.dishevelled</groupId>
+        <artifactId>dsh-compress</artifactId>
+        <version>1.6</version>
+      </dependency>
   </dependencies>
 
 

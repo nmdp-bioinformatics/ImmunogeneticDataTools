@@ -39,7 +39,40 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.targetEncoding>UTF-8</project.build.targetEncoding>
   </properties>
-  
+
+  <!-- Moved down from the root pom (Phase 3.5): these were previously inherited by
+       every module regardless of need. poi/poi-ooxml and jaxb-runtime/jakarta.xml.bind-api
+       are used directly here (frequency file parsing, JAXB annotations on Sample/
+       Haplotype/etc.); commons-lang was riding a transitive freebie via dsh-commandline,
+       which now lives in ld-tools instead, so it's declared explicitly here since
+       GLStringUtilities.java uses it directly. -->
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi</artifactId>
+      <version>5.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>5.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
     <testSourceDirectory>src/test/java</testSourceDirectory>

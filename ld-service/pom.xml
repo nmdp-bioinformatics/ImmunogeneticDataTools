@@ -84,21 +84,10 @@
           <artifactId>jackson-databind-nullable</artifactId>
           <version>0.2.11</version>
       </dependency>
-      <!-- Renamed from mysql:mysql-connector-java (Phase 2 deferred this here: Boot 2.7's
-           BOM didn't manage the new coordinates, Boot 3's does). -->
-      <dependency>
-          <groupId>com.mysql</groupId>
-          <artifactId>mysql-connector-j</artifactId>
-          <scope>runtime</scope>
-      </dependency>
-      <dependency>
-          <groupId>org.springframework.data</groupId>
-          <artifactId>spring-data-jpa</artifactId>
-      </dependency>
-      <dependency>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-data-jpa</artifactId>
-      </dependency>
+      <!-- mysql-connector-j, spring-data-jpa, and spring-boot-starter-data-jpa were removed
+           here (Phase 3.5): confirmed unused. HLAHapVServiceApplication explicitly excludes
+           DataSourceAutoConfiguration and HibernateJpaAutoConfiguration, so none of this was
+           ever actually wired up at runtime. Re-add if a real DB feature gets built. -->
       <!-- Bean Validation API support -->
       <dependency>
           <groupId>jakarta.validation</groupId>
