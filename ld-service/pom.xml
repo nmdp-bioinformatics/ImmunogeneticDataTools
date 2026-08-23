@@ -60,10 +60,22 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-starter-web</artifactId>
       </dependency>
-      <!-- Overrides the stale 2.1.2 pulled transitively via springfox-swagger2 (which
-           doesn't support Schema.requiredMode(), needed by openapi-generator 7.x's
-           generated models). Becomes a direct, non-transitive need once springfox is
-           replaced in Phase 3b. -->
+      <!-- Replaces springfox-swagger2, which was abandoned and broken by Spring MVC's
+           path-matching changes since Boot 2.6, and crashed ld-service at startup with
+           a NullPointerException in documentationPluginsBootstrapper (confirmed via
+           actually running the packaged jar; the service had apparently been unable to
+           start at all for some time). 1.8.0 is the last release on the javax/Boot-2.x
+           line; bumps to the jakarta/Boot-3.x line (springdoc-openapi-starter-webmvc-ui)
+           happen in Phase 3c. Auto-configures itself, no @EnableSwagger2-equivalent
+           annotation needed. -->
+      <dependency>
+          <groupId>org.springdoc</groupId>
+          <artifactId>springdoc-openapi-ui</artifactId>
+          <version>1.8.0</version>
+      </dependency>
+      <!-- Needed directly now that springfox (which pulled in an old 2.1.2 transitively)
+           is gone; current version, supports Schema.requiredMode() used by
+           openapi-generator 7.x's generated models. -->
       <dependency>
           <groupId>io.swagger.core.v3</groupId>
           <artifactId>swagger-annotations</artifactId>

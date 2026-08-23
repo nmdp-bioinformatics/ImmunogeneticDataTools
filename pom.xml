@@ -50,7 +50,6 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.enforcer.jdk-version>[${java.version},]</maven.enforcer.jdk-version>
-    <springfox-version>3.0.0</springfox-version>
     <maven.enforcer.maven-version>[3.8.6,)</maven.enforcer.maven-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.targetEncoding>UTF-8</project.build.targetEncoding>
@@ -115,12 +114,6 @@
      <dependency>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-starter-web</artifactId>
-      </dependency>
-      <!--SpringFox dependencies -->
-      <dependency>
-          <groupId>io.springfox</groupId>
-          <artifactId>springfox-swagger2</artifactId>
-          <version>${springfox-version}</version>
       </dependency>
       <!-- Bean Validation API support -->
       <dependency>
