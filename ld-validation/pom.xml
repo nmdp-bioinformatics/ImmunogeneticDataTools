@@ -116,6 +116,48 @@
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <version>3.3.0</version>
       </plugin>
+      <!-- The root pom's surefire pluginManagement hardcodes argLine to "-Xmx4G", which
+           overwrites (rather than chains with) the -javaagent flag jacoco:prepare-agent
+           injects via the argLine property below; without this override, jacoco silently
+           collects no execution data and report skips with "missing execution data file".
+           Re-declaring surefire here, scoped to just this module, to chain the two instead of
+           touching the root pom's shared config (which every other module also inherits). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>@{argLine} -Xmx4G</argLine>
+        </configuration>
+      </plugin>
+      <!-- Coverage reporting only, not a threshold/gate. Scoped to this module since it's the
+           one with real test infrastructure; ld-tools has 2 test files and ld-service has none,
+           so instrumenting them wouldn't measure anything meaningful yet. prepare-agent wires
+           the runtime agent into surefire's argLine; report (bound to verify, which runs after
+           test) turns the collected exec data into target/site/jacoco/index.html. CI stores that
+           as a build artifact, see .circleci/config.yml, so coverage is visible without
+           failing the build on a number nobody's agreed on yet (ld-service in particular has no
+           test coverage at all right now; a hard gate today would either fail immediately or
+           need exclusions carved out before this is even useful). -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
