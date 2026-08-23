@@ -78,10 +78,15 @@
       <artifactId>jaxb-runtime</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <!-- commons-lang 2.x (was 2.6) is permanently unpatched for CVE-2025-48924 / GHSA-j288-q9x7-2f5v
+         (StackOverflowError from uncontrolled recursion in ClassUtils.getClass() on very long
+         inputs); the fix only exists on the commons-lang3 line (3.18.0+). Usage here is a
+         single StringUtils.countMatches() call in GLStringUtilities, which has an identical
+         signature on commons-lang3, so this is a straight dependency + import swap. -->
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.18.0</version>
     </dependency>
   </dependencies>
 
