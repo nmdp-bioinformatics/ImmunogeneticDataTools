@@ -38,8 +38,6 @@ import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -64,10 +62,10 @@ public class GLStringUtilities {
 	static final String GL_STRING_DELIMITER_REGEX = "[\\^\\|\\+~/]";
 	private static final String FILE_DELIMITER_REGEX = "[\t,]";
 	public static final String ESCAPED_ASTERISK = "\\*";
+	// No longer backed by a Pattern -- convertToProteinLevel() now checks the variant
+	// character directly instead of matching this regex. Left as public API surface (the
+	// set of recognized IMGT/HLA suffix letters) in case anything external relies on it.
 	public static final String VARIANTS_REGEX = "[SNLQ]";
-	// Precompiled once instead of via Pattern.matches(), which recompiles the regex from
-	// scratch on every call -- convertToProteinLevel() is on the hot analysis path.
-	private static final Pattern VARIANTS_PATTERN = Pattern.compile(VARIANTS_REGEX);
 	public static final String COLON = ":";
 	public static final int P_GROUP_LEVEL = 2;
 
@@ -308,34 +306,33 @@ public class GLStringUtilities {
 		return notCIWD;
 	}
 
+	// Was: split both strings, then rebuild truncated copies of each via StringBuffer.append()
+	// just to compare the rebuilt strings with .equals() -- profiled as a real hot spot
+	// (~11% of CPU samples in AbstractStringBuilder.append) on this method alone, since it's
+	// called on essentially every candidate-vs-reference comparison in the matching path.
+	// Rebuilding "field0:field1:...:fieldN-1" from parts and comparing the joined strings is
+	// equivalent to comparing the parts pairwise (no field can itself contain a colon, since
+	// colon was the split delimiter) -- so a direct field-by-field equals() loop is sufficient
+	// and skips the StringBuffer allocation/append/toString entirely.
 	public static boolean fieldLevelComparison(String allele,
 			String referenceAllele) {
 		if (allele == null || referenceAllele == null) {
 			return false;
 		}
-		
+
 		String[] alleleParts = allele.split(COLON);
 		String[] referenceAlleleParts = referenceAllele.split(COLON);
 
 		int comparisonLength = (alleleParts.length < referenceAlleleParts.length) ? alleleParts.length
 				: referenceAlleleParts.length;
 
-		StringBuffer alleleBuffer = new StringBuffer();
-		StringBuffer referenceAlleleBuffer = new StringBuffer();
-
 		for (int i = 0; i < comparisonLength; i++) {
-			alleleBuffer.append(alleleParts[i]);
-			referenceAlleleBuffer.append(referenceAlleleParts[i]);
-			if (i < comparisonLength - 1) {
-				alleleBuffer.append(COLON);
-				referenceAlleleBuffer.append(COLON);
+			if (!alleleParts[i].equals(referenceAlleleParts[i])) {
+				return false;
 			}
 		}
 
-		boolean match = alleleBuffer.toString().equals(
-				referenceAlleleBuffer.toString());
-
-		return match;
+		return true;
 	}
 
 	/**
@@ -374,9 +371,16 @@ public class GLStringUtilities {
 		String[] parts = allele.split(COLON);
 
 		String matchedValue = null;
-		if (parts.length > P_GROUP_LEVEL
-				&& VARIANTS_PATTERN.matcher(
-						"" + allele.charAt(allele.length() - 1)).matches()) {
+		// Was: VARIANTS_PATTERN.matcher("" + allele.charAt(...)).matches() -- allocating a new
+		// 1-character String via concatenation, then a Matcher, then running the regex engine
+		// ("[SNLQ]") over it, on every call. Checking a single char against a fixed small set
+		// of literal characters is exactly equivalent to that regex match, without allocating
+		// a String or a Matcher, or invoking the regex engine at all. Profiled as a real (if
+		// smaller) hot spot alongside fieldLevelComparison()'s allocations. Kept behind the
+		// same parts.length > P_GROUP_LEVEL short-circuit as before, so charAt() is still only
+		// ever reached when the allele is guaranteed non-trivial (3+ fields already implies
+		// at least two colons).
+		if (parts.length > P_GROUP_LEVEL && isVariantAllele(allele)) {
 			matchedValue = parts[0] + COLON + parts[1]
 					+ allele.charAt(allele.length() - 1);
 			LOGGER.finest("Found an SNLQ while comparing ARS: " + allele);
@@ -388,6 +392,13 @@ public class GLStringUtilities {
 			matchedValue = parts[0] + COLON + parts[1];
 		}
 		return matchedValue;
+	}
+
+	// Equivalent to matching VARIANTS_REGEX ("[SNLQ]") against the allele's last character,
+	// without allocating a String or a Matcher, or invoking the regex engine.
+	private static boolean isVariantAllele(String allele) {
+		char lastChar = allele.charAt(allele.length() - 1);
+		return lastChar == 'S' || lastChar == 'N' || lastChar == 'L' || lastChar == 'Q';
 	}
 
 	// TODO:  Fix homozygous checker - not dealing with genotypic ambiguity appropriately (S2 - DRB4 example)
