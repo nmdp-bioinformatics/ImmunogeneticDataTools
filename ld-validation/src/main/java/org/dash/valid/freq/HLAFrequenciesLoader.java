@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.poifs.filesystem.FileMagic;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -476,33 +477,95 @@ public class HLAFrequenciesLoader {
 			Locus[] locusPositions) throws IOException, InvalidFormatException {
 		List<DisequilibriumElement> disequilibriumElements = new ArrayList<DisequilibriumElement>();
 
-		Workbook workbook = WorkbookFactory.create(inStream);
-       
-        // Return first sheet from the XLSX workbook
-        Sheet mySheet = workbook.getSheetAt(0);
-       
-        // Get iterator to all the rows in current sheet
-        Iterator<Row> rowIterator = mySheet.iterator();
-        
-        int firstRow = mySheet.getFirstRowNum();
-        
-        List<String> raceHeaders = null;
+		// The entire bundled 2007 NMDP reference dataset (frequencies/nmdp-2007/*.xls) is the
+		// legacy OLE2/BIFF binary format, not the ZIP-based OOXML format ".xlsx" implies --
+		// WorkbookFactory.create() always auto-detected and handled both transparently, but
+		// StreamingXlsxRows (see its class comment) only understands OOXML. Peeking the actual
+		// container format (not trusting the extension) means only genuinely OOXML input takes
+		// the streaming path; the OLE2 files, which were never the memory/performance problem
+		// StreamingXlsxRows exists to fix, keep going through the DOM reader that already
+		// handles them correctly.
+		InputStream markableStream = FileMagic.prepareToCheckMagic(inStream);
+		FileMagic magic = FileMagic.valueOf(markableStream);
 
-        // Traversing over each row of XLSX file
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
+		if (FileMagic.OOXML.equals(magic)) {
+			ReferenceDataRowHandler rowHandler = new ReferenceDataRowHandler(disequilibriumElements, locusPositions);
+			StreamingXlsxRows.read(markableStream, rowHandler);
 
-            if (row.getRowNum() == firstRow) {
-            	raceHeaders = readHeaderElementsByRace(row);
-            }
-            else {
-	            disequilibriumElements.add(readDiseqilibriumElementsByRace(row, raceHeaders, locusPositions));
-            }            
-        }
-        
-        workbook.close();
-        
+			if (rowHandler.isCombinedHaplotypeFormat()) {
+				rankCombinedHaplotypeFrequencies(disequilibriumElements);
+			}
+		}
+		else {
+			loadNMDPLinkageReferenceDataDom(markableStream, locusPositions, disequilibriumElements);
+		}
+
         return disequilibriumElements;
+	}
+
+	// DOM (WorkbookFactory/Row/Cell) fallback for legacy OLE2 (.xls) reference files -- see
+	// loadNMDPLinkageReferenceData(InputStream, Locus[]) above for why this still exists
+	// alongside the SAX streaming path. The combined-haplotype layout (see
+	// COMBINED_HAPLOTYPE_HEADER) is only ever used by the 2026 nine-locus release, which is
+	// always OOXML, so this fallback only ever needs the original per-locus-column layout.
+	private static void loadNMDPLinkageReferenceDataDom(InputStream inStream, Locus[] locusPositions,
+			List<DisequilibriumElement> disequilibriumElements) throws IOException, InvalidFormatException {
+		Workbook workbook = WorkbookFactory.create(inStream);
+
+		Sheet mySheet = workbook.getSheetAt(0);
+		Iterator<Row> rowIterator = mySheet.iterator();
+		int firstRow = mySheet.getFirstRowNum();
+
+		List<String> raceHeaders = null;
+
+		while (rowIterator.hasNext()) {
+			Row row = rowIterator.next();
+
+			if (row.getRowNum() == firstRow) {
+				raceHeaders = readHeaderElementsByRaceDom(row);
+			}
+			else {
+				disequilibriumElements.add(readDiseqilibriumElementsByRaceDom(row, raceHeaders, locusPositions));
+			}
+		}
+
+		workbook.close();
+	}
+
+	// Row-by-row callback for loadNMDPLinkageReferenceData(InputStream, Locus[]) above: the
+	// first row streamed is always the header row (self-describing -- see
+	// COMBINED_HAPLOTYPE_HEADER), every row after that is a data row.
+	private static final class ReferenceDataRowHandler implements StreamingXlsxRows.RowHandler {
+		private final List<DisequilibriumElement> disequilibriumElements;
+		private final Locus[] locusPositions;
+		private boolean firstRowSeen;
+		private boolean combinedHaplotypeFormat;
+		private List<String> raceHeaders;
+
+		ReferenceDataRowHandler(List<DisequilibriumElement> disequilibriumElements, Locus[] locusPositions) {
+			this.disequilibriumElements = disequilibriumElements;
+			this.locusPositions = locusPositions;
+		}
+
+		@Override
+		public void row(int rowNum, List<String> row) {
+			if (!firstRowSeen) {
+				firstRowSeen = true;
+				combinedHaplotypeFormat = !row.isEmpty() && COMBINED_HAPLOTYPE_HEADER.equalsIgnoreCase(row.get(0));
+				raceHeaders = combinedHaplotypeFormat
+						? readCombinedHaplotypeHeaderElementsByRace(row)
+						: readHeaderElementsByRace(row);
+			}
+			else {
+				disequilibriumElements.add(combinedHaplotypeFormat
+						? readCombinedHaplotypeElementsByRace(row, raceHeaders, locusPositions)
+						: readDiseqilibriumElementsByRace(row, raceHeaders, locusPositions));
+			}
+		}
+
+		boolean isCombinedHaplotypeFormat() {
+			return combinedHaplotypeFormat;
+		}
 	}
 	
 	private void loadIndividualLocusFrequencies(File allelesFile) throws IOException {
@@ -568,23 +631,76 @@ public class HLAFrequenciesLoader {
 
 	public static List<String> loadIndividualLocusFrequency(InputStream inputStream)
 			throws IOException, InvalidFormatException {
+		// See loadNMDPLinkageReferenceData(InputStream, Locus[]) for why format is detected
+		// from the actual container bytes rather than assumed: the bundled 2007 NMDP
+		// single-locus files (frequencies/nmdp-2007/*.xls) are legacy OLE2, not OOXML, and
+		// StreamingXlsxRows only understands OOXML.
+		InputStream markableStream = FileMagic.prepareToCheckMagic(inputStream);
+		FileMagic magic = FileMagic.valueOf(markableStream);
+
+		if (FileMagic.OOXML.equals(magic)) {
+			return loadIndividualLocusFrequencyStreaming(markableStream);
+		}
+
+		return loadIndividualLocusFrequencyDom(markableStream);
+	}
+
+	private static List<String> loadIndividualLocusFrequencyStreaming(InputStream inputStream)
+			throws IOException, InvalidFormatException {
+		final List<String> singleLocusFrequencies = new ArrayList<String>();
+
+		// Streams rows via StreamingXlsxRows (SAX) rather than building the full in-memory
+		// DOM WorkbookFactory.create()/XSSFWorkbook would -- see loadNMDPLinkageReferenceData
+		// and StreamingXlsxRows' class comment for why.
+		StreamingXlsxRows.read(inputStream, new StreamingXlsxRows.RowHandler() {
+			private boolean firstRowSeen;
+			private String detectedLocus;
+			private String locusShortName;
+
+			@Override
+			public void row(int rowNum, List<String> row) {
+				if (!firstRowSeen) {
+					firstRowSeen = true;
+					// Legacy single-locus files header their first column with the locus
+					// name itself (e.g. "A"); the newer combined-haplotype layout (see
+					// loadNMDPLinkageReferenceData) headers it "Haplotype" instead, since
+					// every row's first cell already carries a fully-qualified allele string
+					// (e.g. "A*02:01") needing no locus name applied to it. Resolving the
+					// locus's short name only lazily, when a legacy-format data row actually
+					// needs it below, means a "Haplotype" header (which Locus.lookup()
+					// wouldn't recognize) no longer needs to resolve to anything up front.
+					detectedLocus = row.get(0);
+					return;
+				}
+
+				String cellValue = row.get(0);
+				if (!cellValue.contains(GLStringConstants.ASTERISK)) {
+					if (locusShortName == null) {
+						locusShortName = Locus.lookup(detectedLocus).getShortName();
+					}
+					cellValue = locusShortName + GLStringConstants.ASTERISK + cellValue.substring(0, 2) + GLStringUtilities.COLON + cellValue.substring(2);
+				}
+				singleLocusFrequencies.add(GLStringConstants.HLA_DASH + cellValue);
+			}
+		});
+
+		return singleLocusFrequencies;
+	}
+
+	// DOM (WorkbookFactory/Row/Cell) fallback for legacy OLE2 (.xls) single-locus reference
+	// files -- see loadIndividualLocusFrequency(InputStream) above.
+	private static List<String> loadIndividualLocusFrequencyDom(InputStream inputStream)
+			throws IOException, InvalidFormatException {
 		String detectedLocus = null;
 		String locusShortName = null;
 		List<String> singleLocusFrequencies = new ArrayList<String>();
 
 		Workbook workbook = WorkbookFactory.create(inputStream);
-		
-		// Return first sheet from the XLSX workbook
+
 		Sheet mySheet = workbook.getSheetAt(0);
-      
-		// Get iterator to all the rows in current sheet
 		Iterator<Row> rowIterator = mySheet.iterator();
-		
 		int firstRow = mySheet.getFirstRowNum();
-			
-		String cellValue = null;
-		
-		// Traversing over each row of XLSX file
+
 		while (rowIterator.hasNext()) {
 		    Row row = rowIterator.next();
 
@@ -593,52 +709,51 @@ public class HLAFrequenciesLoader {
 		    	locusShortName = Locus.lookup(detectedLocus).getShortName();
 		    	continue;
 		    }
-		    else {
-			    cellValue = row.getCell(0).getStringCellValue();
-			    if (!cellValue.contains(GLStringConstants.ASTERISK)) {
-			    	cellValue = locusShortName + GLStringConstants.ASTERISK + cellValue.substring(0, 2) + GLStringUtilities.COLON + cellValue.substring(2);
-			    }
-				singleLocusFrequencies.add(GLStringConstants.HLA_DASH + cellValue);
-		    }            
+
+		    String cellValue = row.getCell(0).getStringCellValue();
+		    if (!cellValue.contains(GLStringConstants.ASTERISK)) {
+		    	cellValue = locusShortName + GLStringConstants.ASTERISK + cellValue.substring(0, 2) + GLStringUtilities.COLON + cellValue.substring(2);
+		    }
+			singleLocusFrequencies.add(GLStringConstants.HLA_DASH + cellValue);
 		}
-		
+
 		workbook.close();
 		return singleLocusFrequencies;
 	}
 	
-	private static List<String> readHeaderElementsByRace(Row row) {		
+	// DOM (Row/Cell) counterpart of readHeaderElementsByRace(List<String>) below, used only by
+	// the legacy OLE2 (.xls) fallback path (see loadNMDPLinkageReferenceDataDom()).
+	private static List<String> readHeaderElementsByRaceDom(Row row) {
 		List<String> raceHeaders = new ArrayList<String>();
-		
+
 		Iterator<Cell> cellIterator = row.cellIterator();
 
 		while (cellIterator.hasNext()) {
 			Cell cell = cellIterator.next();
-			
+
 			String[] race = cell.getStringCellValue().split(UNDERSCORE);
 			raceHeaders.add(cell.getColumnIndex(), race[0]);
 		}
-		
+
 		return raceHeaders;
 	}
 
-	/**
-	 * @param row
-	 */
-	private static DisequilibriumElement readDiseqilibriumElementsByRace(Row row, List<String> raceHeaders, Locus[] locusPositions) {		
-		// For each row, iterate through each columns
+	// DOM (Row/Cell) counterpart of readDiseqilibriumElementsByRace(List<String>, ...) below,
+	// used only by the legacy OLE2 (.xls) fallback path.
+	private static DisequilibriumElement readDiseqilibriumElementsByRaceDom(Row row, List<String> raceHeaders, Locus[] locusPositions) {
 		Iterator<Cell> cellIterator = row.cellIterator();
-		
+
 		List<FrequencyByRace> frequenciesByRace  = new ArrayList<FrequencyByRace>();
 		DisequilibriumElementByRace disElement = new DisequilibriumElementByRace();
-		
+
 		int columnIndex;
 		String cellValue = null;
-		
+
 		while (cellIterator.hasNext()) {
 		    Cell cell = cellIterator.next();
 
 		    columnIndex = cell.getColumnIndex();
-		    
+
 		    if (columnIndex < locusPositions.length) {
 			    cellValue = cell.getStringCellValue();
 			    if (!cellValue.contains(GLStringConstants.ASTERISK)) {
@@ -650,34 +765,192 @@ public class HLAFrequenciesLoader {
 		    }
 		    else {
 		    	if ((locusPositions.length % 2 == 0 && columnIndex % 2 == 0) || (locusPositions.length % 2 != 0 && columnIndex % 2 != 0)) {
-		    		disElement.setFrequenciesByRace(loadFrequencyAndRank(row, cell, frequenciesByRace, raceHeaders));
+		    		disElement.setFrequenciesByRace(loadFrequencyAndRankDom(row, cell, frequenciesByRace, raceHeaders));
 		    	}
 		    }
 		}
-		
+
+	    return disElement;
+	}
+
+	// DOM (Row/Cell) counterpart of loadFrequencyAndRank(List<String>, ...) below, used only by
+	// the legacy OLE2 (.xls) fallback path.
+	private static List<FrequencyByRace> loadFrequencyAndRankDom(Row row, Cell cell,
+			List<FrequencyByRace> frequenciesByRace, List<String> raceHeaders) {
+		Double freq = cell.getNumericCellValue();
+
+		if (freq != 0) {
+			FrequencyByRace frequencyByRace = new FrequencyByRace(freq, ((Double) row.getCell(cell.getColumnIndex() + 1).getNumericCellValue()).toString(), raceHeaders.get(cell.getColumnIndex()));
+			frequenciesByRace.add(frequencyByRace);
+		}
+
+		Collections.sort(frequenciesByRace, new FrequencyByRaceComparator());
+
+		return frequenciesByRace;
+	}
+
+	private static List<String> readHeaderElementsByRace(List<String> row) {
+		List<String> raceHeaders = new ArrayList<String>();
+
+		for (String cellValue : row) {
+			String[] race = cellValue.split(UNDERSCORE);
+			raceHeaders.add(race[0]);
+		}
+
+		return raceHeaders;
+	}
+
+	/**
+	 * @param row
+	 */
+	private static DisequilibriumElement readDiseqilibriumElementsByRace(List<String> row, List<String> raceHeaders, Locus[] locusPositions) {
+		List<FrequencyByRace> frequenciesByRace  = new ArrayList<FrequencyByRace>();
+		DisequilibriumElementByRace disElement = new DisequilibriumElementByRace();
+
+		for (int columnIndex = 0; columnIndex < row.size(); columnIndex++) {
+		    if (columnIndex < locusPositions.length) {
+			    String cellValue = row.get(columnIndex);
+			    if (!cellValue.contains(GLStringConstants.ASTERISK)) {
+			    	cellValue = locusPositions[columnIndex].getShortName() + GLStringConstants.ASTERISK + cellValue.substring(0, 2) + GLStringUtilities.COLON + cellValue.substring(2);
+			    }
+			    List<String> val = new ArrayList<String>();
+			    val.add(GLStringConstants.HLA_DASH + cellValue);
+		    	disElement.setHlaElement(locusPositions[columnIndex], val);
+		    }
+		    else {
+		    	if ((locusPositions.length % 2 == 0 && columnIndex % 2 == 0) || (locusPositions.length % 2 != 0 && columnIndex % 2 != 0)) {
+		    		disElement.setFrequenciesByRace(loadFrequencyAndRank(row, columnIndex, frequenciesByRace, raceHeaders));
+		    	}
+		    }
+		}
+
 	    return disElement;
 	}
 
 	/**
 	 * @param row
+	 * @param columnIndex
 	 * @param frequenciesByRace
-	 * @param cell
-	 * @param idx
+	 * @param raceHeaders
 	 */
-	private static List<FrequencyByRace> loadFrequencyAndRank(Row row, Cell cell, 
+	private static List<FrequencyByRace> loadFrequencyAndRank(List<String> row, int columnIndex,
 			List<FrequencyByRace> frequenciesByRace, List<String> raceHeaders) {
-		Double freq = cell.getNumericCellValue();
-		
-		if (freq != 0) {
-			FrequencyByRace frequencyByRace = new FrequencyByRace(freq, ((Double) row.getCell(cell.getColumnIndex() + 1).getNumericCellValue()).toString(), raceHeaders.get(cell.getColumnIndex()));
-			frequenciesByRace.add(frequencyByRace);
+		// A frequency cell (and its companion rank cell) can legitimately be absent from the
+		// source XML entirely rather than present with a "0" value -- treat a blank the same
+		// as a zero frequency (skip it) instead of failing to parse it as a number.
+		String freqText = row.get(columnIndex);
+		if (!freqText.isEmpty()) {
+			double freq = Double.parseDouble(freqText);
+
+			if (freq != 0) {
+				String rankText = columnIndex + 1 < row.size() ? row.get(columnIndex + 1) : "";
+				// Matches the legacy DOM code's own transformation exactly: it read the rank
+				// cell's raw numeric value and re-stringified it via Double.toString() (e.g.
+				// "4" in the file becomes "4.0"), rather than passing the file's own text
+				// through unchanged.
+				String rank = rankText.isEmpty() ? null : Double.toString(Double.parseDouble(rankText));
+				frequenciesByRace.add(new FrequencyByRace(freq, rank, raceHeaders.get(columnIndex)));
+			}
 		}
-		
+
 		Collections.sort(frequenciesByRace, new FrequencyByRaceComparator());
-		
+
 		return frequenciesByRace;
 	}
-	
+
+	// Header row label that identifies the combined-haplotype layout (see
+	// loadNMDPLinkageReferenceData(InputStream, Locus[])).
+	private static final String COMBINED_HAPLOTYPE_HEADER = "Haplotype";
+
+	// Combined-haplotype layout's header row is: "Haplotype", one column per population
+	// (its plain name, e.g. "AAFA" -- no "_..." suffix to strip, unlike the legacy layout's
+	// readHeaderElementsByRace()), then "TotalFreq". Race headers are kept aligned to their
+	// column index (indices 0 and lastColumn left null and never read) so the shared
+	// raceHeaders.get(columnIndex) lookup pattern used elsewhere still works unchanged.
+	private static List<String> readCombinedHaplotypeHeaderElementsByRace(List<String> row) {
+		int lastColumn = row.size() - 1;
+		List<String> raceHeaders = new ArrayList<String>(Collections.nCopies(lastColumn + 1, (String) null));
+
+		for (int col = 1; col < lastColumn; col++) {
+			raceHeaders.set(col, row.get(col));
+		}
+
+		return raceHeaders;
+	}
+
+	// Parses one data row of the combined-haplotype layout. Column 0 is a single "~"-joined,
+	// already-fully-formatted haplotype string (e.g. "A*01:01~C*07:01~B*08:01"), so each
+	// locus's allele is read directly out of that one cell instead of from its own column,
+	// unlike readDiseqilibriumElementsByRace()'s per-locus columns. The remaining columns
+	// (excluding the trailing TotalFreq column) are plain per-population frequency values
+	// with no companion rank column -- rank isn't in this layout's source data at all, so it's
+	// left null here and filled in afterward by rankCombinedHaplotypeFrequencies(), once every
+	// row's frequency for a given population is known.
+	private static DisequilibriumElementByRace readCombinedHaplotypeElementsByRace(List<String> row, List<String> raceHeaders, Locus[] locusPositions) {
+		DisequilibriumElementByRace disElement = new DisequilibriumElementByRace();
+
+		String haplotype = row.get(0);
+		String[] tokens = haplotype.split(GLStringConstants.GENE_PHASE_DELIMITER);
+
+		for (int i = 0; i < tokens.length && i < locusPositions.length; i++) {
+			List<String> val = new ArrayList<String>();
+			val.add(GLStringConstants.HLA_DASH + tokens[i]);
+			disElement.setHlaElement(locusPositions[i], val);
+		}
+
+		List<FrequencyByRace> frequenciesByRace = new ArrayList<FrequencyByRace>();
+		int lastColumn = row.size() - 1;
+
+		for (int col = 1; col < lastColumn; col++) {
+			String freqText = row.get(col);
+			if (freqText.isEmpty()) {
+				continue;
+			}
+
+			double freq = Double.parseDouble(freqText);
+			if (freq != 0) {
+				frequenciesByRace.add(new FrequencyByRace(freq, null, raceHeaders.get(col)));
+			}
+		}
+
+		disElement.setFrequenciesByRace(frequenciesByRace);
+
+		return disElement;
+	}
+
+	// Computes rank for the combined-haplotype layout, which supplies no rank column (see
+	// readCombinedHaplotypeElementsByRace() above): for each population, every haplotype's
+	// FrequencyByRace entry for that population is ranked 1 (highest frequency) through N,
+	// matching what "rank" meant when it was read directly from the legacy layout's rank
+	// columns instead of computed.
+	private static void rankCombinedHaplotypeFrequencies(List<DisequilibriumElement> disequilibriumElements) {
+		HashMap<String, List<FrequencyByRace>> frequenciesByPopulation = new HashMap<String, List<FrequencyByRace>>();
+
+		for (DisequilibriumElement element : disequilibriumElements) {
+			for (FrequencyByRace frequencyByRace : ((DisequilibriumElementByRace) element).getFrequenciesByRace()) {
+				List<FrequencyByRace> forPopulation = frequenciesByPopulation.get(frequencyByRace.getRace());
+				if (forPopulation == null) {
+					forPopulation = new ArrayList<FrequencyByRace>();
+					frequenciesByPopulation.put(frequencyByRace.getRace(), forPopulation);
+				}
+				forPopulation.add(frequencyByRace);
+			}
+		}
+
+		for (List<FrequencyByRace> forPopulation : frequenciesByPopulation.values()) {
+			Collections.sort(forPopulation, new java.util.Comparator<FrequencyByRace>() {
+				@Override
+				public int compare(FrequencyByRace a, FrequencyByRace b) {
+					return Double.compare(b.getFrequency(), a.getFrequency());
+				}
+			});
+
+			for (int i = 0; i < forPopulation.size(); i++) {
+				forPopulation.get(i).setRank(String.valueOf(i + 1));
+			}
+		}
+	}
+
 	public List<DisequilibriumElement> loadLinkageReferenceData(String filename, Locus[] locusPositions) throws FileNotFoundException, IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(HLAFrequenciesLoader.class.getClassLoader().getResourceAsStream(filename)));
 		String row;
