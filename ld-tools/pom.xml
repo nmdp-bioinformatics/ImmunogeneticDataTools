@@ -120,6 +120,10 @@
             	<id>normalize-frequency-file</id>
             	<mainClass>org.nmdp.validation.tools.NormalizeFrequencyFile</mainClass>
             </program>
+            <program>
+            	<id>synthetic-gl-string-generator</id>
+            	<mainClass>org.nmdp.validation.tools.SyntheticGLStringGenerator</mainClass>
+            </program>
           </programs>
         </configuration>
         <executions>
