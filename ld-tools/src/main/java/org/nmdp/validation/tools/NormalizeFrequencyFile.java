@@ -24,17 +24,10 @@ package org.nmdp.validation.tools;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.dash.valid.DisequilibriumElement;
-import org.dash.valid.Linkages;
-import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
@@ -54,23 +47,12 @@ import org.dishevelled.commandline.argument.StringArgument;
  *
  */
 public class NormalizeFrequencyFile implements Callable<Integer> {
-	
+
     private final File inputFile;
     private final String frequencies;
     private final File outputFile;
-    
+
     public static final String SINGLE = "single";
-    
-    private static Map<EnumSet<Locus>, Locus[]> LOCUS_POSITION_MAP = new HashMap<EnumSet<Locus>, Locus[]>();
-    
-    static {
-    	LOCUS_POSITION_MAP.put(Locus.A_C_B_LOCI, HLAFrequenciesLoader.NMDP_ABC_LOCI_POS);
-    	LOCUS_POSITION_MAP.put(Locus.C_B_LOCI, HLAFrequenciesLoader.NMDP_BC_LOCI_POS);
-    	LOCUS_POSITION_MAP.put(Locus.DRB1_DQB1_LOCI, HLAFrequenciesLoader.NMDP_DRB1DQB1_LOCI_POS);
-    	LOCUS_POSITION_MAP.put(Locus.DRB_DQB_LOCI, HLAFrequenciesLoader.NMDP_DRDQB1_LOCI_POS);
-    	LOCUS_POSITION_MAP.put(Locus.FIVE_LOCUS, HLAFrequenciesLoader.NMDP_FIVE_LOCUS_POS);
-    	LOCUS_POSITION_MAP.put(Locus.SIX_LOCUS, HLAFrequenciesLoader.NMDP_SIX_LOCUS_POS);
-    }
 
     private static final String USAGE = "normalize-frequency-file [args]";
 
@@ -89,6 +71,13 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
     
     @Override
     public Integer call() throws Exception {
+    	// POI's default 100MB cap on a single in-memory array allocation (a zip-bomb guard) is
+    	// too small for some of the larger reference files this tool is meant to read (the
+    	// nine-locus NMDP release's biggest files run well past that once decompressed); this
+    	// tool only ever reads a file the caller names directly on the local filesystem, never
+    	// an untrusted upload, so raising the cap here is safe.
+    	org.apache.poi.util.IOUtils.setByteArrayMaxOverride(Integer.MAX_VALUE);
+
     	PrintWriter writer = new PrintWriter(outputFile);
     	
     	if (SINGLE.equals(frequencies)) {
@@ -99,17 +88,28 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
     		}
     	}
     	else {
-			HashSet<String> linkageNames = new HashSet<String>();
-			linkageNames.add(frequencies);
-			Set<Linkages> linkagesSet = Linkages.lookup(linkageNames);
-			LinkagesLoader.getInstance(linkagesSet);
-									
-			List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.loadNMDPLinkageReferenceData(new FileInputStream(inputFile), LOCUS_POSITION_MAP.get(Linkages.lookup(frequencies).getLoci()));
-					
+			// Was: a hardcoded Map<EnumSet<Locus>, Locus[]> keyed by a pre-registered Linkages
+			// enum constant, so adding support for a new locus combination meant adding new
+			// Linkages/Locus.*_LOCI constants first. This project's own bundled reference files
+			// (frequencies/nmdp/A~C~B.xlsx, .../DRB3-4-5~DRB1~DQB1.xlsx, etc.) already name
+			// themselves with their exact column order, "~"-joined -- Locus.lookup() already
+			// resolves every token that convention uses (including "DRBX" and "DRB3-4-5" as
+			// DRB345 aliases), so deriving column order directly from the input file's own name
+			// handles any locus combination a reference file happens to be named for, without
+			// needing new enum constants registered ahead of time for each one.
+			Locus[] locusPositions = deriveLocusPositions(inputFile);
+
+			List<DisequilibriumElement> disequilibriumElements = HLAFrequenciesLoader.loadNMDPLinkageReferenceData(new FileInputStream(inputFile), locusPositions);
+
 			for (DisequilibriumElement element : disequilibriumElements) {
 				StringBuffer sb = new StringBuffer();
 				int locusCounter = 0;
-				for (Locus locus : Locus.lookup(element.getLoci())) {
+				// Was: Locus.lookup(element.getLoci()) -- looks up the exact locus SET against
+				// the same small set of pre-registered combos, returning null (NPE on iteration)
+				// for anything else. locusPositions is already the correct, file-derived order
+				// for these exact elements (it's what they were just loaded with), so use it
+				// directly instead of re-deriving order through that same limited lookup.
+				for (Locus locus : locusPositions) {
 					if (locusCounter > 0) {
 						sb.append(GLStringConstants.GENE_PHASE_DELIMITER);
 					}
@@ -126,9 +126,36 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
     	}
     	
     	writer.close();
-    	
+
     	return 0;
-	}    	
+	}
+
+	// Derives the per-column Locus order from the input file's own name: "A~C~B.xlsx" ->
+	// [HLA_A, HLA_C, HLA_B]. Matches the naming convention this project's own bundled
+	// frequencies/nmdp/*.xlsx files already use (including "DRB3-4-5", which Locus.lookup()
+	// already resolves via its freqName field), so newer NMDP reference file releases that
+	// follow the same convention (e.g. the 2026 nine-locus release's "DRBX~DRB1~DQA1~DQB1.xlsx")
+	// work without any code change here, as long as every "~"-joined token is a locus
+	// Locus.lookup() recognizes.
+	private static Locus[] deriveLocusPositions(File file) {
+		String baseName = file.getName();
+		int dot = baseName.lastIndexOf('.');
+		String stem = dot > 0 ? baseName.substring(0, dot) : baseName;
+		String[] tokens = stem.split(GLStringConstants.GENE_PHASE_DELIMITER);
+
+		Locus[] positions = new Locus[tokens.length];
+		for (int i = 0; i < tokens.length; i++) {
+			Locus locus = Locus.lookup(tokens[i]);
+			if (locus == null) {
+				throw new IllegalArgumentException("Could not recognize locus token \"" + tokens[i]
+						+ "\" in file name \"" + file.getName() + "\" -- expected \"~\"-joined locus names "
+						+ "matching the order of columns in the file (e.g. \"A~C~B.xlsx\"), the same "
+						+ "convention this project's own bundled frequencies/nmdp/*.xlsx files use.");
+			}
+			positions[i] = locus;
+		}
+		return positions;
+	}
 
     /**
      * Main.
@@ -139,7 +166,11 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
         Switch about = new Switch("a", "about", "display about message");
         Switch help  = new Switch("h", "help", "display help message");
         FileArgument inputFile = new FileArgument("i", "input-file", "input file, default stdin", false);
-        StringArgument frequencies = new StringArgument("f", "frequencies", "frequencies (acb, cb, drb1_dqb1, drb_dqb, five_loc, six_loc, single), default five_loc", false);
+        StringArgument frequencies = new StringArgument("f", "frequencies",
+                "\"single\" for an individual-locus frequency file; any other value (or omitted) for a "
+                        + "multi-locus haplotype file, whose column order is derived from the input file's own "
+                        + "\"~\"-joined name (e.g. A~C~B.xlsx), not from this argument",
+                false);
         FileArgument outputFile   = new FileArgument("o", "output-file", "output allele assignment file, default stdout", false);
 
         ArgumentList arguments  = new ArgumentList(about, help, inputFile, frequencies, outputFile);
