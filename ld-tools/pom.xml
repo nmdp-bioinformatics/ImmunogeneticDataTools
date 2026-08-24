@@ -75,6 +75,22 @@
         <artifactId>dsh-compress</artifactId>
         <version>1.6</version>
       </dependency>
+      <!-- dsh-compress transitively pulls commons-compress 1.21, which wins Maven's "nearest
+           wins" resolution over poi-ooxml's own required commons-compress version (a deeper
+           transitive dependency via ld-validation), since dsh-compress is declared directly
+           here. This didn't used to matter: poi-ooxml 5.2.2 (in use before this project's
+           Phase 1 dependency bump) itself required exactly commons-compress 1.21, so the two
+           agreed by coincidence. Bumping poi/poi-ooxml to 5.5.1 raised POI's own requirement
+           to commons-compress 1.28.0 without touching dsh-compress's transitive 1.21, so the
+           two now disagree, and NormalizeFrequencyFile breaks with NoSuchMethodError
+           (ZipArchiveInputStream.getNextEntry() changed signature between those versions) the
+           first time it actually reads an XLSX file. A regression from that POI bump, not a
+           pre-existing bug. Declaring the version POI 5.5.1 actually needs directly overrides it. -->
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>1.28.0</version>
+      </dependency>
   </dependencies>
 
 
