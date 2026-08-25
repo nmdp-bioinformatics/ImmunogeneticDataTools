@@ -41,6 +41,19 @@ import jakarta.xml.bind.annotation.XmlTransient;
 import jakarta.xml.bind.annotation.XmlType;
 
 
+/**
+ * A reference-data match found for one haplotype — the {@link DisequilibriumElement} it
+ * matched, plus the {@link Haplotype} it was matched for. Reported as {@code <linkage>} in
+ * output XML.
+ * <p>
+ * <b>Note:</b> this class overrides {@link #equals(Object)} (true for any two matches of
+ * the same reference row, regardless of which raw-allele candidate matched it) but not
+ * {@code hashCode()} — a real equals()/hashCode() contract violation, fixed at the call
+ * site rather than here (see {@link org.dash.valid.HLALinkageDisequilibrium}'s
+ * {@code findLinkedPairs}, which derives its linkages set directly from already-deterministic
+ * winners instead of ever putting these into a {@code HashSet}/{@code HashMap}). Do not add
+ * a new hash-based collection of these without accounting for that gap.
+ */
 @XmlRootElement(name="linkage")
 @XmlType(propOrder={"haplotype", "frequencies", "frequency"})
 public class DetectedDisequilibriumElement {

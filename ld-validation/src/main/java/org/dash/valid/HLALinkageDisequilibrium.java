@@ -45,24 +45,29 @@ import org.dash.valid.gl.haplo.MultiLocusHaplotype;
 import org.dash.valid.report.DetectedDisequilibriumElement;
 import org.dash.valid.report.DetectedLinkageFindings;
 
-/*
- * Linkage disequilibrium
- * 
- * Non-random association of alleles at two or more loci that descend from a single,
- * ancestral chromosome
- * 
- * http://en.wikipedia.org/wiki/Linkage_disequilibrium
- * 
- * This class leverages a specific set of linkage disequilibrium associations relevant in the context
- * of HLA (http://en.wikipedia.org/wiki/Human_leukocyte_antigen) and immunogenetics.
- * 
+/**
+ * Detects <a href="http://en.wikipedia.org/wiki/Linkage_disequilibrium">linkage
+ * disequilibrium</a> (LD) — the non-random association of alleles at two or more loci that
+ * descend from a single, ancestral chromosome — for the specific set of HLA locus
+ * combinations this project tracks (see {@link Linkages}), by matching candidate
+ * haplotypes against reference haplotype frequency data (see
+ * {@link org.dash.valid.freq.HLAFrequenciesLoader}).
  */
-
 public class HLALinkageDisequilibrium {
 
     private static final Logger LOGGER = Logger.getLogger(HLALinkageDisequilibrium.class.getName());
-			
-	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {	
+
+	/**
+	 * Detects linkage disequilibrium for an unphased genotype, enumerating every haplotype
+	 * combination the genotype's own recorded ambiguity allows (via
+	 * {@link LinkageDisequilibriumGenotypeList#getPossibleHaplotypes(EnumSet)}) and matching
+	 * each against the reference frequency data for every tracked {@link Linkages} locus
+	 * combination.
+	 *
+	 * @param glString the parsed genotype to detect linkages for
+	 * @return a {@link Sample} wrapping the genotype and its {@link DetectedLinkageFindings}
+	 */
+	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString) {
 		Sample sample = new Sample(glString);
 		
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
@@ -97,7 +102,19 @@ public class HLALinkageDisequilibrium {
 		return sample;
 	}
 	
-	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString, List<Haplotype> knownHaplotypes) {		
+	/**
+	 * Detects linkage disequilibrium for a genotype whose haplotypes are already known
+	 * (e.g. already phased, via {@link org.dash.valid.gl.GLStringUtilities#buildHaplotypes}),
+	 * instead of enumerating candidates from ambiguity. Each known haplotype is matched
+	 * against reference data via {@link #enrichHaplotype}; a linkage is only reported for a
+	 * given locus combination when exactly two of the known haplotypes both matched
+	 * (a linked pair).
+	 *
+	 * @param glString the parsed genotype (used for CWD/CIWD checks and to build the result)
+	 * @param knownHaplotypes the genotype's already-known haplotypes
+	 * @return a {@link Sample} wrapping the genotype and its {@link DetectedLinkageFindings}
+	 */
+	public static Sample hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList glString, List<Haplotype> knownHaplotypes) {
 		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
 
 		Set<String> notCommon = GLStringUtilities.checkCommonWellDocumented(glString.getGLString());
@@ -144,6 +161,23 @@ public class HLALinkageDisequilibrium {
 		return sample;
 	}
 
+	/**
+	 * Matches one already-known haplotype against reference frequency data for a single
+	 * locus combination, returning a copy annotated with its {@link Haplotype#getLinkage()}
+	 * if a match was found (or with no linkage set, if not). Matching is by
+	 * {@link DisequilibriumElement#equals}, which compares at the G-group/ARS level rather
+	 * than exact allele strings, so a haplotype carrying its own locus-level allele
+	 * ambiguity can in principle match more than one distinct reference row; this method
+	 * does not (currently) apply any explicit tie-break for that case the way
+	 * {@link #hasLinkageDisequilibrium(LinkageDisequilibriumGenotypeList, List)}'s own
+	 * candidate-enumeration path does — see the class-internal notes on
+	 * {@code findLinkedPairs} for that mechanism.
+	 *
+	 * @param loci the locus combination to match against
+	 * @param disequilibriumElements reference data for that locus combination
+	 * @param haplotype the known haplotype to match
+	 * @return a copy of {@code haplotype}, annotated with a linkage if one was found
+	 */
 	public static Haplotype enrichHaplotype(EnumSet<Locus> loci, List<DisequilibriumElement> disequilibriumElements, Haplotype haplotype) {
 		MultiLocusHaplotype enrichedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(haplotype.getAlleleMap()), 
 				new HashMap<Locus, Integer>(haplotype.getHaplotypeInstanceMap()), haplotype.getDrb345Homozygous());
