@@ -40,7 +40,7 @@ If you prefer to compile / package the software from source, follow these instru
 
 * Install Git
 * Clone the repository (git clone https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools.git)
-* Install Java (written for 1.8)
+* Install Java 25 (LTS) — e.g. via Homebrew: `brew install openjdk@25`, then point `JAVA_HOME` at it (`export JAVA_HOME="$(brew --prefix openjdk@25)"`) and put `$JAVA_HOME/bin` on your `PATH`. Homebrew's `openjdk@25` is keg-only and won't be found automatically otherwise.
 * Install Maven (configured for 3.3.3)
 * Run ‘mvn clean package’ from the root of the ImmunogeneticDataTools cloned (local) repository
 
