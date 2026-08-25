@@ -141,7 +141,11 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.12</version>
+        <!-- 0.8.12 can't read Java 25's class file format (major version 69) at all;
+             "Unsupported class file major version 69" during report generation, even though
+             the tests themselves compile and run fine under 25. Java 25 support landed in
+             0.8.14; using the latest (0.8.15) rather than pinning to the minimum that works. -->
+        <version>0.8.15</version>
         <executions>
           <execution>
             <id>prepare-agent</id>

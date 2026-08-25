@@ -46,7 +46,7 @@
     <module>ld-service</module>
   </modules>
   <properties>
-    <java.version>17</java.version>
+    <java.version>25</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.enforcer.jdk-version>[${java.version},]</maven.enforcer.jdk-version>
