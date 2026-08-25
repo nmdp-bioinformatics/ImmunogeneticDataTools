@@ -61,8 +61,11 @@ import org.dishevelled.commandline.argument.FileSetArgument;
 import org.dishevelled.commandline.argument.StringArgument;
 
 /**
- * AnalyzeGLStrings
- *
+ * CLI entry point for {@code analyze-gl-strings} — runs
+ * {@link org.dash.valid.LinkageDisequilibriumAnalyzer} against one or more GL String files
+ * and writes the full report set ({@code summary.xml}, {@code linkages.log},
+ * {@code haplotypePairs.log}, {@code detectedFindings.csv}, etc.) via the writer classes in
+ * {@link org.dash.valid.report}. See the root README for the full CLI argument reference.
  */
 public class AnalyzeGLStrings implements Callable<Integer> {
 	
@@ -77,10 +80,18 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 
 
     /**
-     * Analyze gl string using linkage disequilibrium frequencies
+     * Builds the analysis job for one batch run.
      *
-     * @param inputFile input file, if any
-     * @param outputFile output interpretation file, if any
+     * @param inputFile GL String input file
+     * @param outputFile output directory for the report set
+     * @param hladb IMGT/HLA reference database version to validate against (see the root
+     *              README's {@code org.dash.hladb} property)
+     * @param freq frequency set to use (see the root README's {@code org.dash.frequencies}
+     *             property)
+     * @param warnings whether to also write the *Warnings.log files
+     * @param frequencyFiles custom frequency reference files, if any (standard format,
+     *                       e.g. from {@code normalize-frequency-file})
+     * @param allelesFile custom individual-locus allele frequency file, if any
      */
     public AnalyzeGLStrings(File inputFile, File outputFile, String hladb, String freq, Boolean warnings, Set<File> frequencyFiles, File allelesFile) {
         this.inputFile = inputFile;
