@@ -39,6 +39,16 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 
+/**
+ * Two {@link Haplotype}s detected as a linked pair at one locus combination, plus their
+ * combined frequency. Reported as {@code <haplo-pair>} in output XML.
+ * <p>
+ * The two haplotypes' {@code seq="1"}/{@code seq="2"} ordering (and, by extension, which
+ * one appears first when reading a pair) is assigned deterministically by
+ * {@link HaplotypeComparator} in the constructor, not by construction order — see
+ * {@link #equals(Object)}, which treats either ordering as equal, and {@link #hashCode()},
+ * which is order-independent to match.
+ */
 @XmlRootElement(name="haplo-pair")
 @XmlType(propOrder={"haplotypes", "frequencies", "frequency"})
 public class HaplotypePair {
@@ -50,6 +60,13 @@ public class HaplotypePair {
 	
     private static final Logger LOGGER = Logger.getLogger(HaplotypePair.class.getName());
 	
+	/**
+	 * Convenience accessor for whichever frequency representation this pair actually has.
+	 *
+	 * @return the first per-race frequency in {@link #getFrequencies()} if this pair's
+	 *         reference data is race-stratified, otherwise the single overall
+	 *         {@link #getFrequency()} string
+	 */
 	public Object getPrimaryFrequency() {
 		if (frequencies.iterator().hasNext()) {
 			return frequencies.iterator().next();
@@ -97,7 +114,17 @@ public class HaplotypePair {
 		
 	}
 	
-	public HaplotypePair(Haplotype hap1, Haplotype hap2) {		
+	/**
+	 * Pairs two haplotypes and computes their combined frequency from each one's own
+	 * {@link Haplotype#getLinkage()} (if both are linked; otherwise this pair carries no
+	 * frequency). Which haplotype becomes {@code seq="1"} vs {@code seq="2"} is decided by
+	 * {@link HaplotypeComparator}, not argument order, so construction is deterministic
+	 * regardless of which haplotype the caller happens to pass first.
+	 *
+	 * @param hap1 one haplotype of the pair
+	 * @param hap2 the other haplotype of the pair
+	 */
+	public HaplotypePair(Haplotype hap1, Haplotype hap2) {
 		if (new HaplotypeComparator().compare(hap1, hap2) <= 0) {
 			hap1.setSequence(1);
 			haplotypes.add(hap1);

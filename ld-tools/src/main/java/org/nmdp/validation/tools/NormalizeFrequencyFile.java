@@ -43,8 +43,12 @@ import org.dishevelled.commandline.argument.FileArgument;
 import org.dishevelled.commandline.argument.StringArgument;
 
 /**
- * AnalyzeGLStrings
- *
+ * CLI entry point for {@code normalize-frequency-file} — converts an NMDP haplotype
+ * frequency reference file into this project's own standard comma-delimited format, so it
+ * can be passed to {@code analyze-gl-strings} via {@code -q}. Handles both the legacy
+ * per-locus-column layout and the newer combined-haplotype layout (auto-detected from the
+ * file's own header row); multi-locus column order is derived from the input file's own
+ * {@code "~"}-joined name (e.g. {@code A~C~B.xlsx}).
  */
 public class NormalizeFrequencyFile implements Callable<Integer> {
 
@@ -58,10 +62,12 @@ public class NormalizeFrequencyFile implements Callable<Integer> {
 
 
     /**
-     * Normalize frequency files into a standardized format
+     * Builds the conversion job for one input file.
      *
-     * @param inputFile input file, if any
-     * @param outputFile output interpretation file, if any
+     * @param inputFile input frequency reference file
+     * @param frequencies {@link #SINGLE} for an individual-locus frequency file; any other
+     *                    value (or {@code null}) for a multi-locus haplotype file
+     * @param outputFile output file, in this project's standard format
      */
     public NormalizeFrequencyFile(File inputFile, String frequencies, File outputFile) {
         this.inputFile = inputFile;

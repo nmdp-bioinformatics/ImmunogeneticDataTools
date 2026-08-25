@@ -33,6 +33,14 @@ import org.dash.valid.LocusComparator;
 import org.dash.valid.LocusSet;
 import org.dash.valid.gl.GLStringConstants;
 
+/**
+ * Concrete {@link Haplotype} spanning one or more loci — the implementation used
+ * throughout this project. {@link #getHaplotypeString()} and
+ * {@link #getFullHaplotypeString()} are built from a {@link LocusSet}/{@link LocusComparator}
+ * ordering rather than raw map iteration, specifically so they (and the
+ * {@code equals()}/{@code hashCode()} inherited from {@link Haplotype}, which are based on
+ * {@link #getHaplotypeString()}) are stable across JVM launches.
+ */
 public class MultiLocusHaplotype extends Haplotype {
 	private Map<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
