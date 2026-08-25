@@ -120,14 +120,16 @@
           <repositoryName>lib</repositoryName>
           <installBooterArtifacts>false</installBooterArtifacts>
           <programs>
-            <program>
-              <id>validate-gl-ld</id>
-              <mainClass>org.nmdp.validation.tools.ValidateLdGlstrings</mainClass>
-            </program>
-            <program>
-              <id>extract-mugs</id>
-              <mainClass>org.nmdp.validation.tools.ExtractMugs</mainClass>
-            </program>
+            <!-- validate-gl-ld (org.nmdp.validation.tools.ValidateLdGlstrings) and
+                 extract-mugs (org.nmdp.validation.tools.ExtractMugs) were removed here
+                 until 2026-08-25: both classes were deleted back in commit a6ca96b
+                 ("Enhanced CWD and CIWD reporting", 2021-02-14) as part of a refactor
+                 that consolidated their functionality elsewhere (that same commit
+                 touched HLALinkageDisequilibrium/GLStringUtilities/etc.), but this
+                 program list was never updated to match, so the built distribution
+                 kept shipping bin/validate-gl-ld and bin/extract-mugs scripts that
+                 would fail immediately with ClassNotFoundException if actually run,
+                 for over 5 years, never restored or needed since. -->
             <program>
             	<id>analyze-gl-strings</id>
             	<mainClass>org.nmdp.validation.tools.AnalyzeGLStrings</mainClass>
