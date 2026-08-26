@@ -99,23 +99,33 @@ public class HLAFrequenciesLoader {
 	private static HLAFrequenciesLoader instance = null;
 
 	private static final Logger LOGGER = Logger.getLogger(HLAFrequenciesLoader.class.getName());
-    
+
     private HLAFrequenciesLoader() {
-    	
+
     }
-    
+
     public static HLAFrequenciesLoader getInstance(Set<File> frequencyFiles, File allelesFile) {
     	instance = new HLAFrequenciesLoader();
     	instance.init(frequencyFiles, allelesFile);
-    	
+
     	return instance;
     }
-    
+
+	// Deliberately does NOT reload when Frequencies.FREQUENCIES_PROPERTY changes (unlike
+	// AntigenRecognitionSiteLoader/CommonWellDocumentedLoader's hladb reload-on-change --
+	// Phase 8 tried the same fix here and reverted it). Making this reload-aware surfaced a
+	// real, separate, pre-existing bug: switching to Frequencies.NMDP specifically throws
+	// FileNotFoundException (loadNMDPLinkageReferenceData has no bundled resource for it --
+	// likely the gated/licensed 2011 six-locus dataset noted elsewhere in this project's
+	// history, never committed to the repo) which testPhasedGenotypeList's own setup has been
+	// silently, harmlessly hitting-and-ignoring for years, masked by this exact never-reload
+	// behavior. Fixing that is a separate task; ld-service's frequencySet request parameter
+	// therefore only reliably takes effect on the first analysis a given process performs, same
+	// as it always has -- a known, pre-existing limitation, not one this API introduces.
 	public static HLAFrequenciesLoader getInstance() {
 		if (instance == null) {
-			instance = new HLAFrequenciesLoader();
 			Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
-						
+			instance = new HLAFrequenciesLoader();
 			instance.init(freq);
 		}
 		

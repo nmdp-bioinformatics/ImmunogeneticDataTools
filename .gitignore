@@ -12,3 +12,19 @@
 /detectedFindings.xlsx
 /immuno.log.1
 /summary.xml
+
+# Same report/log files as above, but written relative to a module's own directory instead of
+# the repo root -- happens whenever tests exercising LinkageDisequilibriumAnalyzer with no
+# explicit outputFile run with a module dir as the working directory (e.g. `mvn -pl ld-service
+# test`, ld-service's Phase 8a tests). Previously only ld-validation/ld-tools ever hit this
+# path; ld-service's new /genotypes/file test does too.
+/*/immuno.log
+/*/linkages.log
+/*/linkageWarnings.log
+/*/nonCwdWarnings.log
+/*/haplotypePairs.log
+/*/haplotypePairWarnings.log
+/*/detectedFindings.csv
+/*/detectedFindings.xlsx
+/*/immuno.log.1
+/*/summary.xml

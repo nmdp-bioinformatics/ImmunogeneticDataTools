@@ -45,6 +45,45 @@ paths:
             $ref: '#/definitions/Samples'
         405:
           description: Invalid input
+  /genotypes/file:
+    post:
+      tags:
+      - genotypes
+      summary: Submit a batch file of genotypes for evaluation (the same tab-delimited
+        id/GL-String-per-line format ld-tools' analyze-gl-strings reads)
+      operationId: submitGenotypesFile
+      consumes:
+      - multipart/form-data
+      produces:
+      - application/json
+      - application/xml
+      parameters:
+      - in: formData
+        name: file
+        description: batch input file, one "id<TAB>glString" pair per line
+        required: true
+        type: file
+      - in: formData
+        name: hladbVersion
+        description: IMGT/HLA reference database version to validate against (e.g.
+          3.19.0), default latest
+        required: false
+        type: string
+      - in: formData
+        name: frequencySet
+        description: frequency set to use (e.g. nmdp-2007, nmdp-2007-std, wiki),
+          default nmdp-2007-std. Only reliably takes effect on the first analysis
+          this running service instance performs; see the same field on
+          Genotypes for why.
+        required: false
+        type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/Samples'
+        405:
+          description: Invalid input
 definitions:
   Genotypes:
     type: object
@@ -58,6 +97,19 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/Genotype'
+      hladbVersion:
+        type: string
+        description: IMGT/HLA reference database version to validate against (e.g.
+          3.19.0), default latest. Applies to the whole request, not per genotype.
+      frequencySet:
+        type: string
+        description: frequency set to use (e.g. nmdp-2007, nmdp-2007-std, wiki),
+          default nmdp-2007-std. Applies to the whole request, not per genotype.
+          Only reliably takes effect on the first analysis this running service
+          instance performs -- unlike hladbVersion, a later request asking for a
+          different value will be silently ignored (pre-existing limitation, see
+          HLAFrequenciesLoader#getInstance() server-side). Restart the service to
+          switch.
     xml:
       name: genotypes
   Genotype:
@@ -105,6 +157,35 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/HaplotypePairData'
+      hasAnomalies:
+        type: boolean
+        description: true if detection found no linkages, no haplotype pairs for
+          a sought locus combination, non-CWD/non-CIWD alleles, or a G-group/ARS
+          match against more than the expected reference entries -- the same "should
+          this get a human's attention" signal analyze-gl-strings uses to route
+          a sample to its *Warning*.log files instead of the plain ones.
+      warnings:
+        type: array
+        description: human-readable anomaly summaries (DetectedLinkageFindings#getWarnings)
+        items:
+          type: string
+      linkageReport:
+        type: string
+        description: same text analyze-gl-strings writes to linkages.log/linkageWarnings.log
+          for this sample (LinkageDisequilibriumWriter#formatDetectedLinkages)
+      haplotypePairReport:
+        type: string
+        description: same text analyze-gl-strings writes to haplotypePairs.log/haplotypePairsWarning.log
+          for this sample (HaplotypePairWriter#formatDetectedLinkages)
+      nonCommonWellDocumentedReport:
+        type: string
+        description: same text analyze-gl-strings writes to nonCwdWarnings.log for
+          this sample (CommonWellDocumentedWriter#formatCommonWellDocumented); empty
+          when there are no non-CWD/non-CIWD alleles
+      detectedFindingsReport:
+        type: string
+        description: same CSV row(s) analyze-gl-strings writes to detectedFindings.csv
+          for this sample (DetectedFindingsWriter#formatDetectedFindings)
     xml:
       name: sample
   FindingData:
