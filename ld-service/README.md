@@ -19,13 +19,19 @@ report set (each `SampleData` includes `hasAnomalies`/`warnings` plus a report s
   tab-delimited `id<TAB>glString`-per-line batch file format the CLI reads.
 
 Both accept optional `hladbVersion`/`frequencySet` fields to select the IMGT/HLA reference
-database version and frequency set for the request, mirroring the CLI's `-v`/`-f` flags.
-`hladbVersion` genuinely applies per request; `frequencySet` only reliably takes effect on
-the first analysis a running instance performs (see `HLAFrequenciesLoader#getInstance()`) --
-restart the service to switch it. Requests are serialized (one analysis at a time): the
-underlying detection engine's hladb/frequency-set selection is process-wide state, not
-threaded through per call, so this is a deliberate, honest simplification for what's scoped
-as a personal/local tool, not a general concurrent-request service.
+database version and frequency set for the request, mirroring the CLI's `-v`/`-f` flags —
+both genuinely apply per request. `POST /genotypes/file` additionally accepts
+`frequencyFiles`/`allelesFile` uploads (the CLI's `-q`/`-l`): your own frequency reference
+data, in the "standard format" `ld-tools`' `normalize-frequency-file` produces, from NMDP or
+any other source — this is the actual point of letting an end user bring their own
+frequencies rather than being limited to the handful of bundled named sets. A malformed
+upload fails that one request with a 400, not the whole service (`HLAFrequenciesLoader` used
+to `System.exit(-1)` on this — a real bug, fixed as part of adding this).
+
+Requests are serialized (one analysis at a time): the underlying detection engine's
+hladb/frequency-set selection is process-wide state, not threaded through per call, so this
+is a deliberate, honest simplification for what's scoped as a personal/local tool, not a
+general concurrent-request service.
 
 Interactive docs (springdoc-openapi) are served once the app is running:
 
@@ -42,7 +48,7 @@ or build the jar and run it directly:
 
 ```
 mvn -pl ld-service -am package
-java -jar ld-service/target/ld-service-0.0.1-SNAPSHOT.jar
+java -jar ld-service/target/ld-service-1.0.0.jar
 ```
 
 `docker-compose.yml` here also runs a pre-built image (`mpresteg/hlahapv:latest`) on port

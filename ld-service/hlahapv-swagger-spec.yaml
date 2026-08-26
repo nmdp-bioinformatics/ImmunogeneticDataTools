@@ -71,12 +71,31 @@ paths:
         type: string
       - in: formData
         name: frequencySet
-        description: frequency set to use (e.g. nmdp-2007, nmdp-2007-std, wiki),
-          default nmdp-2007-std. Only reliably takes effect on the first analysis
-          this running service instance performs; see the same field on
-          Genotypes for why.
+        description: named frequency set to use (e.g. nmdp-2007, nmdp-2007-std,
+          wiki), default nmdp-2007-std. Ignored if frequencyFiles is supplied.
+          Note that "nmdp" (as opposed to "nmdp-2007"/"nmdp-2007-std") has no
+          bundled reference data and will fail -- it's reserved for a
+          licensed dataset this project never redistributes.
         required: false
         type: string
+      - in: formData
+        name: frequencyFiles
+        description: your own frequency reference file(s), in the "standard
+          format" ld-tools' normalize-frequency-file produces (from NMDP data or
+          any other source) -- the same files the CLI's -q/--frequency-file(s)
+          flag takes. Overrides frequencySet when present.
+        required: false
+        type: array
+        items:
+          type: file
+        collectionFormat: multi
+      - in: formData
+        name: allelesFile
+        description: optional individual-locus allele frequency file accompanying
+          frequencyFiles (the CLI's -l/--allele-file). Ignored if frequencyFiles
+          is not also supplied.
+        required: false
+        type: file
       responses:
         200:
           description: Successful response
@@ -103,13 +122,13 @@ definitions:
           3.19.0), default latest. Applies to the whole request, not per genotype.
       frequencySet:
         type: string
-        description: frequency set to use (e.g. nmdp-2007, nmdp-2007-std, wiki),
-          default nmdp-2007-std. Applies to the whole request, not per genotype.
-          Only reliably takes effect on the first analysis this running service
-          instance performs -- unlike hladbVersion, a later request asking for a
-          different value will be silently ignored (pre-existing limitation, see
-          HLAFrequenciesLoader#getInstance() server-side). Restart the service to
-          switch.
+        description: named frequency set to use (e.g. nmdp-2007, nmdp-2007-std,
+          wiki), default nmdp-2007-std. Applies to the whole request, not per
+          genotype. Note that "nmdp" (as opposed to "nmdp-2007"/"nmdp-2007-std")
+          has no bundled reference data and will fail -- it's reserved for a
+          licensed dataset this project never redistributes. To use your own
+          frequency file(s) instead of a named set, use POST /genotypes/file's
+          frequencyFiles field -- this JSON endpoint can't carry file uploads.
     xml:
       name: genotypes
   Genotype:

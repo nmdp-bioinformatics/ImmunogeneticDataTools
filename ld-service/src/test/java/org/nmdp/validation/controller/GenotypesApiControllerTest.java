@@ -109,4 +109,39 @@ public class GenotypesApiControllerTest {
             .andExpect(jsonPath("$.sample[0].id").value("sample-1"))
             .andExpect(jsonPath("$.sample[1].id").value("sample-2"));
     }
+
+    // The actual point of Phase 8: let the end user upload their own frequency reference data
+    // (NMDP's or anyone else's, once converted to the "standard format" normalize-frequency-file
+    // produces) instead of being limited to the handful of bundled named sets. Confirms the
+    // upload genuinely reaches the detection engine -- not just that the request is accepted --
+    // by checking the "Inputted" sentinel AnalyzeGLStrings' CLI itself uses for this same case
+    // shows up in the report text.
+    @Test
+    public void submitGenotypesFileAcceptsCustomFrequencyFileUpload() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+        MockMultipartFile freqFile = new MockMultipartFile("frequencyFiles", "miniFiveLocusFreqs.csv", "text/csv",
+                getClass().getClassLoader().getResourceAsStream("miniFiveLocusFreqs.csv").readAllBytes());
+
+        mockMvc.perform(multipart("/genotypes/file").file(file).file(freqFile))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.sample", hasSize(1)))
+            .andExpect(jsonPath("$.sample[0].linkageReport", containsString("Frequencies:  Inputted")));
+    }
+
+    // Phase 8: HLAFrequenciesLoader used to System.exit(-1) the entire process on a bad
+    // frequency file (fine for the CLI, catastrophic for a long-running service -- see
+    // HLAFrequenciesLoader#init(Set,File)). Confirms a malformed upload now fails cleanly with a
+    // 400 for just this one request, not a process-wide crash that would take down every other
+    // in-flight/future request too.
+    @Test
+    public void submitGenotypesFileRejectsMalformedFrequencyFileWithoutCrashing() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+        MockMultipartFile badFreqFile = new MockMultipartFile("frequencyFiles", "garbage.csv", "text/csv",
+                "this is not a valid frequency file at all\n".getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/genotypes/file").file(file).file(badFreqFile))
+            .andExpect(status().isBadRequest());
+    }
 }

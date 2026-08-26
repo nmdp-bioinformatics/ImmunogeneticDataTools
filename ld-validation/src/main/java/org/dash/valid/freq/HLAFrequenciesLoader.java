@@ -111,17 +111,26 @@ public class HLAFrequenciesLoader {
     	return instance;
     }
 
-	// Deliberately does NOT reload when Frequencies.FREQUENCIES_PROPERTY changes (unlike
+    // Forces the next getInstance() call (either overload) to rebuild from scratch instead of
+    // returning whatever's cached. Phase 8: ld-service needs this to correctly switch between
+    // a named Frequencies value and caller-supplied custom frequency files across separate
+    // requests within the same long-running process -- without it, whichever mode's data
+    // loaded first in this process's lifetime would silently keep winning forever.
+    public static void reset() {
+    	instance = null;
+    }
+
+	// Deliberately does NOT auto-reload when Frequencies.FREQUENCIES_PROPERTY changes (unlike
 	// AntigenRecognitionSiteLoader/CommonWellDocumentedLoader's hladb reload-on-change --
-	// Phase 8 tried the same fix here and reverted it). Making this reload-aware surfaced a
-	// real, separate, pre-existing bug: switching to Frequencies.NMDP specifically throws
-	// FileNotFoundException (loadNMDPLinkageReferenceData has no bundled resource for it --
-	// likely the gated/licensed 2011 six-locus dataset noted elsewhere in this project's
+	// Phase 8 tried the same automatic fix here and reverted it). Making this reload-aware
+	// surfaced a real, separate, pre-existing bug: switching to Frequencies.NMDP specifically
+	// throws FileNotFoundException (loadNMDPLinkageReferenceData has no bundled resource for
+	// it -- likely the gated/licensed 2011 six-locus dataset noted elsewhere in this project's
 	// history, never committed to the repo) which testPhasedGenotypeList's own setup has been
 	// silently, harmlessly hitting-and-ignoring for years, masked by this exact never-reload
-	// behavior. Fixing that is a separate task; ld-service's frequencySet request parameter
-	// therefore only reliably takes effect on the first analysis a given process performs, same
-	// as it always has -- a known, pre-existing limitation, not one this API introduces.
+	// behavior. Fixing that is a separate task. Callers that genuinely need fresh state between
+	// uses of a *working* Frequencies value (e.g. ld-service, switching between requests) should
+	// call reset() first rather than relying on this method to notice a change on its own.
 	public static HLAFrequenciesLoader getInstance() {
 		if (instance == null) {
 			Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
@@ -184,9 +193,15 @@ public class HLAFrequenciesLoader {
 		}
 		catch (IOException e) { //| ApiException e) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
-			e.printStackTrace();
-			
-			System.exit(-1);
+
+			// Was System.exit(-1) -- fine for the CLI (a one-shot process where killing it on
+			// bad input is tolerable, and AnalyzeGLStrings' own catch-all already logs and exits
+			// non-zero the same way), catastrophic for ld-service: a single request uploading a
+			// malformed frequency file would kill the whole long-running process for every
+			// other in-flight/future request too. Throwing instead lets each caller decide --
+			// the CLI's main() still ends up exiting non-zero via its existing catch (Exception
+			// e) block; ld-service can turn this into a 400 for just the one bad request instead.
+			throw new IllegalArgumentException("Couldn't load disequilibrium element reference file.", e);
 		}
 	}
 	
