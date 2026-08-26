@@ -26,10 +26,10 @@
   <parent>
     <groupId>org.nmdp.validation</groupId>
     <artifactId>ld-multimodule</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>ld-tools</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>ld-tools</name>
   <url>http://maven.apache.org</url>
   <properties>
