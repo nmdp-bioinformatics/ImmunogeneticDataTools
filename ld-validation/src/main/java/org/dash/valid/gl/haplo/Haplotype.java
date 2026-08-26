@@ -34,12 +34,29 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 import jakarta.xml.bind.annotation.XmlType;
 
+/**
+ * One haplotype — an ordered set of alleles across one or more loci believed to descend
+ * together from a single ancestral chromosome. {@link MultiLocusHaplotype} is the concrete
+ * implementation used throughout this project; see {@link HaplotypePair} for how two
+ * haplotypes combine into a detected linkage.
+ * <p>
+ * {@code equals()}/{@code hashCode()} are based solely on {@link #getHaplotypeString()}
+ * (the canonical, G-group-level representation) — deliberately, since a plain per-field
+ * comparison here was a real source of run-to-run non-determinism before that was fixed
+ * (see the inline comment on {@link #equals(Object)}).
+ */
 @XmlRootElement(name="haplotype")
 @XmlType(propOrder={"sequence", "haplotypeString"})
-public abstract class Haplotype {	
+public abstract class Haplotype {
 	DetectedDisequilibriumElement linkage;
 	private boolean drb345Homozygous;
-	
+
+	/**
+	 * The reference-data match found for this haplotype, if any.
+	 *
+	 * @return the reference-data linkage this haplotype matched, or {@code null} if no
+	 *         match was found (see {@link org.dash.valid.HLALinkageDisequilibrium})
+	 */
 	@XmlTransient
 	public DetectedDisequilibriumElement getLinkage() {
 		return linkage;
@@ -61,9 +78,23 @@ public abstract class Haplotype {
 	public abstract Integer getSequence();
 	public abstract void setSequence(Integer sequence);
 	
+	/**
+	 * The canonical representation used for matching, equality, and hashing.
+	 *
+	 * @return the canonical, G-group-level representation of this haplotype (e.g.
+	 *         {@code "HLA-C*07:01g~HLA-B*08:01g"}) — reported as {@code value} in output XML
+	 */
 	@XmlAttribute(name="value")
 	public abstract String getHaplotypeString();
-	
+
+	/**
+	 * The fully expanded representation, distinct from the canonical {@link #getHaplotypeString()}.
+	 *
+	 * @return the fully expanded, allele-level representation of this haplotype (e.g. every
+	 *         specific allele the matched G-group(s) resolved to) — reported as
+	 *         {@code fullValue} in output XML. Distinct from {@link #getHaplotypeString()}
+	 *         since reference-data matching is G-group/ARS-based, not exact-allele-string.
+	 */
 	@XmlAttribute(name="fullValue")
 	public abstract String getFullHaplotypeString();
 	

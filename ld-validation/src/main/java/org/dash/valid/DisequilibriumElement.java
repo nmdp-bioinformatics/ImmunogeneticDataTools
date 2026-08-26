@@ -31,7 +31,18 @@ import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.haplo.Haplotype;
 
 
-public abstract class DisequilibriumElement {	
+/**
+ * One reference row of haplotype frequency data — the alleles at each locus of a known
+ * haplotype, plus its frequency (see the {@link org.dash.valid.freq} loaders that build
+ * these, and the {@link org.dash.valid.race}/{@link org.dash.valid.base} subclasses that add
+ * per-race or single-frequency data).
+ * <p>
+ * {@link #equals(Object)} compares at the G-group/Antigen Recognition Site level (via
+ * {@link GLStringUtilities#fieldLevelComparison} / {@link GLStringUtilities#checkAntigenRecognitionSite}),
+ * not by exact allele string — so a candidate haplotype whose own recorded ambiguity spans
+ * several raw allele strings can still match a single reference row.
+ */
+public abstract class DisequilibriumElement {
 	private Haplotype haplotype;
 	public DisequilibriumElement() {
 		super();
