@@ -115,6 +115,14 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
         </dependency>
+
+      <!-- Phase 8a: ld-service's first tests. Brings MockMvc + JUnit 5 + AssertJ, version
+           managed by the Boot 3.5.16 BOM. -->
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-test</artifactId>
+          <scope>test</scope>
+      </dependency>
   </dependencies>
 
 
