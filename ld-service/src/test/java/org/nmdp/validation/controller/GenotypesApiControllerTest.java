@@ -23,8 +23,13 @@ package org.nmdp.validation.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -37,20 +42,66 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.nmdp.validation.job.JobRegistry;
 
 // ld-service's first tests (Phase 8a) -- until now this module had zero test coverage at all.
 // Uses the same inline GL String fixture LinkageDisequilibriumAnalyzerTest#testLinkageReportingInlineGLString
 // already exercises directly against ld-validation, driven this time through the real HTTP
 // controller layer, since that's what's actually new/at-risk here.
+//
+// @Import(JobRegistry.class): @WebMvcTest only auto-registers web-layer beans; JobRegistry is a
+// plain @Component the controller now depends on for /genotypes/file. Imported (not mocked) so
+// the async job tests below exercise the real background-thread execution, not a stub.
 @WebMvcTest(GenotypesApiController.class)
+@Import(JobRegistry.class)
 public class GenotypesApiControllerTest {
 
     private static final String INLINE_GL_STRING = "HLA-A*11:01:01+HLA-A*24:02:01:01/HLA-A*24:02:01:02L/HLA-A*24:02:01:03^HLA-B*18:01:01:01/HLA-B*18:01:01:02/HLA-B*18:51+HLA-B*53:01:01^HLA-C*04:01:01:01/HLA-C*04:01:01:02/HLA-C*04:01:01:03/HLA-C*04:01:01:04/HLA-C*04:01:01:05/HLA-C*04:20/HLA-C*04:117+HLA-C*12:03:01:01/HLA-C*12:03:01:02/HLA-C*12:34^HLA-DPA1*01:03:01:01/HLA-DPA1*01:03:01:02/HLA-DPA1*01:03:01:03/HLA-DPA1*01:03:01:04/HLA-DPA1*01:03:01:05+HLA-DPA1*02:01:01^HLA-DPB1*02:01:02+HLA-DPB1*09:01^HLA-DQA1*01:02:01:01/HLA-DQA1*01:02:01:02/HLA-DQA1*01:02:01:03/HLA-DQA1*01:02:01:04/HLA-DQA1*01:11+HLA-DQA1*03:01:01^HLA-DQB1*03:05:01+HLA-DQB1*06:09^HLA-DRB1*11:04:01+HLA-DRB1*13:02:01^HLA-DRB3*02:02:01:01/HLA-DRB3*02:02:01:02+HLA-DRB3*03:01:01";
 
     @Autowired
     private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // Submits a multipart request to /genotypes/file, then polls GET /genotypes/jobs/{jobId}
+    // (Phase 8's async job API) until it reaches a terminal phase, returning that final
+    // JobStatus body. The fixtures this test class uses are tiny (a handful of genotypes
+    // against a small reference file), so real completion happens well within this loop's
+    // bound -- this is not simulating slowness, just accommodating the fact that the work now
+    // genuinely happens on a separate thread instead of inline on the calling one.
+    private JsonNode submitFileJobAndAwaitTerminal(MockMultipartFile... files) throws Exception {
+        var requestBuilder = multipart("/genotypes/file");
+        for (MockMultipartFile file : files) {
+            requestBuilder = requestBuilder.file(file);
+        }
+
+        MvcResult submitResult = mockMvc.perform(requestBuilder)
+            .andExpect(status().isAccepted())
+            .andExpect(jsonPath("$.jobId").exists())
+            .andReturn();
+        String jobId = objectMapper.readTree(submitResult.getResponse().getContentAsString()).get("jobId").asText();
+
+        for (int i = 0; i < 200; i++) {
+            MvcResult statusResult = mockMvc.perform(get("/genotypes/jobs/" + jobId)).andExpect(status().isOk()).andReturn();
+            JsonNode status = objectMapper.readTree(statusResult.getResponse().getContentAsString());
+            String phase = status.get("phase").asText();
+            if (phase.equals("DONE") || phase.equals("FAILED")) {
+                return status;
+            }
+            Thread.sleep(25);
+        }
+
+        fail("Job did not reach a terminal phase in time");
+        return null;
+    }
 
     // Phase 8a's first gap: the anomaly/warning findings used to be dropped entirely from the
     // JSON response -- only getLinkedPairs() ever made it out. Doesn't assert which way
@@ -128,6 +179,9 @@ public class GenotypesApiControllerTest {
     // analyze-gl-strings' actual primary use case. Reuses the same tab-delimited
     // "id<TAB>glString"-per-line format the CLI reads (confirmed against
     // ld-validation/src/test/resources/syntheticExamples.txt).
+    //
+    // Phase 8 (async): this endpoint now returns 202+jobId immediately rather than the result
+    // directly -- see submitFileJobAndAwaitTerminal.
     @Test
     public void submitGenotypesFileParsesTabDelimitedBatchFile() throws Exception {
         String fileContent = "sample-1\t" + INLINE_GL_STRING + "\n"
@@ -135,11 +189,12 @@ public class GenotypesApiControllerTest {
         MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
                 fileContent.getBytes(StandardCharsets.UTF_8));
 
-        mockMvc.perform(multipart("/genotypes/file").file(file))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.sample", hasSize(2)))
-            .andExpect(jsonPath("$.sample[0].id").value("sample-1"))
-            .andExpect(jsonPath("$.sample[1].id").value("sample-2"));
+        JsonNode finalStatus = submitFileJobAndAwaitTerminal(file);
+
+        assertEquals("DONE", finalStatus.get("phase").asText(), finalStatus.toString());
+        assertEquals(2, finalStatus.get("result").get("sample").size());
+        assertEquals("sample-1", finalStatus.get("result").get("sample").get(0).get("id").asText());
+        assertEquals("sample-2", finalStatus.get("result").get("sample").get(1).get("id").asText());
     }
 
     // The actual point of Phase 8: let the end user upload their own frequency reference data
@@ -155,19 +210,22 @@ public class GenotypesApiControllerTest {
         MockMultipartFile freqFile = new MockMultipartFile("frequencyFiles", "miniFiveLocusFreqs.csv", "text/csv",
                 getClass().getClassLoader().getResourceAsStream("miniFiveLocusFreqs.csv").readAllBytes());
 
-        mockMvc.perform(multipart("/genotypes/file").file(file).file(freqFile))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.sample", hasSize(1)))
-            .andExpect(jsonPath("$.sample[0].linkageReport", containsString("Frequencies:  Inputted")));
+        JsonNode finalStatus = submitFileJobAndAwaitTerminal(file, freqFile);
+
+        assertEquals("DONE", finalStatus.get("phase").asText(), finalStatus.toString());
+        String linkageReport = finalStatus.get("result").get("sample").get(0).get("linkageReport").asText();
+        assertTrue(linkageReport.contains("Frequencies:  Inputted"), linkageReport);
     }
 
     // Phase 8: HLAFrequenciesLoader used to System.exit(-1) the entire process on a bad
     // frequency file (fine for the CLI, catastrophic for a long-running service -- see
-    // HLAFrequenciesLoader#init(Set,File)). Confirms a malformed upload now fails cleanly with a
-    // 400 for just this one request, not a process-wide crash that would take down every other
-    // in-flight/future request too.
+    // HLAFrequenciesLoader#init(Set,File)). This particular garbage upload is obviously wrong
+    // (no commas at all), so it's still caught by the cheap synchronous pre-check and rejected
+    // with an immediate 400 -- it never becomes a job at all. See
+    // GenotypesApiController#validateFrequencyFileLooksReasonable for what that check does and
+    // doesn't catch.
     @Test
-    public void submitGenotypesFileRejectsMalformedFrequencyFileWithoutCrashing() throws Exception {
+    public void submitGenotypesFileRejectsObviouslyMalformedFrequencyFileSynchronously() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
                 ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
         MockMultipartFile badFreqFile = new MockMultipartFile("frequencyFiles", "garbage.csv", "text/csv",
@@ -175,5 +233,31 @@ public class GenotypesApiControllerTest {
 
         mockMvc.perform(multipart("/genotypes/file").file(file).file(badFreqFile))
             .andExpect(status().isBadRequest());
+    }
+
+    // A file that passes the cheap synchronous pre-check (right shape for its first few lines)
+    // but is malformed further in only fails once the background job actually gets to that
+    // line -- surfacing as a FAILED job, not a 400. This is the real, documented tradeoff of
+    // making this endpoint async (see JobStatus's FAILED phase description in the spec).
+    @Test
+    public void submitGenotypesFileFailsAsJobWhenFrequencyFileIsMalformedPastThePreCheck() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+        String badContentPastPreCheck = "HIS,HLA-A*01:01g~HLA-C*01:02~HLA-B*08:01g~HLA-DRB1*04:02~HLA-DQB1*03:02,1.2E-4\n".repeat(5)
+                + "this line is fine for the first 5 rows the pre-check reads, but not this one\n";
+        MockMultipartFile badFreqFile = new MockMultipartFile("frequencyFiles", "sneaky.csv", "text/csv",
+                badContentPastPreCheck.getBytes(StandardCharsets.UTF_8));
+
+        JsonNode finalStatus = submitFileJobAndAwaitTerminal(file, badFreqFile);
+
+        assertEquals("FAILED", finalStatus.get("phase").asText(), finalStatus.toString());
+        assertNotNull(finalStatus.get("error").asText());
+    }
+
+    // GET /genotypes/jobs/{jobId} for an id that never existed (or was evicted).
+    @Test
+    public void getGenotypesJobReturns404ForUnknownJobId() throws Exception {
+        mockMvc.perform(get("/genotypes/jobs/does-not-exist"))
+            .andExpect(status().isNotFound());
     }
 }

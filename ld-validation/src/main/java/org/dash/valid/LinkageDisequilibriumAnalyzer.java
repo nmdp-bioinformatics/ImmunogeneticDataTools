@@ -86,10 +86,22 @@ public class LinkageDisequilibriumAnalyzer {
 	}
 	
 	public static List<Sample> analyzeGLStringFile(String name, BufferedReader reader) throws IOException {
+		return analyzeGLStringFile(name, reader, ProgressListener.NOOP);
+	}
+
+	/**
+	 * Same as {@link #analyzeGLStringFile(String, BufferedReader)}, but reports per-genotype
+	 * progress to {@code listener} as the batch runs -- see {@link ProgressListener}.
+	 *
+	 * @param name name to associate with this batch (e.g. the source filename)
+	 * @param reader GL String batch input
+	 * @param listener notified after each genotype is processed
+	 */
+	public static List<Sample> analyzeGLStringFile(String name, BufferedReader reader, ProgressListener listener) throws IOException {
 		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile(name, reader);
-		
-		List<Sample> samplesList = detectLinkages(glStrings);
-		
+
+		List<Sample> samplesList = detectLinkages(glStrings, listener);
+
 		return samplesList;
 	}
 
@@ -118,18 +130,23 @@ public class LinkageDisequilibriumAnalyzer {
 
 	/**
 	 * @param glStrings
-	 * @throws IOException 
-	 * @throws SecurityException 
+	 * @throws IOException
+	 * @throws SecurityException
 	 */
 	private static List<Sample> detectLinkages(List<LinkageDisequilibriumGenotypeList> glStrings) {
+		return detectLinkages(glStrings, ProgressListener.NOOP);
+	}
+
+	private static List<Sample> detectLinkages(List<LinkageDisequilibriumGenotypeList> glStrings, ProgressListener listener) {
 		List<Sample> samplesList = new ArrayList<Sample>();
-		
+
 		int idx = 1;
 		for (LinkageDisequilibriumGenotypeList linkedGLString : glStrings) {
-			
+
 			List<Haplotype> knownHaplotypes = GLStringUtilities.buildHaplotypes(linkedGLString);
-			
+
 			LOGGER.info("Processing gl string " + idx + " of " + glStrings.size() + " (" + (idx*100)/glStrings.size() + "%)");
+			listener.onProgress(idx, glStrings.size());
 			idx++;
 
 			if (knownHaplotypes.size() > 0) {
