@@ -2,6 +2,7 @@ package org.nmdp.validation.controller;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
@@ -115,6 +116,15 @@ public class GenotypesApiController implements GenotypesApi {
     // It only inspects the first few lines, not the whole file -- real errors deeper in a large
     // file still only surface as a FAILED job; catching everything synchronously would mean
     // fully parsing the file before responding, defeating the entire point of this endpoint.
+    //
+    // Every MultipartFile is copied to a temp file WE own, synchronously, right here, before
+    // returning -- found the hard way (a real submission failing with NoSuchFileException deep
+    // in the background job): MultipartFile's content is only guaranteed to exist for this HTTP
+    // request's lifetime. The servlet container (Tomcat) deletes its backing temp file once the
+    // request completes, which now happens almost immediately since we just return 202 -- well
+    // before the background job, on a separate thread, ever gets to read it. The unit tests
+    // never caught this because MockMultipartFile holds its content in memory indefinitely,
+    // immune to that real request-scoped cleanup.
     @Override
     public ResponseEntity<JobReference> submitGenotypesFile(MultipartFile file, String hladbVersion, String frequencySet,
             List<MultipartFile> frequencyFiles, MultipartFile allelesFile) {
@@ -124,7 +134,34 @@ public class GenotypesApiController implements GenotypesApi {
             }
         }
 
-        Job job = jobRegistry.submit(j -> runGenotypesFileJob(j, file, hladbVersion, frequencySet, frequencyFiles, allelesFile));
+        List<File> ownedTempFiles = new ArrayList<>();
+        File ownedInputFile = toTempFile(file, ownedTempFiles);
+        String originalFilename = file.getOriginalFilename();
+
+        Set<File> ownedFrequencyFiles = null;
+        File ownedAllelesFile = null;
+        if (frequencyFiles != null && !frequencyFiles.isEmpty()) {
+            ownedFrequencyFiles = new HashSet<>();
+            for (MultipartFile frequencyFile : frequencyFiles) {
+                ownedFrequencyFiles.add(toTempFile(frequencyFile, ownedTempFiles));
+            }
+            if (allelesFile != null && !allelesFile.isEmpty()) {
+                ownedAllelesFile = toTempFile(allelesFile, ownedTempFiles);
+            }
+        }
+
+        Set<File> jobFrequencyFiles = ownedFrequencyFiles;
+        File jobAllelesFile = ownedAllelesFile;
+        Job job = jobRegistry.submit(j -> {
+            try {
+                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile);
+            }
+            finally {
+                for (File tempFile : ownedTempFiles) {
+                    tempFile.delete();
+                }
+            }
+        });
 
         JobReference reference = new JobReference();
         reference.setJobId(job.getId());
@@ -142,17 +179,20 @@ public class GenotypesApiController implements GenotypesApi {
     }
 
     // Runs on JobRegistry's background worker thread, not the HTTP thread that accepted the
-    // upload. Held under the same ANALYSIS_LOCK submitGenotypes uses, since both paths mutate
-    // the same process-wide hladb/frequency-set configuration.
-    private List<Sample> runGenotypesFileJob(Job job, MultipartFile file, String hladbVersion, String frequencySet,
-            List<MultipartFile> frequencyFiles, MultipartFile allelesFile) throws IOException {
+    // upload -- everything it touches (inputFile, frequencyFiles, allelesFile) is a temp file
+    // submitGenotypesFile already copied the original uploads into, synchronously, before this
+    // ever runs (see the comment there for why that copy is necessary). Held under the same
+    // ANALYSIS_LOCK submitGenotypes uses, since both paths mutate the same process-wide
+    // hladb/frequency-set configuration.
+    private List<Sample> runGenotypesFileJob(Job job, File inputFile, String originalFilename, String hladbVersion, String frequencySet,
+            Set<File> frequencyFiles, File allelesFile) throws IOException {
         synchronized (ANALYSIS_LOCK) {
             job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
             configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
 
             job.setPhase(Job.Phase.ANALYZING_GENOTYPES);
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-                String name = file.getOriginalFilename() != null ? file.getOriginalFilename() : "upload";
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StandardCharsets.UTF_8))) {
+                String name = originalFilename != null ? originalFilename : "upload";
                 // Reuses the exact same parsing + analysis path analyze-gl-strings' CLI uses for
                 // its own batch input files, rather than reimplementing the tab-delimited
                 // "id<TAB>glString" format here.
@@ -256,10 +296,9 @@ public class GenotypesApiController implements GenotypesApi {
     // The /genotypes/file variant: when the caller uploads their own frequencyFiles (any
     // source, in the "standard format" normalize-frequency-file produces -- the same files the
     // CLI's -q/-l flags take), those take precedence over frequencySet, mirroring
-    // AnalyzeGLStrings' own precedence. Writes each upload to a temp file since
-    // HLAFrequenciesLoader's custom-file API takes java.io.File, not streams; always cleans them
-    // up afterward -- the loader parses everything into memory immediately, nothing needs the
-    // temp files to survive past this call.
+    // AnalyzeGLStrings' own precedence. frequencyFiles/allelesFile are already temp files
+    // submitGenotypesFile owns (copied from the original uploads before the job was submitted --
+    // see there for why); this method doesn't create or clean up any files itself.
     //
     // Runs inside a background job (see runGenotypesFileJob), so a malformed upload that slips
     // past validateFrequencyFileLooksReasonable's cheap check just propagates as a plain
@@ -268,7 +307,7 @@ public class GenotypesApiController implements GenotypesApi {
     // bad file instead of throwing at all -- fixed as part of Phase 8, since that would have
     // taken the whole service down over one bad request regardless of sync vs async.)
     private void configureWithOptionalCustomFrequencies(String hladbVersion, String frequencySet,
-            List<MultipartFile> frequencyFiles, MultipartFile allelesFile) {
+            Set<File> frequencyFiles, File allelesFile) {
         System.setProperty(GLStringConstants.HLADB_PROPERTY, hladbVersion != null ? hladbVersion : GLStringConstants.LATEST_HLADB);
 
         if (frequencyFiles == null || frequencyFiles.isEmpty()) {
@@ -278,30 +317,14 @@ public class GenotypesApiController implements GenotypesApi {
 
         System.setProperty(Frequencies.FREQUENCIES_PROPERTY, frequencySet != null ? frequencySet : "Inputted");
 
-        List<File> tempFiles = new ArrayList<>();
-        try {
-            Set<File> tempFrequencyFiles = new HashSet<>();
-            for (MultipartFile frequencyFile : frequencyFiles) {
-                File tempFile = toTempFile(frequencyFile, tempFiles);
-                tempFrequencyFiles.add(tempFile);
-            }
-
-            File tempAllelesFile = (allelesFile != null && !allelesFile.isEmpty()) ? toTempFile(allelesFile, tempFiles) : null;
-
-            // Always reconstructs unconditionally regardless of what's currently cached --
-            // unlike the named-set path, there's no cheap way to tell whether a fresh upload is
-            // "the same as last time" without hashing its content, and every genuine upload
-            // legitimately needs to load, so no reset()-avoidance is possible or attempted here.
-            HLAFrequenciesLoader.getInstance(tempFrequencyFiles, tempAllelesFile);
-            // A subsequent named-set request must not think its target set is already loaded
-            // just because it once was, before this custom-file request replaced it.
-            currentFrequencySet = CUSTOM_FILES;
-        }
-        finally {
-            for (File tempFile : tempFiles) {
-                tempFile.delete();
-            }
-        }
+        // Always reconstructs unconditionally regardless of what's currently cached -- unlike
+        // the named-set path, there's no cheap way to tell whether a fresh upload is "the same
+        // as last time" without hashing its content, and every genuine upload legitimately
+        // needs to load, so no reset()-avoidance is possible or attempted here.
+        HLAFrequenciesLoader.getInstance(frequencyFiles, allelesFile);
+        // A subsequent named-set request must not think its target set is already loaded just
+        // because it once was, before this custom-file request replaced it.
+        currentFrequencySet = CUSTOM_FILES;
     }
 
     private File toTempFile(MultipartFile multipartFile, List<File> tempFiles) {
