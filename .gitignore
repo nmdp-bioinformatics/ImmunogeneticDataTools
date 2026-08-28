@@ -3,6 +3,7 @@
 /target/
 /.settings/
 /immuno.log
+/immuno.log.lck
 /linkages.log
 /linkageWarnings.log
 /nonCwdWarnings.log
@@ -19,6 +20,7 @@
 # test`, ld-service's Phase 8a tests). Previously only ld-validation/ld-tools ever hit this
 # path; ld-service's new /genotypes/file test does too.
 /*/immuno.log
+/*/immuno.log.lck
 /*/linkages.log
 /*/linkageWarnings.log
 /*/nonCwdWarnings.log

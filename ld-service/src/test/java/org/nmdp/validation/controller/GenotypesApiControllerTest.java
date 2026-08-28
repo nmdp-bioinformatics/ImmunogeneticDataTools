@@ -23,6 +23,8 @@ package org.nmdp.validation.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 
+import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -90,6 +93,35 @@ public class GenotypesApiControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.sample[0].linkageReport", containsString("HLA DB Version: 3.19.0")))
             .andExpect(jsonPath("$.sample[0].linkageReport", containsString("Frequencies:  nmdp-2007")));
+    }
+
+    // Regression test for a real perf bug found while measuring actual large-frequency-file
+    // costs against this project's own converted NMDP data (some run 8+ minutes just to parse,
+    // before any genotype analysis even starts): the first version of the per-request
+    // frequencySet fix called HLAFrequenciesLoader.reset() unconditionally on every single
+    // request, discarding the already-parsed data even when nothing had changed. Confirms two
+    // requests with the same frequencySet reuse the same HLAFrequenciesLoader instance (no
+    // reparse), and that a genuine change to a different frequencySet does get a fresh one.
+    @Test
+    public void submitGenotypesOnlyReloadsFrequencyDataWhenFrequencySetActuallyChanges() throws Exception {
+        String bodyNmdp2007 = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING
+                + "\"}],\"frequencySet\":\"nmdp-2007\"}";
+        String bodyNmdp2007Std = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING
+                + "\"}],\"frequencySet\":\"nmdp-2007-std\"}";
+
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(bodyNmdp2007))
+            .andExpect(status().isOk());
+        HLAFrequenciesLoader afterFirst = HLAFrequenciesLoader.getInstance();
+
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(bodyNmdp2007))
+            .andExpect(status().isOk());
+        HLAFrequenciesLoader afterRepeat = HLAFrequenciesLoader.getInstance();
+        assertSame(afterFirst, afterRepeat, "Same frequencySet on a repeat request should reuse the already-parsed data, not reparse it");
+
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(bodyNmdp2007Std))
+            .andExpect(status().isOk());
+        HLAFrequenciesLoader afterChange = HLAFrequenciesLoader.getInstance();
+        assertNotSame(afterRepeat, afterChange, "A genuinely different frequencySet should still get freshly loaded data");
     }
 
     // Phase 8a's third gap: the API previously had no way to submit a batch file at all, unlike
