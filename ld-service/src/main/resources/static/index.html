@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HLAHapV</title>
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header>
+  <h1>HLAHapV</h1>
+  <p>HLA linkage disequilibrium detection &mdash; a browser front end for
+    <code>analyze-gl-strings</code>. Same detection engine, same reports; results below include
+    anomalies/warnings, not just clean matches.</p>
+</header>
+
+<main>
+  <section id="input-section">
+    <div class="input-mode-toggle">
+      <label><input type="radio" name="inputMode" value="paste" checked> Paste GL strings</label>
+      <label><input type="radio" name="inputMode" value="file"> Upload a batch file</label>
+    </div>
+
+    <div id="paste-input">
+      <label for="pasteText">One genotype per line: <code>id&lt;TAB&gt;glString</code> (the id is optional)</label>
+      <textarea id="pasteText" rows="8" placeholder="sample-1&#9;HLA-A*01:01+HLA-A*02:01^HLA-B*..."></textarea>
+    </div>
+
+    <div id="file-input" hidden>
+      <label for="fileInput">Batch file (the same tab-delimited format the CLI reads)</label>
+      <input type="file" id="fileInput">
+    </div>
+
+    <fieldset>
+      <legend>Reference data</legend>
+
+      <label for="hladbVersion">IMGT/HLA database version</label>
+      <input type="text" id="hladbVersion" placeholder="latest (e.g. 3.19.0)">
+
+      <label for="frequencySet">Frequency set</label>
+      <select id="frequencySet">
+        <option value="nmdp-2007-std" selected>nmdp-2007-std (default)</option>
+        <option value="nmdp-2007">nmdp-2007</option>
+        <option value="nmdp-std">nmdp-std</option>
+        <option value="wiki">wiki</option>
+      </select>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="useCustomFrequencies">
+        Use my own frequency file(s) instead
+      </label>
+      <div id="custom-frequencies" hidden>
+        <label for="frequencyFiles">Frequency file(s), in the "standard format" <code>normalize-frequency-file</code> produces</label>
+        <input type="file" id="frequencyFiles" multiple>
+        <label for="allelesFile">Individual-locus allele frequency file (optional)</label>
+        <input type="file" id="allelesFile">
+      </div>
+    </fieldset>
+
+    <button id="submitBtn" type="button">Analyze</button>
+  </section>
+
+  <section id="progress-section" hidden>
+    <p id="progress-phase"></p>
+    <progress id="progress-bar" max="100"></progress>
+    <p id="progress-count"></p>
+  </section>
+
+  <section id="error-section" hidden>
+    <p id="error-message"></p>
+  </section>
+
+  <section id="results-section" hidden>
+    <div class="results-header">
+      <h2>Results</h2>
+      <button id="downloadBtn" type="button" class="secondary">Download reports</button>
+    </div>
+    <div id="results-list"></div>
+  </section>
+</main>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

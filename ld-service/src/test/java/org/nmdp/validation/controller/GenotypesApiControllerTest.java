@@ -24,6 +24,7 @@ package org.nmdp.validation.controller;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -37,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 
+import org.dash.valid.LinkagesLoader;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,9 +76,11 @@ public class GenotypesApiControllerTest {
     // Submits a multipart request to /genotypes/file, then polls GET /genotypes/jobs/{jobId}
     // (Phase 8's async job API) until it reaches a terminal phase, returning that final
     // JobStatus body. The fixtures this test class uses are tiny (a handful of genotypes
-    // against a small reference file), so real completion happens well within this loop's
-    // bound -- this is not simulating slowness, just accommodating the fact that the work now
-    // genuinely happens on a separate thread instead of inline on the calling one.
+    // against a small reference file) -- the work itself is fast -- but the *first* analysis
+    // in this test class's shared JVM/Spring context genuinely fetches real IMGT/HLA reference
+    // data over the network (AntigenRecognitionSiteLoader/CommonWellDocumentedLoader), which
+    // measured 10-15s in practice; a tight poll budget here isn't testing anything, it's just
+    // flaky against ordinary network latency. Generous on purpose.
     private JsonNode submitFileJobAndAwaitTerminal(MockMultipartFile... files) throws Exception {
         var requestBuilder = multipart("/genotypes/file");
         for (MockMultipartFile file : files) {
@@ -89,14 +93,14 @@ public class GenotypesApiControllerTest {
             .andReturn();
         String jobId = objectMapper.readTree(submitResult.getResponse().getContentAsString()).get("jobId").asText();
 
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 300; i++) {
             MvcResult statusResult = mockMvc.perform(get("/genotypes/jobs/" + jobId)).andExpect(status().isOk()).andReturn();
             JsonNode status = objectMapper.readTree(statusResult.getResponse().getContentAsString());
             String phase = status.get("phase").asText();
             if (phase.equals("DONE") || phase.equals("FAILED")) {
                 return status;
             }
-            Thread.sleep(25);
+            Thread.sleep(200);
         }
 
         fail("Job did not reach a terminal phase in time");
@@ -215,6 +219,34 @@ public class GenotypesApiControllerTest {
         assertEquals("DONE", finalStatus.get("phase").asText(), finalStatus.toString());
         String linkageReport = finalStatus.get("result").get("sample").get(0).get("linkageReport").asText();
         assertTrue(linkageReport.contains("Frequencies:  Inputted"), linkageReport);
+    }
+
+    // Regression test for a real bug found while explaining the [B_C, DRB_DQ] default seen in
+    // manual browser testing: HLAFrequenciesLoader#init(Set<File>, File) derives which linkages
+    // to search for directly from an uploaded custom frequency file's own content (its loci),
+    // and pushes them into LinkagesLoader -- but LinkagesLoader itself had no reset() at all
+    // (unlike HLAFrequenciesLoader, fixed earlier in Phase 8), so once any request initialized
+    // it, a later request uploading a file with genuinely different loci would have its derived
+    // linkages silently discarded, stuck on whatever was cached first. Confirms two custom
+    // uploads with different locus combinations (five-locus vs. HLA-C~HLA-B) genuinely produce
+    // different linkages, not the same cached set both times.
+    @Test
+    public void submitGenotypesFileDerivesLinkagesFromEachCustomFrequencyFileUpload() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+
+        MockMultipartFile fiveLocusFreqFile = new MockMultipartFile("frequencyFiles", "miniFiveLocusFreqs.csv", "text/csv",
+                getClass().getClassLoader().getResourceAsStream("miniFiveLocusFreqs.csv").readAllBytes());
+        submitFileJobAndAwaitTerminal(file, fiveLocusFreqFile);
+        var linkagesAfterFiveLocus = LinkagesLoader.getInstance().getLinkages();
+
+        MockMultipartFile cbFreqFile = new MockMultipartFile("frequencyFiles", "miniCBFreqs.csv", "text/csv",
+                getClass().getClassLoader().getResourceAsStream("miniCBFreqs.csv").readAllBytes());
+        submitFileJobAndAwaitTerminal(file, cbFreqFile);
+        var linkagesAfterCB = LinkagesLoader.getInstance().getLinkages();
+
+        assertNotEquals(linkagesAfterFiveLocus, linkagesAfterCB,
+                "A genuinely different custom frequency file's derived linkages should not be stuck on the previous upload's");
     }
 
     // Phase 8: HLAFrequenciesLoader used to System.exit(-1) the entire process on a bad
