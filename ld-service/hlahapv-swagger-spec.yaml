@@ -97,12 +97,45 @@ paths:
         required: false
         type: file
       responses:
+        202:
+          description: Accepted -- processing runs asynchronously (real frequency
+            reference data can take minutes just to load, well past any
+            reasonable HTTP timeout). Poll GET /genotypes/jobs/{jobId} with the
+            returned jobId for progress and the eventual result.
+          schema:
+            $ref: '#/definitions/JobReference'
+        400:
+          description: Invalid input, caught synchronously before the job is
+            created (e.g. an unreadable or obviously-malformed frequencyFiles
+            upload -- a cheap check on just the first few lines, not a full
+            parse). A file that passes this check but is malformed further in
+            still fails, just later, as a FAILED job instead of a 400 -- see
+            JobStatus.
+        405:
+          description: Invalid input
+  /genotypes/jobs/{jobId}:
+    get:
+      tags:
+      - genotypes
+      summary: Check the status of, and eventually retrieve the result of, a
+        job created by POST /genotypes/file
+      operationId: getGenotypesJob
+      produces:
+      - application/json
+      - application/xml
+      parameters:
+      - in: path
+        name: jobId
+        required: true
+        type: string
+      responses:
         200:
           description: Successful response
           schema:
-            $ref: '#/definitions/Samples'
-        405:
-          description: Invalid input
+            $ref: '#/definitions/JobStatus'
+        404:
+          description: No job with this id (never existed, or it's been evicted
+            -- jobs aren't kept forever, see JobStatus)
 definitions:
   Genotypes:
     type: object
@@ -236,7 +269,55 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/FindingData'
-            
+  JobReference:
+    type: object
+    required:
+    - jobId
+    properties:
+      jobId:
+        type: string
+  JobStatus:
+    type: object
+    required:
+    - jobId
+    - phase
+    properties:
+      jobId:
+        type: string
+      phase:
+        type: string
+        enum:
+        - QUEUED
+        - LOADING_REFERENCE_DATA
+        - ANALYZING_GENOTYPES
+        - DONE
+        - FAILED
+        description: |
+          QUEUED: accepted, waiting for the (single) background worker to pick it up --
+          ld-service processes one job at a time, same as the CLI's own single-process model.
+          LOADING_REFERENCE_DATA: parsing frequency reference data. No processed/total/percent
+          during this phase -- the parsing loop itself has no progress signal (v1 scope), so
+          this is intentionally coarse; measured against real converted NMDP data, this phase
+          alone can take several minutes for large files.
+          ANALYZING_GENOTYPES: running detection per genotype -- processed/total/percent are
+          meaningful here.
+          DONE: result is populated.
+          FAILED: error is populated. Includes frequencyFiles content that was malformed in a
+          way the initial synchronous pre-check didn't catch.
+      processed:
+        type: integer
+        description: only meaningful during ANALYZING_GENOTYPES
+      total:
+        type: integer
+        description: only meaningful during ANALYZING_GENOTYPES
+      percent:
+        type: integer
+        description: only meaningful during ANALYZING_GENOTYPES
+      result:
+        $ref: '#/definitions/Samples'
+      error:
+        type: string
+
 # Added by API Auto Mocking Plugin
 host: virtserver.swaggerhub.com
 basePath: /mpresteg/HLAHapV/1.0.0
