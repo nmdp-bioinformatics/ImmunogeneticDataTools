@@ -16,6 +16,7 @@ import java.util.Set;
 import jakarta.validation.Valid;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
+import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Sample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
@@ -271,9 +272,14 @@ public class GenotypesApiController implements GenotypesApi {
     // Sets the same System properties AnalyzeGLStrings' CLI sets from its -v/-f flags, so
     // per-request selection here reaches the detection engine the identical way the CLI's
     // already does. hladbVersion genuinely takes effect per request (AntigenRecognitionSiteLoader
-    // and CommonWellDocumentedLoader both reload when it changes, comparing internally). Must be
-    // called from inside the ANALYSIS_LOCK critical section.
+    // and CommonWellDocumentedLoader both reload when it changes, comparing internally).
+    // LinkagesLoader.reset() unconditionally, every request: unlike HLAFrequenciesLoader,
+    // rebuilding it is cheap (no I/O), and it has no reload-on-change comparison of its own at
+    // all (see LinkagesLoader#reset() for the real bug this closes -- a custom-file upload's
+    // own derived linkages could otherwise be silently discarded by an earlier request's
+    // already-cached ones). Must be called from inside the ANALYSIS_LOCK critical section.
     private void configure(String hladbVersion, String frequencySet) {
+        LinkagesLoader.reset();
         System.setProperty(GLStringConstants.HLADB_PROPERTY, hladbVersion != null ? hladbVersion : GLStringConstants.LATEST_HLADB);
         configureNamedFrequencySet(frequencySet);
     }
@@ -308,6 +314,7 @@ public class GenotypesApiController implements GenotypesApi {
     // taken the whole service down over one bad request regardless of sync vs async.)
     private void configureWithOptionalCustomFrequencies(String hladbVersion, String frequencySet,
             Set<File> frequencyFiles, File allelesFile) {
+        LinkagesLoader.reset();
         System.setProperty(GLStringConstants.HLADB_PROPERTY, hladbVersion != null ? hladbVersion : GLStringConstants.LATEST_HLADB);
 
         if (frequencyFiles == null || frequencyFiles.isEmpty()) {
