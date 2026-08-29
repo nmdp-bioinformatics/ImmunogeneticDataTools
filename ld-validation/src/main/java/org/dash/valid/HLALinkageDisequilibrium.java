@@ -182,7 +182,15 @@ public class HLALinkageDisequilibrium {
 		MultiLocusHaplotype enrichedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(haplotype.getAlleleMap()), 
 				new HashMap<Locus, Integer>(haplotype.getHaplotypeInstanceMap()), haplotype.getDrb345Homozygous());
 		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
-		List<DisequilibriumElement> shortenedList = new ArrayList<DisequilibriumElement>(disequilibriumElements);
+		// Was: new ArrayList<>(disequilibriumElements) -- a full copy of the (potentially huge,
+		// e.g. 900K+ rows for a real custom-uploaded frequency file) reference list, made fresh
+		// for every single haplotype checked. disequilibriumElements is HLAFrequenciesLoader's
+		// own live, shared list (see #getDisequilibriumElements) -- callers here only ever read
+		// from shortenedList (.contains()/.indexOf()/.get()/.subList()), never mutate it, so
+		// there's nothing the copy was protecting against. A subList() view (or, as here, the
+		// list itself, since subList() start=0 is just the list) behaves identically for every
+		// operation this method performs, without allocating and copying the whole thing.
+		List<DisequilibriumElement> shortenedList = disequilibriumElements;
 
 		for (Locus locus : enrichedHaplotype.getLoci()) {
 			if (loci.contains(locus)) {
@@ -238,7 +246,11 @@ public class HLALinkageDisequilibrium {
 		MultiLocusHaplotype clonedHaplotype = null;
 
 		for (MultiLocusHaplotype possibleHaplotype : glString.getPossibleHaplotypes(loci)) {
-			List<DisequilibriumElement> shortenedList = new ArrayList<DisequilibriumElement>(disequilibriumElements);
+			// See the identical comment in enrichHaplotype() above: this used to copy the full
+			// (potentially huge) reference list per candidate haplotype for no reason -- nothing
+			// here mutates shortenedList, so referencing disequilibriumElements directly is
+			// behaviorally identical and avoids that copy.
+			List<DisequilibriumElement> shortenedList = disequilibriumElements;
 
 			HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
 
