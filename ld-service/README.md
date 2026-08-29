@@ -112,6 +112,14 @@ mvn -pl ld-service -am package
 java -jar ld-service/target/ld-service-1.0.0.jar
 ```
 
+**Prefer the jar over `spring-boot:run` for anything performance-sensitive** — e.g. testing
+against a large custom frequency file, where `LOADING_REFERENCE_DATA` can genuinely take
+minutes (see above). `spring-boot:run` launches with `-XX:TieredStopAtLevel=1`
+(Spring Boot Maven Plugin's own dev-mode default, not anything configured here) — it
+disables the JVM's C2 JIT compiler to speed up startup for a quick edit-run loop, at a real
+cost to throughput on exactly this kind of long-running, CPU-bound parse. The jar runs with
+the JVM's normal full tiered compilation instead.
+
 `docker-compose.yml` here also runs a pre-built image (`mpresteg/hlahapv:latest`) on port
 8080, if you don't want to build locally.
 
