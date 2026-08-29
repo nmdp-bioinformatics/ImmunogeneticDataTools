@@ -65,6 +65,26 @@ Interactive docs (springdoc-openapi) are served once the app is running:
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
+## Browser UI
+
+Once the app is running, open **`http://localhost:8080/`** for a browser UI covering the
+same `analyze-gl-strings` workflow as the CLI and the `/genotypes/file` API above — it's
+served as a static resource (`src/main/resources/static`) by this same Spring Boot app, no
+separate setup. It supports:
+
+- Pasting GL strings directly, or uploading a batch file — either way submits through the
+  same async job API described above, so even a single pasted genotype gets progress
+  tracking rather than a blocking request
+- Selecting `hladbVersion`/`frequencySet`, or uploading your own `frequencyFiles`/`allelesFile`
+- Live progress while the job runs (an indeterminate bar while reference data loads, a real
+  percentage during genotype analysis)
+- Results per sample: an anomaly/clean badge, warnings, haplotype-pair frequency tables, and
+  the same four report texts the CLI writes to `*.log`/`.csv` files, each shown collapsed
+- A "Download reports" button that assembles those report texts into one file
+
+v1 covers `analyze-gl-strings` only — `normalize-frequency-file` and
+`synthetic-gl-string-generator` remain CLI-only for now.
+
 ## Running it
 
 ```
