@@ -206,8 +206,16 @@ public class DetectedLinkageFindings {
 					relativeRaceFreq = (RelativeFrequencyByRace) freqByRace;
 										
 					totalFreq = raceTotalFreqsMap.get(loci).get(relativeRaceFreq.getRace());
-					
-					relativeRaceFreq.setRelativeFrequency((relativeRaceFreq.getFrequency() * 100) / totalFreq);
+
+					// Clamped to 100.0: relativeFrequency is this pair's own contribution to totalFreq,
+					// which by definition can be at most the whole of totalFreq -- but (freq * 100) / total
+					// is two independently-rounded double operations, and double rounding doesn't
+					// guarantee round-tripping back to exactly 100.0 even when freq == totalFreq (a
+					// single-candidate race bucket, the common case). Confirmed against real output
+					// (analyze-gl-strings against stanfordExamplesFixed.txt): 391 of 10173 values came
+					// back as exactly 100.00000000000001 -- one ULP over 100, not a genuine case of one
+					// candidate outweighing the total it belongs to.
+					relativeRaceFreq.setRelativeFrequency(Math.min(100.0, (relativeRaceFreq.getFrequency() * 100) / totalFreq));
 					freqsByRace.add(relativeRaceFreq);
 					
 					List<Double> relativeFrequencies;
