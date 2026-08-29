@@ -45,6 +45,97 @@ paths:
             $ref: '#/definitions/Samples'
         405:
           description: Invalid input
+  /genotypes/file:
+    post:
+      tags:
+      - genotypes
+      summary: Submit a batch file of genotypes for evaluation (the same tab-delimited
+        id/GL-String-per-line format ld-tools' analyze-gl-strings reads)
+      operationId: submitGenotypesFile
+      consumes:
+      - multipart/form-data
+      produces:
+      - application/json
+      - application/xml
+      parameters:
+      - in: formData
+        name: file
+        description: batch input file, one "id<TAB>glString" pair per line
+        required: true
+        type: file
+      - in: formData
+        name: hladbVersion
+        description: IMGT/HLA reference database version to validate against (e.g.
+          3.19.0), default latest
+        required: false
+        type: string
+      - in: formData
+        name: frequencySet
+        description: named frequency set to use (e.g. nmdp-2007, nmdp-2007-std,
+          wiki), default nmdp-2007-std. Ignored if frequencyFiles is supplied.
+          Note that "nmdp" (as opposed to "nmdp-2007"/"nmdp-2007-std") has no
+          bundled reference data and will fail -- it's reserved for a
+          licensed dataset this project never redistributes.
+        required: false
+        type: string
+      - in: formData
+        name: frequencyFiles
+        description: your own frequency reference file(s), in the "standard
+          format" ld-tools' normalize-frequency-file produces (from NMDP data or
+          any other source) -- the same files the CLI's -q/--frequency-file(s)
+          flag takes. Overrides frequencySet when present.
+        required: false
+        type: array
+        items:
+          type: file
+        collectionFormat: multi
+      - in: formData
+        name: allelesFile
+        description: optional individual-locus allele frequency file accompanying
+          frequencyFiles (the CLI's -l/--allele-file). Ignored if frequencyFiles
+          is not also supplied.
+        required: false
+        type: file
+      responses:
+        202:
+          description: Accepted -- processing runs asynchronously (real frequency
+            reference data can take minutes just to load, well past any
+            reasonable HTTP timeout). Poll GET /genotypes/jobs/{jobId} with the
+            returned jobId for progress and the eventual result.
+          schema:
+            $ref: '#/definitions/JobReference'
+        400:
+          description: Invalid input, caught synchronously before the job is
+            created (e.g. an unreadable or obviously-malformed frequencyFiles
+            upload -- a cheap check on just the first few lines, not a full
+            parse). A file that passes this check but is malformed further in
+            still fails, just later, as a FAILED job instead of a 400 -- see
+            JobStatus.
+        405:
+          description: Invalid input
+  /genotypes/jobs/{jobId}:
+    get:
+      tags:
+      - genotypes
+      summary: Check the status of, and eventually retrieve the result of, a
+        job created by POST /genotypes/file
+      operationId: getGenotypesJob
+      produces:
+      - application/json
+      - application/xml
+      parameters:
+      - in: path
+        name: jobId
+        required: true
+        type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/JobStatus'
+        404:
+          description: No job with this id (never existed, or it's been evicted
+            -- jobs aren't kept forever, see JobStatus)
 definitions:
   Genotypes:
     type: object
@@ -58,6 +149,19 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/Genotype'
+      hladbVersion:
+        type: string
+        description: IMGT/HLA reference database version to validate against (e.g.
+          3.19.0), default latest. Applies to the whole request, not per genotype.
+      frequencySet:
+        type: string
+        description: named frequency set to use (e.g. nmdp-2007, nmdp-2007-std,
+          wiki), default nmdp-2007-std. Applies to the whole request, not per
+          genotype. Note that "nmdp" (as opposed to "nmdp-2007"/"nmdp-2007-std")
+          has no bundled reference data and will fail -- it's reserved for a
+          licensed dataset this project never redistributes. To use your own
+          frequency file(s) instead of a named set, use POST /genotypes/file's
+          frequencyFiles field -- this JSON endpoint can't carry file uploads.
     xml:
       name: genotypes
   Genotype:
@@ -105,6 +209,35 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/HaplotypePairData'
+      hasAnomalies:
+        type: boolean
+        description: true if detection found no linkages, no haplotype pairs for
+          a sought locus combination, non-CWD/non-CIWD alleles, or a G-group/ARS
+          match against more than the expected reference entries -- the same "should
+          this get a human's attention" signal analyze-gl-strings uses to route
+          a sample to its *Warning*.log files instead of the plain ones.
+      warnings:
+        type: array
+        description: human-readable anomaly summaries (DetectedLinkageFindings#getWarnings)
+        items:
+          type: string
+      linkageReport:
+        type: string
+        description: same text analyze-gl-strings writes to linkages.log/linkageWarnings.log
+          for this sample (LinkageDisequilibriumWriter#formatDetectedLinkages)
+      haplotypePairReport:
+        type: string
+        description: same text analyze-gl-strings writes to haplotypePairs.log/haplotypePairsWarning.log
+          for this sample (HaplotypePairWriter#formatDetectedLinkages)
+      nonCommonWellDocumentedReport:
+        type: string
+        description: same text analyze-gl-strings writes to nonCwdWarnings.log for
+          this sample (CommonWellDocumentedWriter#formatCommonWellDocumented); empty
+          when there are no non-CWD/non-CIWD alleles
+      detectedFindingsReport:
+        type: string
+        description: same CSV row(s) analyze-gl-strings writes to detectedFindings.csv
+          for this sample (DetectedFindingsWriter#formatDetectedFindings)
     xml:
       name: sample
   FindingData:
@@ -136,7 +269,55 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/FindingData'
-            
+  JobReference:
+    type: object
+    required:
+    - jobId
+    properties:
+      jobId:
+        type: string
+  JobStatus:
+    type: object
+    required:
+    - jobId
+    - phase
+    properties:
+      jobId:
+        type: string
+      phase:
+        type: string
+        enum:
+        - QUEUED
+        - LOADING_REFERENCE_DATA
+        - ANALYZING_GENOTYPES
+        - DONE
+        - FAILED
+        description: |
+          QUEUED: accepted, waiting for the (single) background worker to pick it up --
+          ld-service processes one job at a time, same as the CLI's own single-process model.
+          LOADING_REFERENCE_DATA: parsing frequency reference data. No processed/total/percent
+          during this phase -- the parsing loop itself has no progress signal (v1 scope), so
+          this is intentionally coarse; measured against real converted NMDP data, this phase
+          alone can take several minutes for large files.
+          ANALYZING_GENOTYPES: running detection per genotype -- processed/total/percent are
+          meaningful here.
+          DONE: result is populated.
+          FAILED: error is populated. Includes frequencyFiles content that was malformed in a
+          way the initial synchronous pre-check didn't catch.
+      processed:
+        type: integer
+        description: only meaningful during ANALYZING_GENOTYPES
+      total:
+        type: integer
+        description: only meaningful during ANALYZING_GENOTYPES
+      percent:
+        type: integer
+        description: only meaningful during ANALYZING_GENOTYPES
+      result:
+        $ref: '#/definitions/Samples'
+      error:
+        type: string
+
 # Added by API Auto Mocking Plugin
 host: virtserver.swaggerhub.com
 basePath: /mpresteg/HLAHapV/1.0.0

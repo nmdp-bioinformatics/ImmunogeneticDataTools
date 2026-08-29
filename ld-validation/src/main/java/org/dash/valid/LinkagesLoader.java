@@ -63,10 +63,26 @@ public class LinkagesLoader {
 		if (instance == null) {
 			instance = new LinkagesLoader(linkages);
 		}
-		
+
 		return instance;
 	}
-	
+
+	// Forces the next getInstance() call (either overload) to rebuild from scratch instead of
+	// returning whatever's cached. Phase 8: ld-service needs this for the same reason
+	// HLAFrequenciesLoader does (see its own reset()) -- a long-running process, unlike the
+	// CLI's one-shot-per-invocation model, can outlive whichever request happened to initialize
+	// this singleton first. The gap here is more serious than HLAFrequenciesLoader's, though:
+	// HLAFrequenciesLoader#init(Set<File>, File) derives which linkages to search for directly
+	// from an uploaded custom frequency file's own content and pushes them here via
+	// getInstance(Set<Linkages>) -- without resetting first, a later custom-file upload with
+	// genuinely different loci than whatever request initialized this singleton first would
+	// have its derived linkages silently discarded, still searching for the original ones.
+	// Unlike HLAFrequenciesLoader, rebuilding here is cheap (a small lookup, no I/O), so callers
+	// can reset unconditionally on every request with no caching tradeoff to weigh.
+	public static void reset() {
+		instance = null;
+	}
+
 	private void setLinkages(Set<Linkages> linkages) {
 		this.linkages = linkages;
 	}

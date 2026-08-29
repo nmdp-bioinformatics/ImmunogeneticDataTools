@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.zip.ZipInputStream;
@@ -53,35 +54,46 @@ public class AntigenRecognitionSiteLoader {
 	HashMap<String, HashSet<String>> arsMap = new HashMap<String, HashSet<String>>();
 
     private static final Logger LOGGER = Logger.getLogger(AntigenRecognitionSiteLoader.class.getName());
-    
+
     private static final String DEFAULT_ARS_FILE = "reference/mmc1.xls";
-	
+
+    // Which hladb the cached instance was built for (null when it's the fixed local ARS_DEFAULT
+    // file, which doesn't vary by hladb at all). Phase 8: ld-service can now be asked to analyze
+    // against a different hladb per request; without tracking this, a long-running process would
+    // silently keep serving whichever hladb's G-groups happened to load first, ignoring every
+    // later request's choice. Mirrors the same reload-on-change pattern already used by
+    // CommonWellDocumentedLoader for the same reason.
+    private static String instanceHladb;
+
 	private AntigenRecognitionSiteLoader() {
 	}
-	
+
 	public HashMap<String, HashSet<String>> getArsMap() {
 		return this.arsMap;
 	}
-	
+
 	public static AntigenRecognitionSiteLoader getInstance() throws IOException, InvalidFormatException {
-		String hladb = null;
-		if (instance == null) {
+		String ars = System.getProperty(GLStringConstants.ARS_PROPERTY);
+		boolean usesDefaultArs = ars != null && ars.equals(GLStringConstants.ARS_DEFAULT);
+		String hladb = usesDefaultArs ? null : System.getProperty(GLStringConstants.HLADB_PROPERTY);
+
+		if (instance == null || !Objects.equals(hladb, instanceHladb)) {
 			try {
-				String ars = System.getProperty(GLStringConstants.ARS_PROPERTY);
-				if (ars != null && ars.equals(GLStringConstants.ARS_DEFAULT)) {
+				if (usesDefaultArs) {
 					instance = new AntigenRecognitionSiteLoader();
 					instance.init();
 				}
 				else {
 					instance = new AntigenRecognitionSiteLoader();
-					hladb = System.getProperty(GLStringConstants.HLADB_PROPERTY);
-	
 					instance.init(hladb);
 				}
+				instanceHladb = hladb;
 			}
 			catch (IOException | ParserConfigurationException | SAXException e) {
 				LOGGER.info("Couldn't find IMGT file in the correct format for hladb: " + hladb);
+				instance = new AntigenRecognitionSiteLoader();
 				instance.init();
+				instanceHladb = null;
 			}
 		}
 
