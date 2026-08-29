@@ -179,18 +179,9 @@ public class HLALinkageDisequilibrium {
 	 * @return a copy of {@code haplotype}, annotated with a linkage if one was found
 	 */
 	public static Haplotype enrichHaplotype(EnumSet<Locus> loci, List<DisequilibriumElement> disequilibriumElements, Haplotype haplotype) {
-		MultiLocusHaplotype enrichedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(haplotype.getAlleleMap()), 
+		MultiLocusHaplotype enrichedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(haplotype.getAlleleMap()),
 				new HashMap<Locus, Integer>(haplotype.getHaplotypeInstanceMap()), haplotype.getDrb345Homozygous());
 		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
-		// Was: new ArrayList<>(disequilibriumElements) -- a full copy of the (potentially huge,
-		// e.g. 900K+ rows for a real custom-uploaded frequency file) reference list, made fresh
-		// for every single haplotype checked. disequilibriumElements is HLAFrequenciesLoader's
-		// own live, shared list (see #getDisequilibriumElements) -- callers here only ever read
-		// from shortenedList (.contains()/.indexOf()/.get()/.subList()), never mutate it, so
-		// there's nothing the copy was protecting against. A subList() view (or, as here, the
-		// list itself, since subList() start=0 is just the list) behaves identically for every
-		// operation this method performs, without allocating and copying the whole thing.
-		List<DisequilibriumElement> shortenedList = disequilibriumElements;
 
 		for (Locus locus : enrichedHaplotype.getLoci()) {
 			if (loci.contains(locus)) {
@@ -200,21 +191,25 @@ public class HLALinkageDisequilibrium {
 				enrichedHaplotype.removeAlleles(locus);
 			}
 		}
-		
+
 		DisequilibriumElement element = new CoreDisequilibriumElement(hlaElementMap, enrichedHaplotype);
-		DetectedDisequilibriumElement detectedElement = null;
-					
-		while (shortenedList.contains(element)) {
-			int index = shortenedList.indexOf(element);
-			detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
+
+		// Was a manual List#contains()/indexOf()/subList() linear scan over the full (possibly
+		// 900K+ row, for a real custom-uploaded frequency file) reference list, repeated once per
+		// match found. DisequilibriumElementIndex finds the identical set of matches (equals()
+		// itself is unchanged and still has the final say -- see its javadoc) without scanning
+		// the whole list per lookup. Keeps the original's "last match found wins" behavior: the
+		// loop below overwrites the linkage on every iteration, same as the old while-loop did.
+		List<DisequilibriumElement> matches = DisequilibriumElementIndex.forElements(disequilibriumElements).findMatches(element);
+
+		for (DisequilibriumElement match : matches) {
+			DetectedDisequilibriumElement detectedElement = new DetectedDisequilibriumElement(match);
 			detectedElement.setHaplotype(element.getHaplotype());
 			enrichedHaplotype.setLinkage(detectedElement);
-			
-			shortenedList = shortenedList.subList(index + 1, shortenedList.size());
 		}
-		
+
 		enrichedHaplotype.setSequence(haplotype.getSequence());
-		
+
 		return enrichedHaplotype;
 	}
 	
@@ -245,13 +240,12 @@ public class HLALinkageDisequilibrium {
 
 		MultiLocusHaplotype clonedHaplotype = null;
 
-		for (MultiLocusHaplotype possibleHaplotype : glString.getPossibleHaplotypes(loci)) {
-			// See the identical comment in enrichHaplotype() above: this used to copy the full
-			// (potentially huge) reference list per candidate haplotype for no reason -- nothing
-			// here mutates shortenedList, so referencing disequilibriumElements directly is
-			// behaviorally identical and avoids that copy.
-			List<DisequilibriumElement> shortenedList = disequilibriumElements;
+		// disequilibriumElements can be huge (900K+ rows for a real custom-uploaded frequency
+		// file); the index below is built once (and cached by list identity) rather than once
+		// per possibleHaplotype the way the old List#contains()/indexOf() scan effectively was.
+		DisequilibriumElementIndex index = DisequilibriumElementIndex.forElements(disequilibriumElements);
 
+		for (MultiLocusHaplotype possibleHaplotype : glString.getPossibleHaplotypes(loci)) {
 			HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
 
 			for (Locus locus : possibleHaplotype.getLoci()) {
@@ -262,12 +256,15 @@ public class HLALinkageDisequilibrium {
 			}
 
 			DisequilibriumElement element = new CoreDisequilibriumElement(hlaElementMap, possibleHaplotype);
-			DetectedDisequilibriumElement detectedElement = null;
 
-			while (shortenedList.contains(element)) {
-				int index = shortenedList.indexOf(element);
+			// Was a manual List#contains()/indexOf()/subList() linear scan finding matches one at
+			// a time. index.findMatches() returns the identical set (equals() itself is
+			// unchanged -- see DisequilibriumElementIndex's javadoc for why a naive string-keyed
+			// Map isn't safe here) in the same list order, so this loop's tie-break behavior below
+			// is unchanged from the original while-loop's.
+			for (DisequilibriumElement match : index.findMatches(element)) {
 				clonedHaplotype = new MultiLocusHaplotype(new ConcurrentHashMap<Locus, List<String>>(possibleHaplotype.getAlleleMap()), possibleHaplotype.getHaplotypeInstanceMap(), possibleHaplotype.getDrb345Homozygous());
-				detectedElement = new DetectedDisequilibriumElement(shortenedList.get(index));
+				DetectedDisequilibriumElement detectedElement = new DetectedDisequilibriumElement(match);
 				detectedElement.setHaplotype(element.getHaplotype());
 				clonedHaplotype.setLinkage(detectedElement);
 
@@ -282,8 +279,6 @@ public class HLALinkageDisequilibrium {
 							+ clonedHaplotype.getFullHaplotypeString() + " over " + existingHaplotype.getFullHaplotypeString());
 					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
 				}
-
-				shortenedList = shortenedList.subList(index + 1, shortenedList.size());
 			}
 		}
 
