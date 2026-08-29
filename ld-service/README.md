@@ -87,11 +87,25 @@ v1 covers `analyze-gl-strings` only — `normalize-frequency-file` and
 
 ## Running it
 
+From the repo root, once `ld-validation` has been installed to your local Maven repo at
+least once (`mvn install` from the root — plain `mvn clean package` doesn't put it there):
+
 ```
-mvn -pl ld-service -am spring-boot:run
+mvn -f ld-service/pom.xml spring-boot:run
 ```
 
-or build the jar and run it directly:
+`-f` (point at this module's own `pom.xml` directly) matters here, not just style: the more
+obvious `mvn -pl ld-service -am spring-boot:run` looks equivalent but fails with "Unable to
+find a suitable main class" — the root `pom.xml` (artifactId `ld-multimodule`) itself
+inherits from `spring-boot-starter-parent`, so a bare `plugin:goal` invocation (as opposed to
+a lifecycle phase) tries to run `spring-boot:run` against every project `-pl ld-service -am`
+pulls into the reactor, including that root aggregator — which has no main class and fails
+before the reactor ever reaches `ld-service`. `-f` builds only this module, sidestepping the
+aggregator entirely (hence needing `ld-validation` pre-installed rather than built alongside
+it in the same reactor pass, the way `-am` would).
+
+Or build the jar and run it directly (this form is unaffected — `package` is a lifecycle
+phase, not a bare goal, so it isn't subject to the same issue):
 
 ```
 mvn -pl ld-service -am package
