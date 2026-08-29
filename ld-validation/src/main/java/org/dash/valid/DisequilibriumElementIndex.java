@@ -49,9 +49,15 @@ import org.dash.valid.gl.GLStringUtilities;
  * (ARS/G-group membership) -- so a plain {@code Map<String, DisequilibriumElement>} keyed by
  * allele string would silently miss real matches. This class instead builds, per locus:
  * <ul>
- * <li>a field-prefix index covering every reference row at every truncation depth its own
- *     allele string supports, so a query allele of any length finds every row whose comparison
- *     (at whichever length is shorter) would agree; and</li>
+ * <li>a field-prefix index, split into two maps so a query never has to consult a bucket sized
+ *     by "every row that happens to share a short prefix" -- {@code sameLengthIndex} holds each
+ *     row once, keyed by its own exact field count and full string; {@code longerRowPrefixIndex}
+ *     holds a row's prefix at length K only for K strictly less than the row's own length (i.e.
+ *     only where it's actually needed, to satisfy a query shorter than the row itself). A query
+ *     of length Lq checks {@code sameLengthIndex} at every K from 1 to Lq (catching every row
+ *     whose own length is <= Lq) plus {@code longerRowPrefixIndex} at exactly K=Lq (catching
+ *     rows longer than the query) -- never a generic "everyone sharing my first field" bucket;
+ *     and</li>
  * <li>an ARS-code index, inverting {@link AntigenRecognitionSiteLoader}'s existing map against
  *     the reference rows actually present.</li>
  * </ul>
@@ -77,13 +83,19 @@ class DisequilibriumElementIndex {
 
 	private final List<DisequilibriumElement> elements;
 
-	// locus -> fieldCount -> "this row's own first fieldCount fields" -> row indices.
-	// Populated for every fieldCount from 1 up to each row's own full field count, so a row's
-	// entry at fieldCount == its own length is its "full string" entry (comparisonLength ==
-	// this row's length, the row is the shorter/equal side), and entries at fieldCount < its
-	// own length exist so a *shorter* query can still find it (comparisonLength == the query's
-	// length, this row is the longer side but truncates down to match).
-	private final Map<Locus, Map<Integer, Map<String, List<Integer>>>> ownLengthIndex =
+	// locus -> exact field count -> row's own full string at that field count -> row indices.
+	// Each row appears exactly once here, at its own natural length -- unlike a single map
+	// covering every truncation depth, this never lets a short, widely-shared prefix (e.g. every
+	// 4-field allele's first field) sweep in rows that don't actually belong at that length.
+	private final Map<Locus, Map<Integer, Map<String, List<Integer>>>> sameLengthIndex =
+			new HashMap<Locus, Map<Integer, Map<String, List<Integer>>>>();
+
+	// locus -> K -> a row's own first-K-fields -> row indices, but ONLY for rows whose own length
+	// is strictly greater than K. Exists so a query *shorter* than some reference row can still
+	// find it (comparisonLength == the query's own length, the row truncates down to match) --
+	// looked up at exactly K == the query's own length, not swept in in bulk the way
+	// sameLengthIndex's per-length buckets are.
+	private final Map<Locus, Map<Integer, Map<String, List<Integer>>>> longerRowPrefixIndex =
 			new HashMap<Locus, Map<Integer, Map<String, List<Integer>>>>();
 
 	private final Map<Locus, Map<String, List<Integer>>> arsIndex =
@@ -148,28 +160,44 @@ class DisequilibriumElementIndex {
 
 	private void indexFieldPrefixes(Locus locus, String allele, int rowIndex) {
 		String[] fields = allele.split(GLStringUtilities.COLON);
-		Map<Integer, Map<String, List<Integer>>> byLength = ownLengthIndex.get(locus);
-
-		if (byLength == null) {
-			byLength = new HashMap<Integer, Map<String, List<Integer>>>();
-			ownLengthIndex.put(locus, byLength);
-		}
+		int ownLength = fields.length;
 
 		StringBuilder prefix = new StringBuilder();
-		for (int fieldCount = 1; fieldCount <= fields.length; fieldCount++) {
+		for (int fieldCount = 1; fieldCount <= ownLength; fieldCount++) {
 			if (fieldCount > 1) {
 				prefix.append(GLStringUtilities.COLON);
 			}
 			prefix.append(fields[fieldCount - 1]);
 
-			Map<String, List<Integer>> byPrefix = byLength.get(fieldCount);
-			if (byPrefix == null) {
-				byPrefix = new HashMap<String, List<Integer>>();
-				byLength.put(fieldCount, byPrefix);
+			if (fieldCount == ownLength) {
+				addIndexEntry(bucketFor(sameLengthIndex, locus, fieldCount), prefix.toString(), rowIndex);
 			}
-
-			addIndexEntry(byPrefix, prefix.toString(), rowIndex);
+			else {
+				addIndexEntry(bucketFor(longerRowPrefixIndex, locus, fieldCount), prefix.toString(), rowIndex);
+			}
 		}
+	}
+
+	private static Map<String, List<Integer>> bucketFor(Map<Locus, Map<Integer, Map<String, List<Integer>>>> index, Locus locus, int fieldCount) {
+		Map<Integer, Map<String, List<Integer>>> byLength = index.get(locus);
+		if (byLength == null) {
+			byLength = new HashMap<Integer, Map<String, List<Integer>>>();
+			index.put(locus, byLength);
+		}
+
+		Map<String, List<Integer>> byPrefix = byLength.get(fieldCount);
+		if (byPrefix == null) {
+			byPrefix = new HashMap<String, List<Integer>>();
+			byLength.put(fieldCount, byPrefix);
+		}
+
+		return byPrefix;
+	}
+
+	// Read-only counterpart to bucketFor() -- never creates a bucket, just looks one up.
+	private static List<Integer> bucketAt(Map<Integer, Map<String, List<Integer>>> byLength, int fieldCount, String key) {
+		Map<String, List<Integer>> byPrefix = byLength.get(fieldCount);
+		return byPrefix == null ? null : byPrefix.get(key);
 	}
 
 	private void indexArsCodes(HashMap<String, HashSet<String>> arsMap, Locus locus, String allele, int rowIndex) {
@@ -255,27 +283,46 @@ class DisequilibriumElementIndex {
 		List<String> queryAlleles = query.getHlaElement(locus);
 
 		if (queryAlleles != null) {
-			Map<Integer, Map<String, List<Integer>>> byLength = ownLengthIndex.get(locus);
+			Map<Integer, Map<String, List<Integer>>> sameLengthByLength = sameLengthIndex.get(locus);
+			Map<Integer, Map<String, List<Integer>>> longerByLength = longerRowPrefixIndex.get(locus);
 			Map<String, List<Integer>> byArsCode = arsIndex.get(locus);
 
 			for (String queryAllele : queryAlleles) {
 				String[] fields = queryAllele.split(GLStringUtilities.COLON);
+				int queryLength = fields.length;
 
-				if (byLength != null) {
+				if (sameLengthByLength != null) {
 					StringBuilder prefix = new StringBuilder();
-					for (int fieldCount = 1; fieldCount <= fields.length; fieldCount++) {
+					for (int fieldCount = 1; fieldCount <= queryLength; fieldCount++) {
 						if (fieldCount > 1) {
 							prefix.append(GLStringUtilities.COLON);
 						}
 						prefix.append(fields[fieldCount - 1]);
 
-						Map<String, List<Integer>> byPrefix = byLength.get(fieldCount);
+						// Rows whose own natural length is exactly fieldCount -- comparisonLength
+						// == fieldCount == that row's length, so its full string must equal this
+						// prefix. Checked at every fieldCount up to the query's own length, since
+						// any of those shorter-or-equal natural lengths could be the shorter side.
+						Map<String, List<Integer>> byPrefix = sameLengthByLength.get(fieldCount);
 						if (byPrefix != null) {
 							List<Integer> hits = byPrefix.get(prefix.toString());
 							if (hits != null) {
 								locusMatches.addAll(hits);
 							}
 						}
+					}
+				}
+
+				if (longerByLength != null) {
+					// Rows longer than the query -- comparisonLength == the query's own length,
+					// so only rows whose prefix at exactly that length equals the query's full
+					// (untruncated) string are candidates. A single lookup, not swept in via the
+					// loop above, since a shorter-than-query fieldCount here would only match
+					// rows that are also longer than *that* fieldCount but no claim is made about
+					// their remaining fields matching the query at all.
+					List<Integer> hits = bucketAt(longerByLength, queryLength, queryAllele);
+					if (hits != null) {
+						locusMatches.addAll(hits);
 					}
 				}
 
