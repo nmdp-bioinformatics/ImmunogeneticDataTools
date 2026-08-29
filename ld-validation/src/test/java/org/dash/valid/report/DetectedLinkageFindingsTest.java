@@ -45,20 +45,35 @@ import org.junit.jupiter.api.Test;
 // 100.00000000000001). Root cause, confirmed independently in Python before fixing here: for any
 // double x, (x * 100.0) / x is NOT guaranteed to round-trip to exactly 100.0 -- the multiply and
 // divide are two separately-rounded IEEE-754 operations, so this happens for a meaningful fraction
-// of possible x values (~6.5% in a random sample), even in the simplest case (a race with only one
-// candidate haplotype pair, so that pair's own frequency *is* totalFreq). Not a logic bug -- a
-// relativeFrequency can never legitimately exceed the total it's a share of -- just floating-point
-// noise on the order of 1 ULP that DetectedLinkageFindings#setLinkedPairs now clamps away.
+// of possible x values (~6.5% each direction in a random sample), even in the simplest case (a race
+// with only one candidate haplotype pair, so that pair's own frequency *is* totalFreq). Not a logic
+// bug -- a single candidate's relative frequency against its own total must be exactly 100.0 -- just
+// floating-point noise of about 1 ULP, landing on either side of 100.0 with similar likelihood.
+// DetectedLinkageFindings#setLinkedPairs now divides before multiplying by 100.0 instead of after,
+// which (confirmed the same way) lands on exactly 100.0 every time for this case, in addition to the
+// Math.min(100.0, ...) backstop for the general (non-degenerate) case.
 public class DetectedLinkageFindingsTest {
 
-	// Found via a random search in Python: (x * 100.0) / x == 100.00000000000001 for this x,
-	// reproducing the exact artifact seen in the user's real output.
-	private static final double FREQUENCY_THAT_ROUNDS_OVER_100_PRE_FIX = 0.43276707357738264;
+	// Found via random searches in Python: (x * 100.0) / x landed just over 100.0 for one value and
+	// just under for the other, reproducing both directions of the artifact seen in the user's real
+	// output -- 100.00000000000001 was the exact value found in summary.xml; the under-100 value is
+	// the same phenomenon in the other direction, not itself something seen in that file.
+	private static final double FREQUENCY_THAT_ROUNDED_OVER_100_PRE_FIX = 0.43276707357738264;
+	private static final double FREQUENCY_THAT_ROUNDED_UNDER_100_PRE_FIX = 0.7637746213388679;
 
 	@Test
-	public void testRelativeFrequencyIsClampedTo100ForASingleCandidatePair() {
+	public void testRelativeFrequencyIsExactly100ForASingleCandidatePairThatPreFixRoundedOver() {
+		assertEquals(100.0, relativeFrequencyForSingleCandidatePair(FREQUENCY_THAT_ROUNDED_OVER_100_PRE_FIX));
+	}
+
+	@Test
+	public void testRelativeFrequencyIsExactly100ForASingleCandidatePairThatPreFixRoundedUnder() {
+		assertEquals(100.0, relativeFrequencyForSingleCandidatePair(FREQUENCY_THAT_ROUNDED_UNDER_100_PRE_FIX));
+	}
+
+	private static double relativeFrequencyForSingleCandidatePair(double frequency) {
 		MultiLocusHaplotype hap1 = haplotype("HLA-B*07:04", "HLA-C*07:02", withFrequency(1.0));
-		MultiLocusHaplotype hap2 = haplotype("HLA-B*44:03", "HLA-C*12:03", withFrequency(FREQUENCY_THAT_ROUNDS_OVER_100_PRE_FIX));
+		MultiLocusHaplotype hap2 = haplotype("HLA-B*44:03", "HLA-C*12:03", withFrequency(frequency));
 
 		HaplotypePair pair = new HaplotypePair(hap1, hap2);
 		assertTrue(pair.isByRace());
@@ -70,13 +85,7 @@ public class DetectedLinkageFindingsTest {
 		findings.setLinkedPairs(linkedPairs);
 
 		RelativeFrequencyByRace relativeFrequencyByRace = pair.getFrequencies().iterator().next();
-
-		// Pre-fix, this pair's own (and only) contribution to its race's total came back as
-		// 100.00000000000001 -- reproduced independently above and confirmed to still reproduce
-		// without the Math.min(100.0, ...) clamp in DetectedLinkageFindings#setLinkedPairs.
-		assertEquals(100.0, relativeFrequencyByRace.getRelativeFrequency(),
-				"a single candidate pair is its race's entire total, so its relative frequency must be exactly 100.0, "
-				+ "not a hair over it from floating-point rounding");
+		return relativeFrequencyByRace.getRelativeFrequency();
 	}
 
 	private static MultiLocusHaplotype haplotype(String bAllele, String cAllele, List<FrequencyByRace> frequenciesByRace) {

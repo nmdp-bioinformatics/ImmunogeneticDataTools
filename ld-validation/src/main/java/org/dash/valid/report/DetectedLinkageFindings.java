@@ -207,15 +207,19 @@ public class DetectedLinkageFindings {
 										
 					totalFreq = raceTotalFreqsMap.get(loci).get(relativeRaceFreq.getRace());
 
-					// Clamped to 100.0: relativeFrequency is this pair's own contribution to totalFreq,
-					// which by definition can be at most the whole of totalFreq -- but (freq * 100) / total
-					// is two independently-rounded double operations, and double rounding doesn't
-					// guarantee round-tripping back to exactly 100.0 even when freq == totalFreq (a
-					// single-candidate race bucket, the common case). Confirmed against real output
-					// (analyze-gl-strings against stanfordExamplesFixed.txt): 391 of 10173 values came
-					// back as exactly 100.00000000000001 -- one ULP over 100, not a genuine case of one
-					// candidate outweighing the total it belongs to.
-					relativeRaceFreq.setRelativeFrequency(Math.min(100.0, (relativeRaceFreq.getFrequency() * 100) / totalFreq));
+					// relativeFrequency is this pair's own contribution to totalFreq, which by definition
+					// can be at most the whole of totalFreq -- freq/totalFreq can never round to more than
+					// 1.0 (dividing two doubles where the numerator is <= the denominator is bounded above
+					// by 1.0, which is itself exactly representable), and multiplying that by the exactly-
+					// representable 100.0 can't push it past 100.0 either. Divide-then-multiply matters here,
+					// not just style: the more obvious (freq * 100) / total is two *independently* rounded
+					// operations that don't reliably round-trip back to exactly 100.0 even when freq ==
+					// totalFreq (a single-candidate race bucket, the common case) -- confirmed against real
+					// output (analyze-gl-strings against stanfordExamplesFixed.txt): 391 of 10173 values came
+					// back as exactly 100.00000000000001 (one ULP over), and plenty of others landed a ULP
+					// under (e.g. 99.99999999999999) from the same rounding, just in the other direction.
+					// Math.min(100.0, ...) is kept as a zero-cost defensive backstop, not the actual fix.
+					relativeRaceFreq.setRelativeFrequency(Math.min(100.0, 100.0 * (relativeRaceFreq.getFrequency() / totalFreq)));
 					freqsByRace.add(relativeRaceFreq);
 					
 					List<Double> relativeFrequencies;
