@@ -87,38 +87,12 @@ v1 covers `analyze-gl-strings` only — `normalize-frequency-file` and
 
 ## Running it
 
-From the repo root, once `ld-validation` has been installed to your local Maven repo at
-least once (`mvn install` from the root — plain `mvn clean package` doesn't put it there):
-
-```
-mvn -f ld-service/pom.xml spring-boot:run
-```
-
-`-f` (point at this module's own `pom.xml` directly) matters here, not just style: the more
-obvious `mvn -pl ld-service -am spring-boot:run` looks equivalent but fails with "Unable to
-find a suitable main class" — the root `pom.xml` (artifactId `ld-multimodule`) itself
-inherits from `spring-boot-starter-parent`, so a bare `plugin:goal` invocation (as opposed to
-a lifecycle phase) tries to run `spring-boot:run` against every project `-pl ld-service -am`
-pulls into the reactor, including that root aggregator — which has no main class and fails
-before the reactor ever reaches `ld-service`. `-f` builds only this module, sidestepping the
-aggregator entirely (hence needing `ld-validation` pre-installed rather than built alongside
-it in the same reactor pass, the way `-am` would).
-
-Or build the jar and run it directly (this form is unaffected — `package` is a lifecycle
-phase, not a bare goal, so it isn't subject to the same issue):
+Build the jar and run it directly:
 
 ```
 mvn -pl ld-service -am package
 java -jar ld-service/target/ld-service-1.0.0.jar
 ```
-
-**Prefer the jar over `spring-boot:run` for anything performance-sensitive** — e.g. testing
-against a large custom frequency file, where `LOADING_REFERENCE_DATA` can genuinely take
-minutes (see above). `spring-boot:run` launches with `-XX:TieredStopAtLevel=1`
-(Spring Boot Maven Plugin's own dev-mode default, not anything configured here) — it
-disables the JVM's C2 JIT compiler to speed up startup for a quick edit-run loop, at a real
-cost to throughput on exactly this kind of long-running, CPU-bound parse. The jar runs with
-the JVM's normal full tiered compilation instead.
 
 `docker-compose.yml` here also runs a pre-built image (`mpresteg/hlahapv:latest`) on port
 8080, if you don't want to build locally.
