@@ -22,7 +22,9 @@
 package org.dash.valid.ars;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -115,15 +117,40 @@ public class AntigenRecognitionSiteLoader {
 	// gGroup/gGroupAllele elements don't nest inside each other (only inside gene, whose
 	// own attributes are never used), so tracking "are we inside a gGroup" as a single flag
 	// while streaming is enough to reproduce the original nesting-scoped behavior.
+	//
+	// Two further, separately-verified findings from actually profiling this against the real
+	// file: decompressed, hla_ambigs.xml.zip is 1.5GB+ (16M+ lines), of which 99.88% is
+	// <tns:ambigCombosList> content this method never reads at all -- but a dedicated StAX
+	// implementation's own skipElement() (tested directly, via Woodstox) turned out not to help,
+	// since the underlying tokenizer still has to character-scan past skipped content either
+	// way. What does help:
+	// 1. AntigenRecognitionSiteCache -- for a *pinned* hladb (anything but LATEST_HLADB, which
+	//    is a moving branch, not a release), this data can never change once published, so
+	//    there's no reason to ever fetch or parse it more than once on a given machine.
+	// 2. Buffering the whole (compressed) response before parsing, instead of tokenizing
+	//    directly off the live network socket -- measured ~24s streamed live vs. ~13s from an
+	//    otherwise-identical already-downloaded local file for this exact file, i.e. roughly
+	//    half the wall-clock cost was network-interleaving overhead, not parsing itself.
 	public static HashMap<String, HashSet<String>> loadGGroups(String hladb) throws MalformedURLException, IOException, ParserConfigurationException, SAXException {
 		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
+
+		HashMap<String, HashSet<String>> cached = AntigenRecognitionSiteCache.read(hladb);
+		if (cached != null) {
+			return cached;
+		}
+
 		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip");
 
 		System.out.println(url.toString());
 
 		HashMap<String, HashSet<String>> gAlleleListMap = new HashMap<String, HashSet<String>>();
 
-		try (ZipInputStream zipStream = new ZipInputStream(url.openStream())) {
+		byte[] responseBytes;
+		try (InputStream urlStream = url.openStream()) {
+			responseBytes = urlStream.readAllBytes();
+		}
+
+		try (ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))) {
 			zipStream.getNextEntry();
 
 			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
@@ -189,6 +216,8 @@ public class AntigenRecognitionSiteLoader {
 		catch (XMLStreamException e) {
 			throw new IOException("Problem streaming IMGT/HLA ambiguity XML for hladb: " + hladb, e);
 		}
+
+		AntigenRecognitionSiteCache.write(hladb, gAlleleListMap);
 
 		return gAlleleListMap;
 	}
