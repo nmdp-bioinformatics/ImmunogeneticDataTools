@@ -26,7 +26,19 @@ The results of the software should be used for supporting the evidence, but not 
 *Future Goals:*
 
  * Host publicly
- 
+
+#### Modules
+
+This repository is a multi-module Maven project (the three modules the root `pom.xml`
+actually builds):
+
+* **[`ld-validation`](ld-validation/README.md)** — the core detection library. Has no CLI or API of its own; both of the below are built on top of it.
+* **[`ld-tools`](ld-tools/README.md)** — the command-line tools described in the rest of this README (`analyze-gl-strings`, `normalize-frequency-file`, `synthetic-gl-string-generator`).
+* **[`ld-service`](ld-service/README.md)** — a REST API and browser UI wrapping the same detection library, for anyone who'd rather not use the command line. Includes an async job API (large inputs and custom reference-data uploads can take minutes to process) and a plain HTML/CSS/JS browser UI for `analyze-gl-strings` — see its README for the API, the UI, and how to run it. Its `ld-service/ld-client` subdirectory is a separate, auto-generated Java API client (not part of this Maven reactor; regenerated from the spec rather than hand-edited).
+
+The rest of this README covers the original `ld-tools` command-line workflow; see the
+[`ld-service` README](ld-service/README.md) for the REST API and browser UI instead.
+
 #### Using the software:
 As of release .7, the ability to download the software package and make use of command line tools is available.
 

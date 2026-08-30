@@ -33,6 +33,35 @@ if a test's expected allele/G-group counts look wrong after a new IMGT/HLA relea
 the `hladb` Maven property and the `org.dash.hladb` system property before assuming it's
 a real regression.
 
+### Running `ld-service` for local iteration
+
+`ld-service/README.md`'s "Running it" only documents the packaged jar, which is what an
+end user of the service actually wants. For a faster edit-run loop while working on
+`ld-service` itself, `spring-boot:run` skips the packaging step:
+
+```
+mvn -f ld-service/pom.xml spring-boot:run
+```
+
+`-f` (point at this module's own `pom.xml` directly) matters here, not just style: the
+more obvious `mvn -pl ld-service -am spring-boot:run` looks equivalent but fails with
+"Unable to find a suitable main class" — the root `pom.xml` (artifactId `ld-multimodule`)
+itself inherits from `spring-boot-starter-parent`, so a bare `plugin:goal` invocation (as
+opposed to a lifecycle phase) tries to run `spring-boot:run` against every project
+`-pl ld-service -am` pulls into the reactor, including that root aggregator — which has
+no main class and fails before the reactor ever reaches `ld-service`. `-f` builds only
+this module, sidestepping the aggregator entirely — which means `ld-validation` needs to
+already be installed to your local repo (`mvn install` from the root at least once; plain
+`mvn clean package` doesn't put it there), since `-f` doesn't build it alongside `ld-service`
+in the same reactor pass the way `-am` would.
+
+Don't use `spring-boot:run` to judge real performance, though — it launches with
+`-XX:TieredStopAtLevel=1` (Spring Boot Maven Plugin's own dev-mode default, not anything
+configured here), which disables the JVM's C2 JIT compiler to speed up startup for a quick
+edit-run loop, at a real cost to throughput on long-running CPU-bound work (e.g. parsing a
+large custom frequency file — see `ld-service/README.md`'s note on `LOADING_REFERENCE_DATA`
+taking minutes for real reference data). Use the packaged jar for that instead.
+
 ## Branch / PR workflow
 
 - One branch per unit of work, targeted at this repo's `master`.

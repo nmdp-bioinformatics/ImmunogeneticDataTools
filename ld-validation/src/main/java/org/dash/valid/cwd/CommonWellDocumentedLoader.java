@@ -22,8 +22,10 @@
 package org.dash.valid.cwd;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -92,12 +94,27 @@ public class CommonWellDocumentedLoader {
 	// worked around by pinning tests to an old HLADB version. Measured against the current
 	// latest release (3.65.0, ~22MB compressed): the DOM version needed ~2GB of heap and
 	// ~40s; this version holds only the accumulating accessionMap in memory.
+	//
+	// Also cached on disk (CommonWellDocumentedCache) and buffered before parsing, same fixes
+	// and same reasoning as AntigenRecognitionSiteLoader#loadGGroups -- see its comment for the
+	// measurements. Newly relevant here since loadCommonWellDocumentedAlleles now calls this for
+	// LATEST_HLADB too, not just pinned versions.
 	public HashMap<String, List<String>> loadFromIMGT(String hladb) throws IOException, ParserConfigurationException, SAXException {
+		HashMap<String, List<String>> cached = CommonWellDocumentedCache.read(hladb);
+		if (cached != null) {
+			return cached;
+		}
+
 		HashMap<String, List<String>> accessionMap = new HashMap<String, List<String>>();
 
 		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla.xml.zip");
 
-		try (ZipInputStream zipStream = new ZipInputStream(url.openStream())) {
+		byte[] responseBytes;
+		try (InputStream urlStream = url.openStream()) {
+			responseBytes = urlStream.readAllBytes();
+		}
+
+		try (ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))) {
 			zipStream.getNextEntry();
 
 			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
@@ -137,6 +154,8 @@ public class CommonWellDocumentedLoader {
 			throw new IOException("Problem streaming IMGT/HLA XML for hladb: " + hladb, e);
 		}
 
+		CommonWellDocumentedCache.write(hladb, accessionMap);
+
 		return accessionMap;
 	}
 	
@@ -145,8 +164,29 @@ public class CommonWellDocumentedLoader {
 		HashMap<String, List<String>> accessionMap = null;
 		boolean accessionLoaded = false;
 				
-		// TODO:  Why bailing on LATEST HLADB here?
-		if (hladb == null || GLStringConstants.LATEST_HLADB.equals(hladb)) return;
+		// Was: an early return whenever hladb is null or LATEST_HLADB (added in 2017 "Turn off
+		// cwd logic if no HLA DB is known", replacing what this line now restores -- with a
+		// still-unresolved "TODO: Why bailing on LATEST HLADB here?" added later, in 2021, by
+		// the same history; neither commit explains the original reasoning). The actual effect:
+		// since that return happened before cwdSet/accessionMap were ever populated, and both
+		// fields default to empty collections, checkCommonWellDocumented()'s own
+		// "if (cwdAlleles.size() == 0) return empty" guard then unconditionally short-circuited
+		// -- meaning CWD-anomaly detection reported zero warnings, always, for every analysis
+		// that didn't explicitly pin a hladb version via -v/-Dorg.dash.hladb. Given the default
+		// (no -v flag) is very likely the most common way this tool gets run, that was a real,
+		// silent feature gap, not a deliberate scope limitation worth keeping.
+		//
+		// Verified this restores CWD-anomaly detection correctly rather than just producing
+		// noise: confirmed directly that the same input produced 0 non-cwd warnings under the
+		// old guard and 3 with a pinned version, then diffed a full real run (337 genotypes,
+		// default hladb, stanfordExamplesFixed.txt) old vs. new -- exactly one line differed in
+		// the entire output (one new, specific, plausible <non-cwd> allele finding), every other
+		// output file byte-identical. One consequence worth knowing: this means loadFromIMGT (and
+		// its hla.xml.zip fetch) now runs for LATEST_HLADB too, not just pinned versions -- see
+		// CommonWellDocumentedCache, which already accounts for this (a 24h TTL for LATEST_HLADB
+		// specifically, since unlike a pinned release it's a moving target that can't be cached
+		// forever).
+		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
 
 		try {
 			accessionMap = loadFromIMGT(hladb);
