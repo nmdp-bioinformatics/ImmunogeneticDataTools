@@ -134,6 +134,7 @@ class AntigenRecognitionSiteCache {
 	 */
 	static void write(String hladb, HashMap<String, HashSet<String>> arsMap) {
 		File dir = cacheDir();
+		File tempFile = null;
 
 		try {
 			Files.createDirectories(dir.toPath());
@@ -142,13 +143,22 @@ class AntigenRecognitionSiteCache {
 			// final Files.move() below is guaranteed to be on the same filesystem -- required
 			// for ATOMIC_MOVE to actually be atomic rather than silently falling back to a
 			// non-atomic copy-then-delete.
-			File tempFile = File.createTempFile("ars-", ".tmp", dir);
+			tempFile = File.createTempFile("ars-", ".tmp", dir);
 
 			try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tempFile), StandardCharsets.UTF_8))) {
 				writer.write(CACHED_AT_PREFIX + System.currentTimeMillis());
 				writer.newLine();
 
 				for (Map.Entry<String, HashSet<String>> entry : arsMap.entrySet()) {
+					// A null key here would throw (BufferedWriter#write(null) is an NPE) and be
+					// swallowed by the catch below -- confirmed as a real failure mode for the
+					// analogous CommonWellDocumentedCache (a null map key does occur in real
+					// data there). arsCode is always non-null by construction in this loader, but
+					// skipping defensively costs nothing and keeps the rest of a real map
+					// cacheable even if that ever stops being true.
+					if (entry.getKey() == null) {
+						continue;
+					}
 					writer.write(entry.getKey());
 					writer.write('\t');
 					writer.write(String.join(",", entry.getValue()));
@@ -161,6 +171,12 @@ class AntigenRecognitionSiteCache {
 		}
 		catch (Exception e) {
 			LOGGER.info("Couldn't write ARS cache for hladb " + hladb + ": " + e);
+			// Best-effort cleanup so a write failure (whatever the cause) doesn't leave orphaned
+			// .tmp files behind indefinitely -- this is the one path Files.move() above never
+			// reaches, so tempFile would otherwise just sit in the cache directory forever.
+			if (tempFile != null) {
+				tempFile.delete();
+			}
 		}
 	}
 
