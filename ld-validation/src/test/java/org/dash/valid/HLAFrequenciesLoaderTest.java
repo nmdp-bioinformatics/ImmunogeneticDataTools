@@ -46,8 +46,36 @@ public class HLAFrequenciesLoaderTest {
 		URI uri = HLAFrequenciesLoaderTest.class.getClassLoader().getResource("frequencies/NMDP_2007_FiveLocus_Freqs_NoRank.csv").toURI();
 		Set<File> noRankFreqs = new HashSet<File>();
 		noRankFreqs.add(new File(uri));
-		
+
 		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(noRankFreqs, null).getDisequilibriumElements(Linkages.FIVE_LOCUS.getLoci());
+		assertTrue(disElements != null && disElements.size() > 0);
+	}
+
+	// Issues #9/#46 regression coverage. Before Locus.NINE_LOCUS/Linkages.NINE_LOCUS existed,
+	// loading a real standard-format nine-locus reference file through this exact path threw an
+	// unhandled NullPointerException (Locus#lookup(Set) returned null for an unrecognized
+	// combination, which Linkages#lookup(EnumSet) then called containsAll() on) -- confirmed via
+	// a real reproduction against synthetic data shaped like the real NMDP nine-locus release,
+	// not a hypothetical. This test failing with that same NPE is exactly the regression to
+	// watch for.
+	@Test
+	public void testLoadNineLocusStandardFrequencies() throws Exception {
+		URI uri = HLAFrequenciesLoaderTest.class.getClassLoader().getResource("frequencies/NineLocus_Freqs.csv").toURI();
+		Set<File> nineLocusFreqs = new HashSet<File>();
+		nineLocusFreqs.add(new File(uri));
+
+		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(nineLocusFreqs, null).getDisequilibriumElements(Locus.NINE_LOCUS);
+		assertTrue(disElements != null && disElements.size() > 0);
+	}
+
+	// Same regression, for the narrower DPA1~DPB1-only combination issue #9 asked for by name.
+	@Test
+	public void testLoadDpa1Dpb1StandardFrequencies() throws Exception {
+		URI uri = HLAFrequenciesLoaderTest.class.getClassLoader().getResource("frequencies/DPA1DPB1_Freqs.csv").toURI();
+		Set<File> dpa1Dpb1Freqs = new HashSet<File>();
+		dpa1Dpb1Freqs.add(new File(uri));
+
+		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(dpa1Dpb1Freqs, null).getDisequilibriumElements(Locus.DPA1_DPB1_LOCI);
 		assertTrue(disElements != null && disElements.size() > 0);
 	}
 }

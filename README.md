@@ -78,11 +78,33 @@ If you prefer to compile / package the software from source, follow these instru
 + **Description:**  If specified, applies the antigen recognition site mappings from the time of the NMDP 2011 Frequencies.  Otherwise, tries to use the antigen recognition site mappings associated with the specified HLA DB first, falling back on the default if they aren't available
 
 + **Name:**  org.dash.linkages
-+ **Value(s):**  acb, cb, drb_dq, drb_dqb, drb1_dqb1, fiv_loc, six_loc
-+ **Description:**  Specifies the loci across which to detect linkages using provided frequencies
++ **Value(s):**  acb, cb, drb_dq, drb_dqb, drb1_dqb1, dpa1_dpb1, five_loc, six_loc, nine_loc
++ **Description:**  Specifies the loci across which to detect linkages using provided frequencies. Note: a custom frequency file passed via `-q` doesn't need this set at all -- its own linkage combination is auto-detected from the loci actually present in the file.
 
 + **Name:**  java.util.logging.config.file
 + **Value(s):**  logging.properties
+
+*Memory / heap sizing for large custom `-q` frequency files:*
+
++ A custom standard-format frequency file passed via `-q` is parsed entirely into memory
+  (`HLAFrequenciesLoader.loadStandardReferenceData`) and held there as objects for the
+  duration of the run — the detection engine needs random access to every reference
+  haplotype. The in-memory footprint runs roughly **4–6x the file size**, driven mostly by
+  the number of *distinct* haplotypes.
++ The JVM's default maximum heap is only ~25% of system RAM (~2 GB on an 8 GB machine),
+  which is not enough for a large reference file. The real NMDP nine-locus release
+  (`A~C~B~DRBX~DRB1~DQA1~DQB1~DPA1~DPB1`, ~1 GB / ~6.4M rows) needs **at least `-Xmx4g`,
+  and `-Xmx6g` comfortably**. Too small a heap shows up first as a long stretch of GC
+  thrash, then an `OutOfMemoryError: Java heap space` inside
+  `HLAFrequenciesLoader.loadStandardReferenceData` — not a parsing or data error.
++ Set it via `JAVA_OPTS` (honored by the packaged `bin/analyze-gl-strings` script):
+
+  ```
+  JAVA_OPTS="-Xmx6g" ./bin/analyze-gl-strings -i input.txt -o output/ -q A~C~B~DRBX~DRB1~DQA1~DQB1~DPA1~DPB1.std.csv
+  ```
+
+  For the `mvn exec:java` workflow, use `MAVEN_OPTS="-Xmx6g"` instead. The bundled named
+  frequency sets (`-f`) are much smaller and do not need this.
 
 *Logs:*
 
