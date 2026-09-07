@@ -22,8 +22,8 @@
 package org.dash.valid.race;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.dash.valid.CoreDisequilibriumElement;
 import org.dash.valid.Locus;
@@ -40,7 +40,7 @@ public class DisequilibriumElementByRace extends CoreDisequilibriumElement {
 		super();
 	}
 	
-	public DisequilibriumElementByRace (HashMap<Locus, List<String>> hlaElementMap, List<FrequencyByRace> frequenciesByRace) {
+	public DisequilibriumElementByRace (Map<Locus, List<String>> hlaElementMap, List<FrequencyByRace> frequenciesByRace) {
 		setHlaElementMap(hlaElementMap);
 		setFrequenciesByRace(frequenciesByRace);
 	}
