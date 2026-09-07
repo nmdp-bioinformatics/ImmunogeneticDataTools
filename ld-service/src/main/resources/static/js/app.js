@@ -310,4 +310,25 @@
     a.remove();
     URL.revokeObjectURL(url);
   });
+
+  // Best-effort: shows the running build's version in the footer, same rationale as the CLI
+  // tools' -h/-a version display (issue #89). Silently leaves the footer empty on any failure
+  // (endpoint disabled, network hiccup, unexpected response shape) rather than showing an error
+  // for something this cosmetic.
+  (function loadVersion() {
+    const footer = document.getElementById("app-version");
+    fetch("/actuator/info")
+      .then(function (response) {
+        return response.ok ? response.json() : null;
+      })
+      .then(function (info) {
+        const build = info && info.build;
+        if (build && build.name && build.version) {
+          footer.textContent = build.name + " " + build.version;
+        }
+      })
+      .catch(function () {
+        // Best-effort, see above.
+      });
+  })();
 })();
