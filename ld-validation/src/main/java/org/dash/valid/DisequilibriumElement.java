@@ -22,8 +22,9 @@
 package org.dash.valid;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.dash.valid.gl.GLStringConstants;
@@ -58,13 +59,19 @@ public abstract class DisequilibriumElement {
 
 	public abstract String getFrequencyInfo();
 		
-	private HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
+	// EnumMap, not HashMap: this map is Locus-keyed, holds 2-9 entries, and a large custom
+	// reference file keeps millions of these resident at once (see
+	// HLAFrequenciesLoader#loadStandardReferenceData). An EnumMap is a pair of flat arrays
+	// sized to the enum rather than a Node[] table with per-entry Node objects. keySet()
+	// iteration is in Locus ordinal order; callers (Locus#lookup(Set), LinkagesLoader,
+	// DisequilibriumElementByRace marshalling) treat the locus set as unordered.
+	private Map<Locus, List<String>> hlaElementMap = new EnumMap<Locus, List<String>>(Locus.class);
 
 	public Collection<List<String>> getHlaElements() {
 		return hlaElementMap.values();
 	}
-	
-	public void setHlaElementMap(HashMap<Locus, List<String>> hlaElementMap) {
+
+	public void setHlaElementMap(Map<Locus, List<String>> hlaElementMap) {
 		this.hlaElementMap = hlaElementMap;
 	}
 	
@@ -76,7 +83,7 @@ public abstract class DisequilibriumElement {
 		return hlaElementMap.get(locus);
 	}
 	
-	public DisequilibriumElement(HashMap<Locus, List<String>> hlaElementMap) {
+	public DisequilibriumElement(Map<Locus, List<String>> hlaElementMap) {
 		this.hlaElementMap = hlaElementMap;
 	}
 	
