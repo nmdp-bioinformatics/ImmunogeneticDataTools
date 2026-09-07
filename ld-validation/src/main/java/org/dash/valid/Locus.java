@@ -48,14 +48,22 @@ public enum Locus {
 	String serologicName;
 	
 	public static final EnumSet<Locus> A_C_B_LOCI = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B);
-	public static final EnumSet<Locus> C_B_LOCI = EnumSet.of(Locus.HLA_C, Locus.HLA_B);	
+	public static final EnumSet<Locus> C_B_LOCI = EnumSet.of(Locus.HLA_C, Locus.HLA_B);
 	public static final EnumSet<Locus> DRB1_DQB1_LOCI = EnumSet.of(Locus.HLA_DRB1, Locus.HLA_DQB1);
 	public static final EnumSet<Locus> DRB_DQB_LOCI = EnumSet.of(Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1);
 	public static final EnumSet<Locus> DRB_DQ_LOCI = EnumSet.of(Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1, Locus.HLA_DQA1);
+	public static final EnumSet<Locus> DPA1_DPB1_LOCI = EnumSet.of(Locus.HLA_DPA1, Locus.HLA_DPB1);
 	public static final EnumSet<Locus> FIVE_LOCUS = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB1, Locus.HLA_DQB1);
 	public static final EnumSet<Locus> SIX_LOCUS = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1);
-	
-	private static final EnumSet<?>[] LOCI_ARRAY = new EnumSet<?>[] {A_C_B_LOCI, C_B_LOCI, DRB1_DQB1_LOCI, DRB_DQB_LOCI, DRB_DQ_LOCI, FIVE_LOCUS, SIX_LOCUS};
+	// Issues #9/#46: the loci themselves (DQA1, DPB1, DPA1) were already recognized by this enum
+	// -- what was missing was a named nine-locus combination for Locus#lookup(Set)/
+	// Linkages#lookup(EnumSet) to actually resolve a real nine-locus standard-format frequency
+	// file against, instead of falling through to null (see Linkages.java's NINE_LOCUS/
+	// DPA1_DPB1 entries for what that null caused: an unhandled NullPointerException, confirmed
+	// against a real reproduction, not a graceful "no linkages found").
+	public static final EnumSet<Locus> NINE_LOCUS = EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B, Locus.HLA_DRB345, Locus.HLA_DRB1, Locus.HLA_DQB1, Locus.HLA_DQA1, Locus.HLA_DPB1, Locus.HLA_DPA1);
+
+	private static final EnumSet<?>[] LOCI_ARRAY = new EnumSet<?>[] {A_C_B_LOCI, C_B_LOCI, DRB1_DQB1_LOCI, DRB_DQB_LOCI, DRB_DQ_LOCI, DPA1_DPB1_LOCI, FIVE_LOCUS, SIX_LOCUS, NINE_LOCUS};
 	
 	private static final Logger LOGGER = Logger.getLogger(Locus.class.getName());
 	

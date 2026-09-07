@@ -29,13 +29,23 @@ import java.util.logging.Logger;
 import org.dash.valid.freq.Frequencies;
 
 public enum Linkages {
-	A_B_C ("acb", Locus.A_C_B_LOCI), 
-	B_C ("cb", Locus.C_B_LOCI), 
-	DRB_DQB ("drb_dqb", Locus.DRB_DQB_LOCI), 
+	A_B_C ("acb", Locus.A_C_B_LOCI),
+	B_C ("cb", Locus.C_B_LOCI),
+	DRB_DQB ("drb_dqb", Locus.DRB_DQB_LOCI),
 	DRB_DQ ("drb_dq", Locus.DRB_DQ_LOCI),
 	DRB1_DQB1 ("drb1_dqb1", Locus.DRB1_DQB1_LOCI),
+	// Issue #9: DPA1/DPB1 alone, for a custom reference file scoped to just that pair --
+	// mirrors DRB1_DQB1 existing as its own narrower entry alongside the DRB-inclusive ones.
+	DPA1_DPB1 ("dpa1_dpb1", Locus.DPA1_DPB1_LOCI),
 	FIVE_LOCUS ("five_loc", Locus.FIVE_LOCUS),
-	SIX_LOCUS ("six_loc", Locus.SIX_LOCUS);
+	SIX_LOCUS ("six_loc", Locus.SIX_LOCUS),
+	// Issue #46. HLAFrequenciesLoader#init(Set<File>, File) auto-detects which Linkages a
+	// custom reference file's own loci match via Locus#lookup(Set)/Linkages#lookup(EnumSet) --
+	// no separate wiring needed here for that path to pick this up for a real nine-locus
+	// standard-format file. Confirmed via a real reproduction that, before this entry existed,
+	// that lookup returned null and crashed with an NPE (see Locus.java's NINE_LOCUS comment)
+	// rather than just omitting nine-locus-specific findings.
+	NINE_LOCUS ("nine_loc", Locus.NINE_LOCUS);
 	
 	private String shortName;
 	private EnumSet<Locus> loci;
