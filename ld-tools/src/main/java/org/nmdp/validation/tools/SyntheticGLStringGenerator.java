@@ -313,7 +313,7 @@ public class SyntheticGLStringGenerator implements Callable<Integer> {
                 System.exit(0);
             }
             if (help.wasFound()) {
-                Usage.usage(USAGE, null, commandLine, arguments, System.out);
+                Usage.usage(About.header(), USAGE, null, commandLine, arguments, System.out);
                 System.exit(0);
             }
             generator = new SyntheticGLStringGenerator(

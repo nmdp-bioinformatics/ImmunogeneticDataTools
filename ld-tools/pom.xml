@@ -39,6 +39,12 @@
     <maven.enforcer.maven-version>[3.0.4,)</maven.enforcer.maven-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.targetEncoding>UTF-8</project.build.targetEncoding>
+    <!-- ${maven.build.timestamp} itself is a special case Maven's own POM interpolator
+         resolves while parsing this file (that's why it works here), but it is not exposed to
+         templating-maven-plugin's later filter-sources step the same way: confirmed by
+         testing, and a known limitation (see e.g. MASSEMBLY-603 for the same issue in a
+         different plugin). Re-exposing it under a plain property name works around that. -->
+    <build.timestamp>${maven.build.timestamp}</build.timestamp>
   </properties>
     <dependencyManagement>
     <dependencies>
@@ -96,6 +102,38 @@
 
 <build>
     <plugins>
+      <!-- Populates the git.commit.id.abbrev and (built-in) maven.build.timestamp Maven
+           properties that About.java's java-template is filtered against below. Neither was
+           ever actually wired up before (issue #89): git.commit.id.abbrev in particular isn't a
+           built-in Maven property at all, so without this plugin it was always left as a
+           literal, unresolved "${git.commit.id.abbrev}" (formerly "${git.commit.id}") in every
+           build's about output (the "about" switch, short flag -a). Its "revision" goal defaults to the
+           initialize phase, which runs before templating-maven-plugin's generate-sources
+           filtering just below, so no explicit phase binding or plugin reordering is needed
+           here. Deliberately not configuring the git.dirty flag (a working-tree-is-dirty
+           indicator this plugin also offers); see the PR discussion for issue #89. -->
+      <plugin>
+        <groupId>io.github.git-commit-id</groupId>
+        <artifactId>git-commit-id-maven-plugin</artifactId>
+        <version>10.0.1</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <!-- Default since plugin v4+: exports the abbreviated id as git.commit.id.abbrev
+               either way, but spelled out since About.java's comment refers to it by name. -->
+          <commitIdGenerationMode>flat</commitIdGenerationMode>
+          <!-- Only the Maven property is needed for template filtering; a git.properties
+               file in the built jar would be unused clutter. -->
+          <generateGitPropertiesFile>false</generateGitPropertiesFile>
+        </configuration>
+      </plugin>
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>templating-maven-plugin</artifactId>
