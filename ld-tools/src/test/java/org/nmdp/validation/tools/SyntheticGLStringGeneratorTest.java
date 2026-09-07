@@ -25,9 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.net.URI;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -43,11 +44,27 @@ import org.junit.jupiter.api.io.TempDir;
 // syntheticExamples.README.txt documents for how the committed fixture itself was produced.
 public class SyntheticGLStringGeneratorTest {
 
+	// SyntheticGLStringGenerator's constructor needs a real File (it does
+	// new FileInputStream(frequencyFile) itself), but this test resource lives in a *different*
+	// module (ld-validation's src/main/resources, a cross-module main-resource dependency, not
+	// a same-module test resource) -- getResource(...).toURI() -> new File(uri) only works when
+	// that dependency happens to be resolved as a loose target/classes directory. Confirmed via
+	// a real CI failure (java.lang.IllegalArgumentException: URI is not hierarchical) that this
+	// breaks under a full "mvn verify" reactor lifecycle: once ld-validation's own package phase
+	// completes before ld-tools' tests run, the resource resolves to a jar: URI instead, which
+	// File's constructor can't handle. Reading it as a stream and copying it out to a real file
+	// works regardless of which way the dependency happens to be packaged.
+	private static File copyResourceToFile(String resourcePath, Path targetFile) throws Exception {
+		try (InputStream in = SyntheticGLStringGeneratorTest.class.getClassLoader().getResourceAsStream(resourcePath)) {
+			Files.copy(in, targetFile, StandardCopyOption.REPLACE_EXISTING);
+		}
+		return targetFile.toFile();
+	}
+
 	@Test
 	public void testGeneratesSampleCountLinesInTheExpectedFormat(@TempDir Path tempDir) throws Exception {
-		URI uri = SyntheticGLStringGeneratorTest.class.getClassLoader()
-				.getResource("frequencies/std/NMDP_2007_FiveLocus_Freqs.csv").toURI();
-		File frequencyFile = new File(uri);
+		File frequencyFile = copyResourceToFile("frequencies/std/NMDP_2007_FiveLocus_Freqs.csv",
+				tempDir.resolve("NMDP_2007_FiveLocus_Freqs.csv"));
 		File outputFile = tempDir.resolve("synthetic-out.txt").toFile();
 
 		// Same rates the CLI itself defaults to (see SyntheticGLStringGenerator's --help), not
@@ -82,9 +99,8 @@ public class SyntheticGLStringGeneratorTest {
 
 	@Test
 	public void testSameSeedProducesIdenticalOutput(@TempDir Path tempDir) throws Exception {
-		URI uri = SyntheticGLStringGeneratorTest.class.getClassLoader()
-				.getResource("frequencies/std/NMDP_2007_FiveLocus_Freqs.csv").toURI();
-		File frequencyFile = new File(uri);
+		File frequencyFile = copyResourceToFile("frequencies/std/NMDP_2007_FiveLocus_Freqs.csv",
+				tempDir.resolve("NMDP_2007_FiveLocus_Freqs.csv"));
 
 		File firstRun = tempDir.resolve("first.txt").toFile();
 		File secondRun = tempDir.resolve("second.txt").toFile();
