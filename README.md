@@ -78,8 +78,8 @@ If you prefer to compile / package the software from source, follow these instru
 + **Description:**  If specified, applies the antigen recognition site mappings from the time of the NMDP 2011 Frequencies.  Otherwise, tries to use the antigen recognition site mappings associated with the specified HLA DB first, falling back on the default if they aren't available
 
 + **Name:**  org.dash.linkages
-+ **Value(s):**  acb, cb, drb_dq, drb_dqb, drb1_dqb1, fiv_loc, six_loc
-+ **Description:**  Specifies the loci across which to detect linkages using provided frequencies
++ **Value(s):**  acb, cb, drb_dq, drb_dqb, drb1_dqb1, dpa1_dpb1, five_loc, six_loc, nine_loc
++ **Description:**  Specifies the loci across which to detect linkages using provided frequencies. Note: a custom frequency file passed via `-q` doesn't need this set at all -- its own linkage combination is auto-detected from the loci actually present in the file.
 
 + **Name:**  java.util.logging.config.file
 + **Value(s):**  logging.properties
