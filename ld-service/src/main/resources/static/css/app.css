@@ -237,3 +237,10 @@ details pre {
   color: var(--muted);
   font-style: italic;
 }
+
+#app-version {
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: right;
+}

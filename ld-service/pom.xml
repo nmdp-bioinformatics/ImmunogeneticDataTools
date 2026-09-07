@@ -60,6 +60,17 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-starter-web</artifactId>
       </dependency>
+      <!-- Backs the /actuator/info endpoint the browser UI's footer reads to show its own
+           version (issue #89's ask, applied to the UI as well as the CLI tools: see
+           ld-tools' About.java/-h fix for the CLI side). The "build" info contributor that
+           powers it auto-activates once build-info goal (below) generates a
+           META-INF/build-info.properties on the classpath; no separate config needed for that
+           part, just management.endpoints.web.exposure.include=info in application.properties
+           to expose it over HTTP (only "health" is exposed by default). -->
+      <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-actuator</artifactId>
+      </dependency>
       <!-- Replaces springfox-swagger2 (Phase 3b fix for a startup crash), now bumped from
            the javax/Boot-2.x line (springdoc-openapi-ui) to the jakarta/Boot-3.x
            successor. 2.9.0 is the latest 2.x release, tracked against Boot 3.x throughout
@@ -139,6 +150,16 @@
             <configuration>
               <mainClass>org.nmdp.validation.HLAHapVServiceApplication</mainClass>
             </configuration>
+          </execution>
+          <!-- Generates target/classes/META-INF/build-info.properties (artifact, group,
+               name, version, time), which Actuator's BuildInfoContributor picks up
+               automatically to populate /actuator/info's "build" section: just the
+               version for now, per issue #89. -->
+          <execution>
+            <id>build-info</id>
+            <goals>
+              <goal>build-info</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

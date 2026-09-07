@@ -65,6 +65,10 @@ Interactive docs (springdoc-openapi) are served once the app is running:
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
+`GET /actuator/info` reports the running build's version (`{"build":{"name":"ld-service",
+"version":"1.0.0",...}}`) -- the browser UI's footer reads this to show its own version, the
+same idea as the CLI tools' `-h`/`-a` version display.
+
 ## Browser UI
 
 Once the app is running, open **`http://localhost:8080/`** for a browser UI covering the
