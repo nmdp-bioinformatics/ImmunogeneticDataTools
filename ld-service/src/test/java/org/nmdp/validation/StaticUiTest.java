@@ -22,8 +22,11 @@
 package org.nmdp.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -59,5 +62,20 @@ public class StaticUiTest {
         ResponseEntity<String> js = restTemplate.getForEntity("http://localhost:" + port + "/js/app.js", String.class);
         assertEquals(HttpStatus.OK, js.getStatusCode());
         assertTrue(js.getBody().contains("/genotypes/file"), "app.js should reference the async job endpoint it actually calls");
+        assertTrue(js.getBody().contains("/actuator/info"), "app.js should reference the version endpoint it reads for the footer");
+    }
+
+    // Issue #89, applied to the UI: real end-to-end coverage of the wiring, not just "the
+    // dependency is on the classpath" -- exercises the actual build-info Maven goal's output
+    // (target/classes/META-INF/build-info.properties) flowing through Actuator's real
+    // BuildInfoContributor and web exposure config, exactly what the browser footer depends on.
+    @Test
+    public void actuatorInfoEndpointReportsTheBuildVersion() throws Exception {
+        ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/actuator/info", String.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        JsonNode build = new ObjectMapper().readTree(response.getBody()).path("build");
+        assertEquals("ld-service", build.path("name").asText());
+        assertFalse(build.path("version").asText().isEmpty(), "build.version should be populated, not just present");
     }
 }
