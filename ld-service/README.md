@@ -95,11 +95,23 @@ Build the jar and run it directly:
 
 ```
 mvn -pl ld-service -am package
-java -jar ld-service/target/ld-service-1.0.0.jar
+JAVA_OPTS="-Xmx6g" java -jar ld-service/target/ld-service-1.0.0.jar
 ```
 
 `docker-compose.yml` here also runs a pre-built image (`mpresteg/hlahapv:latest`) on port
 8080, if you don't want to build locally.
+
+### Heap size
+
+A `frequencyFiles` upload is parsed fully into memory (the same
+`HLAFrequenciesLoader.loadStandardReferenceData` path the CLI's `-q` uses) and held there
+for the life of the process, at roughly 4–6x the file size — the NMDP nine-locus release
+(~1 GB) needs `-Xmx4g` minimum, `-Xmx6g` comfortably, and a too-small heap fails with an
+`OutOfMemoryError` that takes down every in-flight job. The container entrypoints
+(`Dockerfile`, `bash-start-java-tomcat.sh`) default to `-Xmx8g`, overridable with
+`JAVA_OPTS`; a bare `java -jar` run gets only the JVM default (~25% of RAM), so set
+`JAVA_OPTS`/`-Xmx` explicitly if you'll upload large frequency files. See the
+[root README](../README.md)'s "Memory / heap sizing" note.
 
 ## `ld-client`
 

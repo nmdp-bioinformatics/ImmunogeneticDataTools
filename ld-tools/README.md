@@ -17,6 +17,23 @@ are documented in the [root README](../README.md).
 analyze-gl-strings -i <input file> -o <output directory> [-v <hladb version>] [-q <frequency file>]
 ```
 
+### Heap size for large `-q` files
+
+A custom standard-format frequency file passed via `-q` is loaded fully into memory and
+held there for the whole run, at roughly 4–6x its on-disk size. The JVM's default max heap
+(~25% of RAM) is not enough for a large one — the NMDP nine-locus release (~1 GB) needs
+`-Xmx4g` minimum, `-Xmx6g` comfortably. A too-small heap surfaces as GC thrash followed by
+an `OutOfMemoryError` in `HLAFrequenciesLoader.loadStandardReferenceData`. The generated
+script honors `JAVA_OPTS`:
+
+```
+JAVA_OPTS="-Xmx6g" ./bin/analyze-gl-strings -i input.txt -o output/ -q A~C~B~DRBX~DRB1~DQA1~DQB1~DPA1~DPB1.std.csv
+```
+
+See the [root README](../README.md)'s "Memory / heap sizing" note for details. This is the
+same nine-locus file `normalize-frequency-file` already raises POI's zip-bomb guard for
+(see "Dependencies worth knowing about" below).
+
 ## `normalize-frequency-file`
 
 Converts an NMDP haplotype frequency reference file into this project's own
