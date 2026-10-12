@@ -132,7 +132,7 @@ final class About {
     }
 
     /**
-     * Return a one-line "&lt;artifactId&gt; &lt;version&gt;" identifier, e.g. {@code ld-tools 1.0.0}.
+     * Return a one-line "&lt;artifactId&gt; &lt;version&gt;" identifier, e.g. {@code ld-tools 1.1.0}.
      * Used to show the software version alongside {@code --help} output, without repeating the
      * full about block's commit/build/copyright/license lines there too (see
      * https://github.com/nmdp-bioinformatics/ImmunogeneticDataTools/issues/89).
