@@ -1,0 +1,162 @@
+# Builds the ld-service Docker image and publishes it to GitHub Container Registry.
+#
+#   - Pushing a version tag (vX.Y.Z) publishes :X.Y.Z (and :X.Y, and :latest for non-prerelease
+#     tags) for linux/amd64 and linux/arm64.
+#   - "Run workflow" (manual) always builds and smoke-tests the image; tick "push" to also publish
+#     it (tagged with the branch name and commit SHA, never :latest) -- used to dry-run this
+#     workflow on a fork or branch before cutting a release.
+#
+# The image name is derived from the repository owner (ghcr.io/<owner>/ld-service), so the same
+# file works unchanged in a fork and in the upstream repository.
+
+name: Publish ld-service image
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      push:
+        description: "Push the image to GHCR (otherwise build and smoke-test only)"
+        type: boolean
+        default: false
+      smoke_arm64:
+        description: "Also smoke-test the linux/arm64 image under emulation (slow)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-image-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Pinned (not ubuntu-latest) so a runner-image migration can't change the build underneath a release.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PUSH: ${{ github.event_name == 'push' || inputs.push }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image name
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ld-service" >> "$GITHUB_OUTPUT"
+
+      # An image tagged 1.1.0 must contain the 1.1.0 jar: /actuator/info reports the Maven
+      # version, so a mismatch would publish an image whose tag and behaviour disagree.
+      - uses: actions/setup-java@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Check the tag matches the Maven version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          pom_version=$(mvn -q -B -pl ld-service help:evaluate -Dexpression=project.version -DforceStdout)
+          tag_version="${GITHUB_REF_NAME#v}"
+          echo "tag=$tag_version pom=$pom_version"
+          if [ "$pom_version" != "$tag_version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the Maven project version $pom_version. Bump the poms first, then tag."
+            exit 1
+          fi
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        if: env.PUSH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=sha
+          flavor: |
+            latest=auto
+          # The action derives title/description/license from the GitHub repo (here: the repo name
+          # and "NOASSERTION", since the repo has no SPDX-detectable LICENSE file); override them.
+          labels: |
+            org.opencontainers.image.title=ld-service
+            org.opencontainers.image.description=HLA linkage disequilibrium validation: REST API and browser UI (HLAHapV / ImmunogeneticDataTools)
+            org.opencontainers.image.licenses=LGPL-3.0-or-later
+
+      - name: Build amd64 image for the smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ld-service/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ld-service:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test (amd64) - wait for the container to report healthy
+        run: |
+          docker run -d --name ld-service-smoke ld-service:smoke
+          for i in $(seq 1 60); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' ld-service-smoke)
+            echo "health: $status"
+            [ "$status" = healthy ] && exit 0
+            sleep 5
+          done
+          docker logs ld-service-smoke
+          exit 1
+
+      - name: Build arm64 image for the smoke test
+        if: inputs.smoke_arm64
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ld-service/Dockerfile
+          platforms: linux/arm64
+          load: true
+          tags: ld-service:smoke-arm64
+          cache-from: type=gha
+
+      - name: Smoke test (arm64, emulated) - wait for the container to report healthy
+        if: inputs.smoke_arm64
+        run: |
+          docker run -d --platform linux/arm64 --name ld-service-smoke-arm64 ld-service:smoke-arm64
+          for i in $(seq 1 120); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' ld-service-smoke-arm64)
+            echo "health: $status"
+            [ "$status" = healthy ] && exit 0
+            sleep 5
+          done
+          docker logs ld-service-smoke-arm64
+          exit 1
+
+      - name: Build the multi-arch image (and push it, when publishing)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ld-service/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Show what was published
+        if: env.PUSH == 'true'
+        run: |
+          first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          docker buildx imagetools inspect "$first_tag"

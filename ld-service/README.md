@@ -98,9 +98,23 @@ service ends up at <http://localhost:8080/> (browser UI) with the API docs at
 ### Option A — Docker (easiest)
 
 **You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or any Docker
-engine with the `docker compose` command), installed **and running**, plus this repository
-cloned. No Java or Maven. There is no pre-built image to download — the first step builds it on
-your machine.
+engine with the `docker compose` command), installed **and running**. No Java or Maven.
+
+**Quickest — no clone, no build.** Each release is published as a ready-made image
+(`linux/amd64` and `linux/arm64`, so Apple Silicon works natively) at
+`ghcr.io/nmdp-bioinformatics/ld-service`, starting with the first release after 1.0.0:
+
+```
+docker run --rm -p 127.0.0.1:8080:8080 ghcr.io/nmdp-bioinformatics/ld-service:latest
+```
+
+Then open <http://localhost:8080/>; `Ctrl+C` stops (and removes) it. This version doesn't keep
+the downloaded HLA reference data between runs — use the compose route below for that.
+
+**With compose (keeps the reference data, easy to start/stop).** Needs this repository cloned.
+`docker compose up` pulls the published image; if it can't (for example no release including it
+exists yet), it builds the same image from your checkout instead, so the steps below work either
+way.
 
 1. Open a terminal and go to this directory (`ld-service`, inside the cloned repo):
 
@@ -108,14 +122,15 @@ your machine.
    cd ImmunogeneticDataTools/ld-service
    ```
 
-2. Build and start it:
+2. Start it:
 
    ```
-   docker compose up --build
+   docker compose up
    ```
 
-   The first run downloads the base images and compiles the project, which takes several
-   minutes; later runs are much faster. The terminal then stays attached and prints the
+   If it has to build from source, the first run downloads base images and compiles the
+   project, which takes several minutes (add `--build` to force a rebuild); pulling the published
+   image is much quicker. The terminal then stays attached and prints the
    service's log. It is ready when you see a line like `Started HLAHapVServiceApplication`
    (about 30–60 seconds after the build finishes).
 
@@ -130,7 +145,8 @@ Everyday use after that:
 |---|---|
 | Start it again | `docker compose up` |
 | Start it in the background | `docker compose up -d` (then `docker compose logs -f` to watch, `docker compose down` to stop) |
-| Pick up code changes after a `git pull` | `docker compose up --build` |
+| Update to the newest published release | `docker compose pull`, then `docker compose up` (a cached image is reused as-is) |
+| Build from my checkout, e.g. after changing code | `docker compose up --build` |
 | Check whether it's healthy | `docker compose ps` — the status column shows `healthy` once it's ready |
 | Give it more memory for a big frequency upload | `JAVA_OPTS=-Xmx6g docker compose up` (and see "Heap size" below) |
 | Start completely fresh (also forgets the downloaded reference data) | `docker compose down -v` |
