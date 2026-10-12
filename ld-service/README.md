@@ -91,29 +91,81 @@ v1 covers `analyze-gl-strings` only — `normalize-frequency-file` and
 
 ## Running it
 
-Build the jar and run it directly:
+Two ways: with Docker (nothing else to install) or directly with Java and Maven. Either way the
+service ends up at <http://localhost:8080/> (browser UI) with the API docs at
+<http://localhost:8080/swagger-ui/index.html>.
+
+### Option A — Docker (easiest)
+
+**You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or any Docker
+engine with the `docker compose` command), installed **and running**, plus this repository
+cloned. No Java or Maven. There is no pre-built image to download — the first step builds it on
+your machine.
+
+1. Open a terminal and go to this directory (`ld-service`, inside the cloned repo):
+
+   ```
+   cd ImmunogeneticDataTools/ld-service
+   ```
+
+2. Build and start it:
+
+   ```
+   docker compose up --build
+   ```
+
+   The first run downloads the base images and compiles the project, which takes several
+   minutes; later runs are much faster. The terminal then stays attached and prints the
+   service's log. It is ready when you see a line like `Started HLAHapVServiceApplication`
+   (about 30–60 seconds after the build finishes).
+
+3. Open <http://localhost:8080/> in your browser.
+
+4. To stop it, press `Ctrl+C` in that terminal, then optionally clean up with
+   `docker compose down`.
+
+Everyday use after that:
+
+| I want to… | Run (from the `ld-service` directory) |
+|---|---|
+| Start it again | `docker compose up` |
+| Start it in the background | `docker compose up -d` (then `docker compose logs -f` to watch, `docker compose down` to stop) |
+| Pick up code changes after a `git pull` | `docker compose up --build` |
+| Check whether it's healthy | `docker compose ps` — the status column shows `healthy` once it's ready |
+| Give it more memory for a big frequency upload | `JAVA_OPTS=-Xmx6g docker compose up` (and see "Heap size" below) |
+| Start completely fresh (also forgets the downloaded reference data) | `docker compose down -v` |
+
+Things worth knowing:
+
+- **It only listens on your own machine** (`127.0.0.1`). The service has no login and accepts
+  uncapped uploads, so it is deliberately not reachable from other computers on your network. To
+  change that on purpose, edit the `ports` entry in `docker-compose.yml` to `"8080:8080"`.
+- **It needs internet access on first use** to download the HLA reference data; that download is
+  cached in a Docker volume, so restarts don't repeat it.
+- **Docker Desktop's memory limit applies.** Its default is a couple of GB, which is fine for the
+  bundled reference data but too small for large frequency-file uploads. Raise it under Docker
+  Desktop → Settings → Resources.
+- **Troubleshooting:** `Cannot connect to the Docker daemon` means Docker Desktop isn't running —
+  start it and retry. `port is already allocated` means something else is using port 8080 — stop
+  it, or change the left-hand `8080` in the `ports` entry. A container that never turns `healthy`:
+  check `docker compose logs`.
+
+Without compose, from the **repo root**: `docker build -f ld-service/Dockerfile -t ld-service:local .`
+then `docker run -p 127.0.0.1:8080:8080 ld-service:local`.
+
+### Option B — Java and Maven
+
+**You need:** Java 25 and Maven (see the [root README](../README.md) for install notes). From the
+**repo root**:
 
 ```
 mvn -pl ld-service -am package
-JAVA_OPTS="-Xmx6g" java -jar ld-service/target/ld-service-1.0.0.jar
+java -Xmx6g -jar ld-service/target/ld-service-1.0.0.jar
 ```
 
-Or, with only Docker installed (no Java or Maven needed), build and run the image from this
-directory:
-
-```
-docker compose up --build
-```
-
-then open <http://localhost:8080/>. The compose file builds `Dockerfile` from the repo root (the
-image needs the sibling modules), publishes the port on loopback only (the service has no
-authentication — edit the `ports` entry in `docker-compose.yml` to expose it on your network
-deliberately), and keeps the downloaded HLA reference cache in a named volume so restarts don't
-re-download it. First start takes a minute or two; the container reports healthy once
-`/actuator/health` answers. No pre-built image is published.
-
-Without compose: `docker build -f ld-service/Dockerfile -t ld-service:local .` from the repo
-root, then `docker run -p 127.0.0.1:8080:8080 ld-service:local`.
+(`-Xmx6g` is the maximum memory the service may use — see "Heap size" below. Note that a plain
+`java` command does not read a `JAVA_OPTS` environment variable; only the Docker setup does.)
+Stop it with `Ctrl+C`.
 
 ### Heap size
 
@@ -125,8 +177,8 @@ for the life of the process, at roughly 4–6x the file size — the NMDP nine-l
 `-XX:MaxRAMPercentage=75.0` (75% of the container's memory), overridable with `JAVA_OPTS` —
 for example `JAVA_OPTS=-Xmx6g docker compose up`. Docker Desktop's VM defaults to only a couple
 of GB, so raise it under Settings → Resources before uploading large frequency files. A bare
-`java -jar` run gets only the JVM default (~25% of RAM), so set
-`JAVA_OPTS`/`-Xmx` explicitly if you'll upload large frequency files. See the
+`java -jar` run gets only the JVM default (~25% of RAM), so pass `-Xmx` explicitly (e.g.
+`java -Xmx6g -jar …`) if you'll upload large frequency files. See the
 [root README](../README.md)'s "Memory / heap sizing" note.
 
 ## `ld-client`
