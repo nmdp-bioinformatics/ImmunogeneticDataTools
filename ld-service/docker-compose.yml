@@ -1,11 +1,21 @@
-version: '3.1'
-
 services:
-  web:
-    image: mpresteg/hlahapv:latest
+  ld-service:
+    build:
+      context: ..
+      dockerfile: ld-service/Dockerfile
+    image: ld-service:local
     container_name: hlahapv-interface
-    restart: always
+    restart: unless-stopped
     ports:
-      - 8080:8080
-    command:
-      - /app/bash-start-java-tomcat.sh
+      # Loopback only: the service has no authentication and accepts uncapped uploads, so
+      # don't expose it to your LAN by default. Change to "8080:8080" to open it up deliberately.
+      - "127.0.0.1:8080:8080"
+    environment:
+      # Heap sizing -- see "Heap size" in README.md. Raise for large frequencyFiles uploads.
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0}
+    volumes:
+      # Persists the downloaded HLA reference (ARS) cache across restarts and rebuilds.
+      - ars-cache:/home/app/.dash-cache
+
+volumes:
+  ars-cache:

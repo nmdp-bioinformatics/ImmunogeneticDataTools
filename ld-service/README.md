@@ -98,8 +98,22 @@ mvn -pl ld-service -am package
 JAVA_OPTS="-Xmx6g" java -jar ld-service/target/ld-service-1.0.0.jar
 ```
 
-`docker-compose.yml` here also runs a pre-built image (`mpresteg/hlahapv:latest`) on port
-8080, if you don't want to build locally.
+Or, with only Docker installed (no Java or Maven needed), build and run the image from this
+directory:
+
+```
+docker compose up --build
+```
+
+then open <http://localhost:8080/>. The compose file builds `Dockerfile` from the repo root (the
+image needs the sibling modules), publishes the port on loopback only (the service has no
+authentication — edit the `ports` entry in `docker-compose.yml` to expose it on your network
+deliberately), and keeps the downloaded HLA reference cache in a named volume so restarts don't
+re-download it. First start takes a minute or two; the container reports healthy once
+`/actuator/health` answers. No pre-built image is published.
+
+Without compose: `docker build -f ld-service/Dockerfile -t ld-service:local .` from the repo
+root, then `docker run -p 127.0.0.1:8080:8080 ld-service:local`.
 
 ### Heap size
 
@@ -107,9 +121,11 @@ A `frequencyFiles` upload is parsed fully into memory (the same
 `HLAFrequenciesLoader.loadStandardReferenceData` path the CLI's `-q` uses) and held there
 for the life of the process, at roughly 4–6x the file size — the NMDP nine-locus release
 (~1 GB) needs `-Xmx4g` minimum, `-Xmx6g` comfortably, and a too-small heap fails with an
-`OutOfMemoryError` that takes down every in-flight job. The container entrypoints
-(`Dockerfile`, `bash-start-java-tomcat.sh`) default to `-Xmx8g`, overridable with
-`JAVA_OPTS`; a bare `java -jar` run gets only the JVM default (~25% of RAM), so set
+`OutOfMemoryError` that takes down every in-flight job. The container defaults to
+`-XX:MaxRAMPercentage=75.0` (75% of the container's memory), overridable with `JAVA_OPTS` —
+for example `JAVA_OPTS=-Xmx6g docker compose up`. Docker Desktop's VM defaults to only a couple
+of GB, so raise it under Settings → Resources before uploading large frequency files. A bare
+`java -jar` run gets only the JVM default (~25% of RAM), so set
 `JAVA_OPTS`/`-Xmx` explicitly if you'll upload large frequency files. See the
 [root README](../README.md)'s "Memory / heap sizing" note.
 

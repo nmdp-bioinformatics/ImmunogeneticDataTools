@@ -33,6 +33,31 @@ jobs:
           path: ld-validation/target/site/jacoco
           destination: coverage/ld-validation
 
+  # Builds the ld-service image and waits for its HEALTHCHECK to pass, so a stale Dockerfile
+  # (the old one pointed at a long-gone jar name and a Java 8 base) fails a PR instead of rotting
+  # unnoticed. Nothing is pushed anywhere.
+  docker-image:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build ld-service image
+          command: docker build -f ld-service/Dockerfile -t ld-service:ci .
+      - run:
+          name: Wait for the container to report healthy
+          command: |
+            docker run -d --name ld-service-ci ld-service:ci
+            for i in $(seq 1 60); do
+              status=$(docker inspect -f '{{.State.Health.Status}}' ld-service-ci)
+              echo "health: $status"
+              [ "$status" = healthy ] && exit 0
+              sleep 5
+            done
+            docker logs ld-service-ci
+            exit 1
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
@@ -40,3 +65,4 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test
+      - docker-image
