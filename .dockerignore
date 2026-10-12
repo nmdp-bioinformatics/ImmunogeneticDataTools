@@ -1,0 +1,29 @@
+# Docker build context is the repo root (ld-service needs its sibling modules and the parent pom).
+# Keep generated output, VCS metadata and -- importantly -- run artifacts out of the image: the
+# *.log / *.csv / *.xlsx / summary.xml files below are written to the working directory by every
+# run and can contain real sample data. Mirrors the run-artifact entries in .gitignore.
+.git
+.claude
+.idea
+.settings
+.DS_Store
+**/target
+
+/immuno.log*
+/*/immuno.log*
+/linkages.log
+/linkageWarnings.log
+/nonCwdWarnings.log
+/haplotypePairs.log
+/haplotypePairWarnings.log
+/detectedFindings.csv
+/detectedFindings.xlsx
+/summary.xml
+/*/linkages.log
+/*/linkageWarnings.log
+/*/nonCwdWarnings.log
+/*/haplotypePairs.log
+/*/haplotypePairWarnings.log
+/*/detectedFindings.csv
+/*/detectedFindings.xlsx
+/*/summary.xml

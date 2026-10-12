@@ -78,6 +78,23 @@ taking minutes for real reference data). Use the packaged jar for that instead.
   not just checking that unit tests are green. Several real, previously-undetected bugs
   in this project were only caught this way.
 
+## Releasing the Docker image
+
+The `ld-service` image is published to GitHub Container Registry
+(`ghcr.io/<owner>/ld-service`, for `linux/amd64` and `linux/arm64`) by
+`.github/workflows/publish-image.yml`:
+
+- **Pushing a version tag** (`vX.Y.Z`) publishes `:X.Y.Z` (plus `:X.Y`, and `:latest` for
+  non-prerelease tags). The Maven version in the poms **must already equal the tag** — the
+  workflow fails otherwise, since the image's `/actuator/info` reports the Maven version.
+  Bump the poms, merge, then tag.
+- **Actions → "Publish ld-service image" → Run workflow** builds and smoke-tests the image
+  (waits for its health check) without publishing; tick "push" to publish a test image tagged
+  with the branch name and commit SHA (never `:latest`). Use this to dry-run changes to the
+  Dockerfile or workflow before a release.
+- The first publish creates the package as private; a repository admin has to make it public
+  (package settings → Change visibility) once, and the organization must allow public packages.
+
 ## Commit messages
 
 Scale detail to how subtle or risky the change is. A one-line summary is fine for a

@@ -78,4 +78,14 @@ public class StaticUiTest {
         assertEquals("ld-service", build.path("name").asText());
         assertFalse(build.path("version").asText().isEmpty(), "build.version should be populated, not just present");
     }
+
+    // The Dockerfile's HEALTHCHECK curls /actuator/health. Setting
+    // management.endpoints.web.exposure.include replaces Spring's default exposure (health)
+    // rather than adding to it, so listing only "info" there once silently made this 404.
+    @Test
+    public void actuatorHealthEndpointIsExposedForTheContainerHealthcheck() throws Exception {
+        ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/actuator/health", String.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("UP", new ObjectMapper().readTree(response.getBody()).path("status").asText());
+    }
 }

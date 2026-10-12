@@ -1,11 +1,26 @@
-version: '3.1'
-
 services:
-  web:
-    image: mpresteg/hlahapv:latest
+  ld-service:
+    build:
+      context: ..
+      dockerfile: ld-service/Dockerfile
+    # Pre-built release image from GHCR. `docker compose up` pulls it if it isn't already on this
+    # machine, and falls back to building it from this checkout (see `build` above) if it can't be
+    # pulled -- e.g. before the first release that includes it. A locally cached image is reused
+    # as-is, so run `docker compose pull` to get a newer release. LD_SERVICE_IMAGE points this at a
+    # different registry path or tag (a fork's image, a specific version, ...).
+    image: ${LD_SERVICE_IMAGE:-ghcr.io/nmdp-bioinformatics/ld-service:latest}
     container_name: hlahapv-interface
-    restart: always
+    restart: unless-stopped
     ports:
-      - 8080:8080
-    command:
-      - /app/bash-start-java-tomcat.sh
+      # Loopback only: the service has no authentication and accepts uncapped uploads, so
+      # don't expose it to your LAN by default. Change to "8080:8080" to open it up deliberately.
+      - "127.0.0.1:8080:8080"
+    environment:
+      # Heap sizing -- see "Heap size" in README.md. Raise for large frequencyFiles uploads.
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0}
+    volumes:
+      # Persists the downloaded HLA reference (ARS) cache across restarts and rebuilds.
+      - ars-cache:/home/app/.dash-cache
+
+volumes:
+  ars-cache:
