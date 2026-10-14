@@ -6,6 +6,10 @@
 #     it (tagged with the branch name and commit SHA, never :latest) -- used to dry-run this
 #     workflow on a fork or branch before cutting a release.
 #
+# Publishing (a tag push, or a manual run with "push" ticked) first waits for CircleCI to report
+# success for the exact commit being published, and refuses to publish if it failed. CircleCI
+# is a separate system, so without this gate nothing stops a tag on a commit whose build is red.
+#
 # The image name is derived from the repository owner (ghcr.io/<owner>/ld-service), so the same
 # file works unchanged in a fork and in the upstream repository.
 
@@ -29,6 +33,7 @@ on:
 permissions:
   contents: read
   packages: write
+  statuses: read   # to read the CircleCI commit statuses
 
 concurrency:
   group: publish-image-${{ github.ref }}
@@ -42,6 +47,44 @@ jobs:
     env:
       PUSH: ${{ github.event_name == 'push' || inputs.push }}
     steps:
+      # CircleCI reports each job of .circleci/config.yml's workflow as a commit status named
+      # "ci/circleci: <job>". Keep REQUIRED_CONTEXTS in sync with that workflow's jobs: a renamed
+      # or removed job makes this step time out (loudly) rather than pass silently.
+      - name: Wait for a green CircleCI build of this commit
+        if: env.PUSH == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUIRED_CONTEXTS: "ci/circleci: build-and-test,ci/circleci: docker-image"
+          TIMEOUT_SECONDS: "1200"
+        run: |
+          IFS=',' read -ra contexts <<< "$REQUIRED_CONTEXTS"
+          deadline=$((SECONDS + TIMEOUT_SECONDS))
+          while true; do
+            # The combined-status endpoint returns only the latest status per context, so a
+            # re-run that goes green after a failed run is seen as green.
+            all_green=true
+            for c in "${contexts[@]}"; do
+              # A failed API call (transient error) is treated like "not reported yet": retry.
+              state=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status" \
+                --jq ".statuses[] | select(.context == \"$c\") | .state" || true)
+              state=${state:-missing}
+              echo "$c: $state"
+              case "$state" in
+                success) ;;
+                failure|error)
+                  echo "::error::CircleCI '$c' is $state for $GITHUB_SHA; not publishing. Fix (or re-run) the build, then publish again."
+                  exit 1 ;;
+                *) all_green=false ;;   # pending, or not reported yet
+              esac
+            done
+            if $all_green; then exit 0; fi
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::Timed out after ${TIMEOUT_SECONDS}s waiting for CircleCI to report success for $GITHUB_SHA."
+              exit 1
+            fi
+            sleep 20
+          done
+
       - uses: actions/checkout@v4
 
       - name: Compute image name

@@ -88,6 +88,12 @@ The `ld-service` image is published to GitHub Container Registry
   non-prerelease tags). The Maven version in the poms **must already equal the tag** — the
   workflow fails otherwise, since the image's `/actuator/info` reports the Maven version.
   Bump the poms, merge, then tag.
+- **Publishing waits for CircleCI.** Before pushing anything, the workflow waits (up to 20
+  minutes) for the commit's `ci/circleci: build-and-test` and `ci/circleci: docker-image`
+  statuses to be green, and fails if either is red. If you tag right after merging, it simply
+  waits for the build; if the build is red, fix it and push a new tag (or re-run CircleCI and
+  then re-run the workflow). Keep the workflow's `REQUIRED_CONTEXTS` in sync with the jobs in
+  `.circleci/config.yml`.
 - **Actions → "Publish ld-service image" → Run workflow** builds and smoke-tests the image
   (waits for its health check) without publishing; tick "push" to publish a test image tagged
   with the branch name and commit SHA (never `:latest`). Use this to dry-run changes to the
