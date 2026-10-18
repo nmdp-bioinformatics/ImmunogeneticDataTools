@@ -18,14 +18,17 @@ commands:
             base=$(git merge-base origin/master HEAD) || exit 0
             files=$(git diff --name-only "$base" HEAD) || exit 0
             [ -n "$files" ] || exit 0
-            while IFS= read -r f; do
+            # No here-string: CircleCI 2.1 reads a double less-than as its own parameter syntax.
+            IFS=$'\n'
+            set -f
+            for f in $files; do
               case "$f" in
                 docs/*|COPYING|COPYING.LESSER|LICENSE) ;;
                 src/*|*/src/*) exit 0 ;;
                 *.md) ;;
                 *) exit 0 ;;
               esac
-            done <<< "$files"
+            done
             echo "Only documentation changed; skipping the build."
             circleci-agent step halt
 
