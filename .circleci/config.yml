@@ -2,6 +2,36 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+# Reusable steps.
+commands:
+  # Pull requests that change only documentation (Markdown outside src/, anything under docs/, the
+  # license files) end the job early, successfully, so the checks CircleCI reports on the PR still
+  # pass but the Maven and Docker builds are not run. It fails closed: on master, or if git cannot
+  # work out the changed files, the job carries on and builds everything.
+  skip-if-docs-only:
+    steps:
+      - run:
+          name: Skip when only documentation changed (pull requests only)
+          command: |
+            [ "$CIRCLE_BRANCH" = master ] && exit 0
+            git fetch -q origin master || exit 0
+            base=$(git merge-base origin/master HEAD) || exit 0
+            files=$(git diff --name-only "$base" HEAD) || exit 0
+            [ -n "$files" ] || exit 0
+            # No here-string: CircleCI 2.1 reads a double less-than as its own parameter syntax.
+            IFS=$'\n'
+            set -f
+            for f in $files; do
+              case "$f" in
+                docs/*|COPYING|COPYING.LESSER|LICENSE) ;;
+                src/*|*/src/*) exit 0 ;;
+                *.md) ;;
+                *) exit 0 ;;
+              esac
+            done
+            echo "Only documentation changed; skipping the build."
+            circleci-agent step halt
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -19,6 +49,7 @@ jobs:
     steps:
       # Checkout the code as the first step.
       - checkout
+      - skip-if-docs-only
       # Use mvn clean and package as the standard maven build phase
       - run:
           name: Build
@@ -41,6 +72,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - skip-if-docs-only
       - setup_remote_docker
       - run:
           name: Build ld-service image
