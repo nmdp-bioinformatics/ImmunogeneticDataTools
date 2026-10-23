@@ -80,9 +80,11 @@ taking minutes for real reference data). Use the packaged jar for that instead.
 
 ## Releasing the Docker image
 
-The `ld-service` image is published to GitHub Container Registry
-(`ghcr.io/<owner>/ld-service`, for `linux/amd64` and `linux/arm64`) by
-`.github/workflows/publish-image.yml`:
+The `ld-service` image is published to Docker Hub (`nmdpbioinformatics/ld-service`, for
+`linux/amd64` and `linux/arm64`) by `.github/workflows/publish-image.yml`. Publishing needs the
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` Actions secrets (a Docker Hub access token with
+write access to that repository); a fork can publish to its own namespace by setting the
+`DOCKERHUB_IMAGE` repository variable. A publish without the secrets fails at its first step:
 
 - **Pushing a version tag** (`vX.Y.Z`) publishes `:X.Y.Z` (plus `:X.Y`, and `:latest` for
   non-prerelease tags). The Maven version in the poms **must already equal the tag** — the
@@ -98,8 +100,8 @@ The `ld-service` image is published to GitHub Container Registry
   (waits for its health check) without publishing; tick "push" to publish a test image tagged
   with the branch name and commit SHA (never `:latest`). Use this to dry-run changes to the
   Dockerfile or workflow before a release.
-- The first publish creates the package as private; a repository admin has to make it public
-  (package settings → Change visibility) once, and the organization must allow public packages.
+- A manual run with "push" unticked never logs in or pushes, so it does not exercise the
+  Docker Hub credentials; only a publish does.
 
 ## Commit messages
 
