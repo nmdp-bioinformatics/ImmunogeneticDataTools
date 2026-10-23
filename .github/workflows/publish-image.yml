@@ -1,4 +1,4 @@
-# Builds the ld-service Docker image and publishes it to GitHub Container Registry.
+# Builds the ld-service Docker image and publishes it to Docker Hub.
 #
 #   - Pushing a version tag (vX.Y.Z) publishes :X.Y.Z (and :X.Y, and :latest for non-prerelease
 #     tags) for linux/amd64 and linux/arm64.
@@ -10,8 +10,11 @@
 # success for the exact commit being published, and refuses to publish if it failed. CircleCI
 # is a separate system, so without this gate nothing stops a tag on a commit whose build is red.
 #
-# The image name is derived from the repository owner (ghcr.io/<owner>/ld-service), so the same
-# file works unchanged in a fork and in the upstream repository.
+# The image is nmdpbioinformatics/ld-service on Docker Hub. A fork can publish to its own
+# namespace by setting the repository variable DOCKERHUB_IMAGE (e.g. <user>/ld-service-test).
+# Publishing needs two Actions secrets, DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (a Docker Hub
+# access token with read/write scope on that repository); without them a publish fails at
+# its first step, and a build-only run (no "push") still works.
 
 name: Publish ld-service image
 
@@ -22,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       push:
-        description: "Push the image to GHCR (otherwise build and smoke-test only)"
+        description: "Push the image to Docker Hub (otherwise build and smoke-test only)"
         type: boolean
         default: false
       smoke_arm64:
@@ -32,7 +35,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
   statuses: read   # to read the CircleCI commit statuses
 
 concurrency:
@@ -47,6 +49,23 @@ jobs:
     env:
       PUSH: ${{ github.event_name == 'push' || inputs.push }}
     steps:
+      # Fail first, before waiting on CircleCI or building, rather than at the login step with
+      # an opaque "username required" error. The secrets are only copied into this step's
+      # environment (never echoed) to test whether they are set.
+      - name: Check the Docker Hub credentials are configured
+        if: env.PUSH == 'true'
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          missing=()
+          [ -n "$DOCKERHUB_USERNAME" ] || missing+=(DOCKERHUB_USERNAME)
+          [ -n "$DOCKERHUB_TOKEN" ] || missing+=(DOCKERHUB_TOKEN)
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Cannot publish to Docker Hub: missing Actions secret(s) ${missing[*]} in $GITHUB_REPOSITORY. Add them under Settings > Secrets and variables > Actions, or run without 'push' to only build and smoke-test."
+            exit 1
+          fi
+
       # CircleCI reports each job of .circleci/config.yml's workflow as a commit status named
       # "ci/circleci: <job>". Keep REQUIRED_CONTEXTS in sync with that workflow's jobs: a renamed
       # or removed job makes this step time out (loudly) rather than pass silently.
@@ -87,9 +106,13 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      # Docker repository names must be lowercase. The name goes through env, not straight into
+      # the script, so a repository variable can't inject shell.
       - name: Compute image name
         id: image
-        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ld-service" >> "$GITHUB_OUTPUT"
+        env:
+          IMAGE: ${{ vars.DOCKERHUB_IMAGE || 'nmdpbioinformatics/ld-service' }}
+        run: echo "name=${IMAGE,,}" >> "$GITHUB_OUTPUT"
 
       # An image tagged 1.1.0 must contain the 1.1.0 jar: /actuator/info reports the Maven
       # version, so a mismatch would publish an image whose tag and behaviour disagree.
@@ -116,9 +139,8 @@ jobs:
       - uses: docker/login-action@v3
         if: env.PUSH == 'true'
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Image tags and labels
         id: meta
