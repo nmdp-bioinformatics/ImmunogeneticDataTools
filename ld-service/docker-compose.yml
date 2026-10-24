@@ -3,12 +3,12 @@ services:
     build:
       context: ..
       dockerfile: ld-service/Dockerfile
-    # Pre-built release image from GHCR. `docker compose up` pulls it if it isn't already on this
+    # Pre-built release image from Docker Hub. `docker compose up` pulls it if it isn't already on this
     # machine, and falls back to building it from this checkout (see `build` above) if it can't be
     # pulled -- e.g. before the first release that includes it. A locally cached image is reused
     # as-is, so run `docker compose pull` to get a newer release. LD_SERVICE_IMAGE points this at a
     # different registry path or tag (a fork's image, a specific version, ...).
-    image: ${LD_SERVICE_IMAGE:-ghcr.io/nmdp-bioinformatics/ld-service:latest}
+    image: ${LD_SERVICE_IMAGE:-nmdpbioinformatics/ld-service:latest}
     container_name: hlahapv-interface
     restart: unless-stopped
     ports:
