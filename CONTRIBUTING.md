@@ -84,7 +84,7 @@ The `ld-service` image is published to Docker Hub (`nmdpbioinformatics/ld-servic
 `linux/amd64` and `linux/arm64`) by `.github/workflows/publish-image.yml`. Publishing needs the
 `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` Actions secrets (a Docker Hub access token with
 write access to that repository); a fork can publish to its own namespace by setting the
-`DOCKERHUB_IMAGE` repository variable. A publish without the secrets fails at its first step:
+`DOCKERHUB_IMAGE` repository variable. A publish without the secrets fails at its first step.
 
 - **Pushing a version tag** (`vX.Y.Z`) publishes `:X.Y.Z` (plus `:X.Y`, and `:latest` for
   non-prerelease tags). The Maven version in the poms **must already equal the tag** — the
