@@ -100,13 +100,20 @@ service ends up at <http://localhost:8080/> (browser UI) with the API docs at
 **You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or any Docker
 engine with the `docker compose` command), installed **and running**. No Java or Maven.
 
-**Quickest — no clone, no build.** Each release is published as a ready-made image
-(`linux/amd64` and `linux/arm64`, so Apple Silicon works natively) at
-`ghcr.io/nmdp-bioinformatics/ld-service`, starting with the first release after 1.0.0:
+**Quickest — no clone, no build.** Each release is published as a ready-made image on
+[Docker Hub](https://hub.docker.com/r/nmdpbioinformatics/ld-service) (`nmdpbioinformatics/ld-service`),
+starting with 1.1.0:
 
 ```
-docker run --rm -p 127.0.0.1:8080:8080 ghcr.io/nmdp-bioinformatics/ld-service:latest
+docker run --rm -p 127.0.0.1:8080:8080 nmdpbioinformatics/ld-service:latest
 ```
+
+In Docker Desktop you can instead search for `nmdpbioinformatics/ld-service`, pull it, and run it
+with host port 8080. A first start on a cold machine can take a couple of minutes.
+
+The published image is currently `linux/amd64` only. On an Apple Silicon Mac it runs under
+emulation (slower, and Docker may print a platform warning): add `--platform linux/amd64` to the
+command above to make that explicit.
 
 Then open <http://localhost:8080/>; `Ctrl+C` stops (and removes) it. This version doesn't keep
 the downloaded HLA reference data between runs — use the compose route below for that.
