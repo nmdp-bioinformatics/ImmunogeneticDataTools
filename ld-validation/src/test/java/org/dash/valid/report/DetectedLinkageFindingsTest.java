@@ -22,11 +22,16 @@
 package org.dash.valid.report;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -89,15 +94,22 @@ public class DetectedLinkageFindingsTest {
 	}
 
 	private static MultiLocusHaplotype haplotype(String bAllele, String cAllele, List<FrequencyByRace> frequenciesByRace) {
+		Map<Locus, String> alleles = new LinkedHashMap<Locus, String>();
+		alleles.put(Locus.HLA_B, bAllele);
+		alleles.put(Locus.HLA_C, cAllele);
+
+		return haplotype(alleles, frequenciesByRace);
+	}
+
+	private static MultiLocusHaplotype haplotype(Map<Locus, String> alleles, List<FrequencyByRace> frequenciesByRace) {
 		ConcurrentHashMap<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
-		alleleMap.put(Locus.HLA_B, list(bAllele));
-		alleleMap.put(Locus.HLA_C, list(cAllele));
+		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
+		for (Map.Entry<Locus, String> allele : alleles.entrySet()) {
+			alleleMap.put(allele.getKey(), list(allele.getValue()));
+			hlaElementMap.put(allele.getKey(), list(allele.getValue()));
+		}
 
 		MultiLocusHaplotype haplotype = new MultiLocusHaplotype(alleleMap, new HashMap<Locus, Integer>(), false);
-
-		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
-		hlaElementMap.put(Locus.HLA_B, list(bAllele));
-		hlaElementMap.put(Locus.HLA_C, list(cAllele));
 
 		DisequilibriumElementByRace disequilibriumElementByRace = new DisequilibriumElementByRace(hlaElementMap, frequenciesByRace);
 		haplotype.setLinkage(new DetectedDisequilibriumElement(disequilibriumElementByRace));
@@ -115,5 +127,204 @@ public class DetectedLinkageFindingsTest {
 		List<String> alleles = new ArrayList<String>();
 		alleles.add(allele);
 		return alleles;
+	}
+
+	// ---- Relative-frequency normalisation across candidate pairs ----
+	//
+	// A pair's relative frequency is its share (in percent) of the summed frequency of every
+	// candidate pair found for the same locus combination, computed separately for each race.
+	// Before these tests nothing asserted a relative frequency other than the single-candidate
+	// 100.0 above, so forcing the value to 100 for every pair passed the whole module, and
+	// getMinimumDifference was never called.
+
+	private static final double DELTA = 1e-9;
+
+	// Builds a pair on the given loci whose frequency in each listed race is exactly the given
+	// value: hap1 carries 1.0 in every race, so the pair frequency (hap1 * hap2) is hap2's value.
+	// Alleles are made unique by id so that no two pairs in a test are equal.
+	private static HaplotypePair pairByRace(int id, Object... raceAndFrequency) {
+		return pairOnLoci(id, false, raceAndFrequency);
+	}
+
+	private static HaplotypePair threeLocusPairByRace(int id, Object... raceAndFrequency) {
+		return pairOnLoci(id, true, raceAndFrequency);
+	}
+
+	private static HaplotypePair pairOnLoci(int id, boolean threeLoci, Object... raceAndFrequency) {
+		List<FrequencyByRace> hap1Frequencies = new ArrayList<FrequencyByRace>();
+		List<FrequencyByRace> hap2Frequencies = new ArrayList<FrequencyByRace>();
+		for (int i = 0; i < raceAndFrequency.length; i += 2) {
+			hap1Frequencies.add(new FrequencyByRace(1.0, "1", (String) raceAndFrequency[i]));
+			hap2Frequencies.add(new FrequencyByRace((Double) raceAndFrequency[i + 1], "1", (String) raceAndFrequency[i]));
+		}
+
+		return new HaplotypePair(haplotype(id, 1, threeLoci, hap1Frequencies), haplotype(id, 2, threeLoci, hap2Frequencies));
+	}
+
+	private static MultiLocusHaplotype haplotype(int id, int copy, boolean threeLoci, List<FrequencyByRace> frequenciesByRace) {
+		Map<Locus, String> alleles = new LinkedHashMap<Locus, String>();
+		alleles.put(Locus.HLA_B, "HLA-B*" + id + ":0" + copy);
+		alleles.put(Locus.HLA_C, "HLA-C*" + id + ":0" + copy);
+		if (threeLoci) {
+			alleles.put(Locus.HLA_A, "HLA-A*" + id + ":0" + copy);
+		}
+
+		return haplotype(alleles, frequenciesByRace);
+	}
+
+	private static DetectedLinkageFindings findingsFor(HaplotypePair... pairs) {
+		Set<HaplotypePair> linkedPairs = new HaplotypePairSet(new HaplotypePairComparator());
+		for (HaplotypePair pair : pairs) {
+			linkedPairs.add(pair);
+		}
+
+		DetectedLinkageFindings findings = new DetectedLinkageFindings();
+		findings.setLinkedPairs(linkedPairs);
+
+		return findings;
+	}
+
+	private static Double relativeFrequency(HaplotypePair pair, String race) {
+		for (RelativeFrequencyByRace relativeFrequency : pair.getFrequencies()) {
+			if (race.equals(relativeFrequency.getRace())) {
+				return relativeFrequency.getRelativeFrequency();
+			}
+		}
+
+		return null;
+	}
+
+	@Test
+	public void testRelativeFrequencyIsEachPairsShareOfTheRacesTotal() {
+		HaplotypePair likelier = pairByRace(1, "CAU", 0.75);
+		HaplotypePair lessLikely = pairByRace(2, "CAU", 0.25);
+
+		findingsFor(likelier, lessLikely);
+
+		assertEquals(75.0, relativeFrequency(likelier, "CAU"), DELTA);
+		assertEquals(25.0, relativeFrequency(lessLikely, "CAU"), DELTA);
+	}
+
+	@Test
+	public void testRelativeFrequencyIsNormalisedSeparatelyForEachRace() {
+		HaplotypePair first = pairByRace(1, "CAU", 0.75, "AFA", 0.25);
+		HaplotypePair second = pairByRace(2, "CAU", 0.25, "AFA", 0.75);
+
+		findingsFor(first, second);
+
+		assertEquals(75.0, relativeFrequency(first, "CAU"), DELTA);
+		assertEquals(25.0, relativeFrequency(first, "AFA"), DELTA);
+		assertEquals(25.0, relativeFrequency(second, "CAU"), DELTA);
+		assertEquals(75.0, relativeFrequency(second, "AFA"), DELTA);
+	}
+
+	// "AFA" has only one candidate, so that candidate is the whole of the race even though the
+	// other pair is more frequent in "CAU".
+	@Test
+	public void testRaceWithASingleCandidateIsOneHundredPercentEvenWhenOtherRacesHaveMore() {
+		HaplotypePair both = pairByRace(1, "CAU", 0.75, "AFA", 0.01);
+		HaplotypePair caucasianOnly = pairByRace(2, "CAU", 0.25);
+
+		findingsFor(both, caucasianOnly);
+
+		assertEquals(75.0, relativeFrequency(both, "CAU"), DELTA);
+		assertEquals(100.0, relativeFrequency(both, "AFA"), DELTA);
+		assertEquals(25.0, relativeFrequency(caucasianOnly, "CAU"), DELTA);
+	}
+
+	// A pair whose two haplotypes share no race has nothing to be a share of: it is dropped from the
+	// findings, and its frequencies play no part in anyone else's total.
+	@Test
+	public void testPairWithNoRaceInCommonIsDroppedAndIgnoredInTheTotals() {
+		HaplotypePair likelier = pairByRace(1, "CAU", 0.75);
+		HaplotypePair lessLikely = pairByRace(2, "CAU", 0.25);
+		HaplotypePair noOverlap = new HaplotypePair(
+				haplotype(3, 1, false, withFrequency(1.0)),
+				haplotype(3, 2, false, Collections.singletonList(new FrequencyByRace(0.9, "1", "AFA"))));
+
+		DetectedLinkageFindings findings = findingsFor(likelier, lessLikely, noOverlap);
+
+		assertEquals(2, findings.getLinkedPairs().size());
+		assertTrue(findings.getLinkedPairs().contains(likelier));
+		assertTrue(findings.getLinkedPairs().contains(lessLikely));
+		assertEquals(75.0, relativeFrequency(likelier, "CAU"), DELTA);
+		assertEquals(25.0, relativeFrequency(lessLikely, "CAU"), DELTA);
+	}
+
+	// Totals are kept per locus combination: a C~B pair is not a competitor of an A~C~B pair.
+	@Test
+	public void testPairsOnDifferentLocusCombinationsAreNotNormalisedAgainstEachOther() {
+		HaplotypePair twoLocus = pairByRace(1, "CAU", 0.75);
+		HaplotypePair threeLocus = threeLocusPairByRace(2, "CAU", 0.25);
+
+		findingsFor(twoLocus, threeLocus);
+
+		assertEquals(100.0, relativeFrequency(twoLocus, "CAU"), DELTA);
+		assertEquals(100.0, relativeFrequency(threeLocus, "CAU"), DELTA);
+	}
+
+	@Test
+	public void testLinkedPairsAreOrderedWithTheMostLikelyFirst() {
+		HaplotypePair least = pairByRace(1, "CAU", 0.1);
+		HaplotypePair most = pairByRace(2, "CAU", 0.6);
+		HaplotypePair middle = pairByRace(3, "CAU", 0.3);
+
+		DetectedLinkageFindings findings = findingsFor(least, most, middle);
+
+		List<HaplotypePair> ordered = new ArrayList<HaplotypePair>(findings.getLinkedPairs());
+		assertEquals(3, ordered.size());
+		assertSame(most, ordered.get(0));
+		assertSame(middle, ordered.get(1));
+		assertSame(least, ordered.get(2));
+
+		assertTrue(findings.hasLinkedPairs(Locus.C_B_LOCI));
+		assertSame(most, findings.getFirstPair(Locus.C_B_LOCI));
+	}
+
+	// ---- getMinimumDifference ----
+	//
+	// The smallest gap between two candidates' relative frequencies in a race, taken over the
+	// races (reported in the detected-findings CSV/XLSX so a reader can tell how decisive the
+	// top candidate is). A race with a single candidate has no gap, so it reports that
+	// candidate's own relative frequency (100).
+
+	@Test
+	public void testMinimumDifferenceFindsTheClosestPairOfCandidates() {
+		// 50, 40, 10 -> the closest pair is 40 and 50 (10), not the first two (10 and 40: 30).
+		DetectedLinkageFindings findings = findingsFor(
+				pairByRace(1, "CAU", 0.5), pairByRace(2, "CAU", 0.4), pairByRace(3, "CAU", 0.1));
+
+		assertEquals(10.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
+	}
+
+	@Test
+	public void testMinimumDifferenceOfTwoCandidatesIsTheirGap() {
+		DetectedLinkageFindings findings = findingsFor(pairByRace(1, "CAU", 0.75), pairByRace(2, "CAU", 0.25));
+
+		assertEquals(50.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
+	}
+
+	@Test
+	public void testMinimumDifferenceOfASingleCandidateIsItsRelativeFrequency() {
+		DetectedLinkageFindings findings = findingsFor(pairByRace(1, "CAU", 0.75));
+
+		assertEquals(100.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
+	}
+
+	// CAU has a gap of 50, AFA a gap of 20, and "ASN" a single candidate (100): the smallest wins.
+	@Test
+	public void testMinimumDifferenceIsTheSmallestAcrossRaces() {
+		DetectedLinkageFindings findings = findingsFor(
+				pairByRace(1, "CAU", 0.75, "AFA", 0.6, "ASN", 0.5),
+				pairByRace(2, "CAU", 0.25, "AFA", 0.4));
+
+		assertEquals(20.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
+	}
+
+	@Test
+	public void testMinimumDifferenceIsNullForALocusCombinationWithNoPairs() {
+		DetectedLinkageFindings findings = findingsFor(pairByRace(1, "CAU", 0.75));
+
+		assertNull(findings.getMinimumDifference(Locus.A_C_B_LOCI));
 	}
 }
