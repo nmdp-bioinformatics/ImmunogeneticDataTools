@@ -36,14 +36,15 @@ import java.util.Set;
 
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
+import org.dash.valid.gl.haplo.Haplotype;
 import org.dash.valid.gl.haplo.HaplotypePair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-// Pins down which HaplotypePairs HLALinkageDisequilibrium#findLinkedPairs builds from a small, hand-made
-// two-locus (C~B) reference file, so the expected pairs are known by construction rather than compared
+// Pins down which HaplotypePairs HLALinkageDisequilibrium#findLinkedPairs builds from small, hand-made
+// two-locus (C~B) and three-locus (A~C~B) reference files, so the expected pairs are known by construction rather than compared
 // against another implementation. The pairing loop's rule: two linked haplotypes form a pair when, at
 // every locus, they come from different copies of the genotype -- or the genotype is homozygous there,
 // in which case the two copies are indistinguishable and the instance check is skipped. Before this test
@@ -63,11 +64,9 @@ public class LinkedPairConstructionTest {
 	}
 
 	private Set<HaplotypePair> linkedPairs(String frequencyRows, String glString) throws IOException {
-		Path frequencyFile = tempDir.resolve("cbFreqs.csv");
+		Path frequencyFile = tempDir.resolve("freqs.csv");
 		Files.write(frequencyFile, frequencyRows.getBytes(StandardCharsets.UTF_8));
 
-		LinkagesLoader.reset();
-		HLAFrequenciesLoader.reset();
 		HLAFrequenciesLoader.getInstance(Collections.singleton(frequencyFile.toFile()), (File) null);
 
 		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(new LinkageDisequilibriumGenotypeList("test", glString));
@@ -76,7 +75,7 @@ public class LinkedPairConstructionTest {
 	}
 
 	private static String pairString(HaplotypePair pair) {
-		List<org.dash.valid.gl.haplo.Haplotype> haplotypes = pair.getHaplotypes();
+		List<Haplotype> haplotypes = pair.getHaplotypes();
 		return haplotypes.get(0).getHaplotypeString() + " | " + haplotypes.get(1).getHaplotypeString();
 	}
 
@@ -91,7 +90,13 @@ public class LinkedPairConstructionTest {
 	private static final String C2_B2 = "HIS,HLA-C*07:01~HLA-B*07:02,6.0E-5\n";
 	private static final String C1_B2 = "HIS,HLA-C*01:02~HLA-B*07:02,1.0E-4\n";
 	private static final String C2_B1 = "HIS,HLA-C*07:01~HLA-B*08:01g,6.0E-5\n";
-	private static final String C2_B1_SAME_B = "HIS,HLA-C*07:01~HLA-B*08:01g,6.0E-5\n";
+
+	// Three loci (A~C~B), for the "different copy at EVERY locus" rule: with only two loci a rule that is
+	// right for the first and last locus but skips the one between them cannot be told apart.
+	private static final String HET_A = "HLA-A*01:01:01:01+HLA-A*02:01:01:01";
+	private static final String A1_C1_B1 = "HIS,HLA-A*01:01~HLA-C*01:02~HLA-B*08:01g,1.0E-4\n";
+	private static final String A2_C2_B2 = "HIS,HLA-A*02:01~HLA-C*07:01~HLA-B*07:02,6.0E-5\n";
+	private static final String A2_C1_B2 = "HIS,HLA-A*02:01~HLA-C*01:02~HLA-B*07:02,6.0E-5\n";
 
 	private void assertPairs(Set<HaplotypePair> pairs, String... expected) {
 		List<String> actual = new ArrayList<String>();
@@ -106,6 +111,21 @@ public class LinkedPairConstructionTest {
 	@Test
 	public void testHeterozygousGenotypeWithBothHaplotypesLinkedGivesOnePair() throws IOException {
 		assertPairs(linkedPairs(C1_B1 + C2_B2, HET_C + "^" + HET_B),
+				"HLA-C*01:02~HLA-B*08:01g | HLA-C*07:01~HLA-B*07:02");
+	}
+
+	// Every combination is in the reference, but a pair must differ in copy at BOTH heterozygous loci:
+	// C1~B1 + C1~B2 share the C copy, so only the two complementary pairs are built.
+	@Test
+	public void testHeterozygousAtBothLociPairsOnlyComplementaryHaplotypes() throws IOException {
+		assertPairs(linkedPairs(C1_B1 + C2_B2 + C1_B2 + C2_B1, HET_C + "^" + HET_B),
+				"HLA-C*01:02~HLA-B*07:02 | HLA-C*07:01~HLA-B*08:01g",
+				"HLA-C*01:02~HLA-B*08:01g | HLA-C*07:01~HLA-B*07:02");
+	}
+
+	@Test
+	public void testThreeLinkedHaplotypesPairOnlyTheComplementaryOnes() throws IOException {
+		assertPairs(linkedPairs(C1_B1 + C2_B2 + C1_B2, HET_C + "^" + HET_B),
 				"HLA-C*01:02~HLA-B*08:01g | HLA-C*07:01~HLA-B*07:02");
 	}
 
@@ -131,7 +151,7 @@ public class LinkedPairConstructionTest {
 	// they came from -- the pair has to be allowed without a different-copy check at B.
 	@Test
 	public void testHomozygousLocusStillPairsHaplotypesFromDifferentCopiesAtTheOtherLocus() throws IOException {
-		assertPairs(linkedPairs(C1_B1 + C2_B1_SAME_B, HET_C + "^" + HOM_B),
+		assertPairs(linkedPairs(C1_B1 + C2_B1, HET_C + "^" + HOM_B),
 				"HLA-C*01:02~HLA-B*08:01g | HLA-C*07:01~HLA-B*08:01g");
 	}
 
@@ -150,5 +170,18 @@ public class LinkedPairConstructionTest {
 	public void testHomozygousAtEveryLocusPairsTheHaplotypeWithItself() throws IOException {
 		assertPairs(linkedPairs(C1_B1, HOM_C + "^" + HOM_B),
 				"HLA-C*01:02~HLA-B*08:01g | HLA-C*01:02~HLA-B*08:01g");
+	}
+
+	@Test
+	public void testThreeLociPairWhenEveryLocusIsFromADifferentCopy() throws IOException {
+		assertPairs(linkedPairs(A1_C1_B1 + A2_C2_B2, HET_A + "^" + HET_C + "^" + HET_B),
+				"HLA-A*01:01~HLA-C*01:02~HLA-B*08:01g | HLA-A*02:01~HLA-C*07:01~HLA-B*07:02");
+	}
+
+	// The two haplotypes differ in copy at A and B but share the C copy, so they cannot be the two
+	// chromosomes of one person.
+	@Test
+	public void testThreeLociNoPairWhenTheMiddleLocusIsTheSameCopy() throws IOException {
+		assertPairs(linkedPairs(A1_C1_B1 + A2_C1_B2, HET_A + "^" + HET_C + "^" + HET_B));
 	}
 }
