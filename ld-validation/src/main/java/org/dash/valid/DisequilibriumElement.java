@@ -121,13 +121,13 @@ public abstract class DisequilibriumElement {
 			}
 				
 			if (Locus.isDRB345(locus) &&
-					(((DisequilibriumElement) element1).getHaplotype() != null &&
-					((DisequilibriumElement) element1).getHaplotype().getDrb345Homozygous() &&  
+					((((DisequilibriumElement) element1).getHaplotype() != null &&
+					((DisequilibriumElement) element1).getHaplotype().getDrb345Homozygous() &&
 					(getHlaElement(locus).contains(GLStringConstants.DASH) || getHlaElement(locus).contains(GLStringConstants.NNNN))) ||
 					(getHaplotype() != null &&
-					getHaplotype().getDrb345Homozygous() && 
-					(((DisequilibriumElement) element1).getHlaElement(locus).contains(GLStringConstants.DASH) || 
-					((DisequilibriumElement) element1).getHlaElement(locus).contains(GLStringConstants.NNNN))))
+					getHaplotype().getDrb345Homozygous() &&
+					(((DisequilibriumElement) element1).getHlaElement(locus).contains(GLStringConstants.DASH) ||
+					((DisequilibriumElement) element1).getHlaElement(locus).contains(GLStringConstants.NNNN)))))
 			{
 				continue;
 			}
