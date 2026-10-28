@@ -22,6 +22,7 @@
 package org.dash.valid.report;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.dash.valid.Locus;
+import org.dash.valid.base.BaseDisequilibriumElement;
 import org.dash.valid.gl.haplo.HaplotypePair;
 import org.dash.valid.gl.haplo.HaplotypePairComparator;
 import org.dash.valid.gl.haplo.HaplotypePairSet;
@@ -45,7 +47,7 @@ import org.dash.valid.race.FrequencyByRace;
 import org.dash.valid.race.RelativeFrequencyByRace;
 import org.junit.jupiter.api.Test;
 
-// Regression test for a real user-reported bug: analyze-gl-strings against stanfordExamplesFixed.txt
+// Two groups of tests. The first two tests are a regression test for a real user-reported bug: analyze-gl-strings against stanfordExamplesFixed.txt
 // produced relative-frequency values > 100 in summary.xml (391 of 10173, all exactly
 // 100.00000000000001). Root cause, confirmed independently in Python before fixing here: for any
 // double x, (x * 100.0) / x is NOT guaranteed to round-trip to exactly 100.0 -- the multiply and
@@ -56,7 +58,8 @@ import org.junit.jupiter.api.Test;
 // floating-point noise of about 1 ULP, landing on either side of 100.0 with similar likelihood.
 // DetectedLinkageFindings#setLinkedPairs now divides before multiplying by 100.0 instead of after,
 // which (confirmed the same way) lands on exactly 100.0 every time for this case, in addition to the
-// Math.min(100.0, ...) backstop for the general (non-degenerate) case.
+// Math.min(100.0, ...) backstop for the general (non-degenerate) case. The rest of the class pins
+// the relative-frequency normalisation across candidate pairs and getMinimumDifference.
 public class DetectedLinkageFindingsTest {
 
 	// Found via random searches in Python: (x * 100.0) / x landed just over 100.0 for one value and
@@ -65,6 +68,9 @@ public class DetectedLinkageFindingsTest {
 	// the same phenomenon in the other direction, not itself something seen in that file.
 	private static final double FREQUENCY_THAT_ROUNDED_OVER_100_PRE_FIX = 0.43276707357738264;
 	private static final double FREQUENCY_THAT_ROUNDED_UNDER_100_PRE_FIX = 0.7637746213388679;
+
+	// Tolerance for the multi-candidate shares, which are not exactly representable.
+	private static final double DELTA = 1e-9;
 
 	@Test
 	public void testRelativeFrequencyIsExactly100ForASingleCandidatePairThatPreFixRoundedOver() {
@@ -137,8 +143,6 @@ public class DetectedLinkageFindingsTest {
 	// 100.0 above, so forcing the value to 100 for every pair passed the whole module, and
 	// getMinimumDifference was never called.
 
-	private static final double DELTA = 1e-9;
-
 	// Builds a pair on the given loci whose frequency in each listed race is exactly the given
 	// value: hap1 carries 1.0 in every race, so the pair frequency (hap1 * hap2) is hap2's value.
 	// Alleles are made unique by id so that no two pairs in a test are equal.
@@ -184,20 +188,32 @@ public class DetectedLinkageFindingsTest {
 		return findings;
 	}
 
-	private static Double relativeFrequency(HaplotypePair pair, String race) {
+	private static double relativeFrequency(HaplotypePair pair, String race) {
 		for (RelativeFrequencyByRace relativeFrequency : pair.getFrequencies()) {
 			if (race.equals(relativeFrequency.getRace())) {
 				return relativeFrequency.getRelativeFrequency();
 			}
 		}
 
-		return null;
+		throw new AssertionError("pair has no frequency for race " + race);
 	}
 
 	@Test
 	public void testRelativeFrequencyIsEachPairsShareOfTheRacesTotal() {
 		HaplotypePair likelier = pairByRace(1, "CAU", 0.75);
 		HaplotypePair lessLikely = pairByRace(2, "CAU", 0.25);
+
+		findingsFor(likelier, lessLikely);
+
+		assertEquals(75.0, relativeFrequency(likelier, "CAU"), DELTA);
+		assertEquals(25.0, relativeFrequency(lessLikely, "CAU"), DELTA);
+	}
+
+	// Real reference frequencies are tiny, so the total of a race is nowhere near 1.0.
+	@Test
+	public void testRelativeFrequencyIsDividedByTheRacesActualTotal() {
+		HaplotypePair likelier = pairByRace(1, "CAU", 0.0003);
+		HaplotypePair lessLikely = pairByRace(2, "CAU", 0.0001);
 
 		findingsFor(likelier, lessLikely);
 
@@ -232,10 +248,11 @@ public class DetectedLinkageFindingsTest {
 		assertEquals(25.0, relativeFrequency(caucasianOnly, "CAU"), DELTA);
 	}
 
-	// A pair whose two haplotypes share no race has nothing to be a share of: it is dropped from the
-	// findings, and its frequencies play no part in anyone else's total.
+	// A pair whose two haplotypes share no race has no frequency to be a share of: it is dropped from
+	// the findings and the others are normalised as if it were not there. (It cannot leak into their
+	// totals either way: HaplotypePair builds no per-race frequency for it, so there is nothing to add.)
 	@Test
-	public void testPairWithNoRaceInCommonIsDroppedAndIgnoredInTheTotals() {
+	public void testPairWithNoRaceInCommonIsDropped() {
 		HaplotypePair likelier = pairByRace(1, "CAU", 0.75);
 		HaplotypePair lessLikely = pairByRace(2, "CAU", 0.25);
 		HaplotypePair noOverlap = new HaplotypePair(
@@ -257,10 +274,12 @@ public class DetectedLinkageFindingsTest {
 		HaplotypePair twoLocus = pairByRace(1, "CAU", 0.75);
 		HaplotypePair threeLocus = threeLocusPairByRace(2, "CAU", 0.25);
 
-		findingsFor(twoLocus, threeLocus);
+		DetectedLinkageFindings findings = findingsFor(twoLocus, threeLocus);
 
 		assertEquals(100.0, relativeFrequency(twoLocus, "CAU"), DELTA);
 		assertEquals(100.0, relativeFrequency(threeLocus, "CAU"), DELTA);
+		assertEquals(100.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
+		assertEquals(100.0, findings.getMinimumDifference(Locus.A_C_B_LOCI), DELTA);
 	}
 
 	@Test
@@ -297,6 +316,22 @@ public class DetectedLinkageFindingsTest {
 		assertEquals(10.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
 	}
 
+	// 5, 20, 25, 50 -> gaps of 15, 5 and 25: the smallest is neither the first nor the last gap.
+	@Test
+	public void testMinimumDifferenceIsTheSmallestGapWhenItIsInTheMiddle() {
+		DetectedLinkageFindings findings = findingsFor(
+				pairByRace(1, "CAU", 0.05), pairByRace(2, "CAU", 0.20), pairByRace(3, "CAU", 0.25), pairByRace(4, "CAU", 0.50));
+
+		assertEquals(5.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
+	}
+
+	@Test
+	public void testMinimumDifferenceOfTwoEquallyLikelyCandidatesIsZero() {
+		DetectedLinkageFindings findings = findingsFor(pairByRace(1, "CAU", 0.25), pairByRace(2, "CAU", 0.25));
+
+		assertEquals(0.0, findings.getMinimumDifference(Locus.C_B_LOCI), DELTA);
+	}
+
 	@Test
 	public void testMinimumDifferenceOfTwoCandidatesIsTheirGap() {
 		DetectedLinkageFindings findings = findingsFor(pairByRace(1, "CAU", 0.75), pairByRace(2, "CAU", 0.25));
@@ -326,5 +361,42 @@ public class DetectedLinkageFindingsTest {
 		DetectedLinkageFindings findings = findingsFor(pairByRace(1, "CAU", 0.75));
 
 		assertNull(findings.getMinimumDifference(Locus.A_C_B_LOCI));
+	}
+
+	// ---- Reference data that is not stratified by race ----
+
+	private static HaplotypePair pairWithoutRace(int id, String hap1Frequency, String hap2Frequency) {
+		return new HaplotypePair(nonRaceHaplotype(id, 1, hap1Frequency), nonRaceHaplotype(id, 2, hap2Frequency));
+	}
+
+	private static MultiLocusHaplotype nonRaceHaplotype(int id, int copy, String frequency) {
+		ConcurrentHashMap<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
+		HashMap<Locus, List<String>> hlaElementMap = new HashMap<Locus, List<String>>();
+		for (Locus locus : new Locus[] { Locus.HLA_B, Locus.HLA_C }) {
+			String allele = locus.getShortName() + "*" + id + ":0" + copy;
+			alleleMap.put(locus, list(allele));
+			hlaElementMap.put(locus, list(allele));
+		}
+
+		MultiLocusHaplotype haplotype = new MultiLocusHaplotype(alleleMap, new HashMap<Locus, Integer>(), false);
+		haplotype.setLinkage(new DetectedDisequilibriumElement(new BaseDisequilibriumElement(hlaElementMap, frequency, "")));
+
+		return haplotype;
+	}
+
+	// Without race there is nothing to normalise: the pairs are kept as given, flagged as linked, and
+	// carry their own "freq1*freq2" string; there is no relative frequency, hence no minimum difference.
+	@Test
+	public void testPairsWithoutRaceAreKeptAndNotNormalised() {
+		HaplotypePair pair = pairWithoutRace(1, "0.1", "0.2");
+		assertFalse(pair.isByRace());
+
+		DetectedLinkageFindings findings = findingsFor(pair);
+
+		assertEquals(1, findings.getLinkedPairs().size());
+		assertSame(pair, findings.getFirstPair(Locus.C_B_LOCI));
+		assertTrue(findings.hasLinkedPairs(Locus.C_B_LOCI));
+		assertEquals("0.1*0.2", pair.getFrequency());
+		assertNull(findings.getMinimumDifference(Locus.C_B_LOCI));
 	}
 }
