@@ -16,6 +16,8 @@ info:
 tags:
 - name: genotypes
   description: Genotypes to be evaluated
+- name: reference
+  description: Reference data the service can analyze against
 # schemes:
 # - http
 paths:
@@ -136,7 +138,49 @@ paths:
         404:
           description: No job with this id (never existed, or it's been evicted
             -- jobs aren't kept forever, see JobStatus)
+  /hladb-versions:
+    get:
+      tags:
+      - reference
+      summary: List the IMGT/HLA releases that can be used as hladbVersion
+      description: |
+        The releases NMDP publishes (https://hml.nmdp.org/mac/api/imgtHlaReleases) that also
+        have the G-group reference file this service needs; older releases are listed by NMDP
+        but cannot be analyzed against. Leaving hladbVersion blank always means the latest.
+        Cached for a day.
+      operationId: getHladbVersions
+      produces:
+      - application/json
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/HladbVersions'
+        502:
+          description: The release list could not be retrieved (for example, no internet access)
 definitions:
+  HladbVersions:
+    type: object
+    required:
+    - versions
+    properties:
+      versions:
+        type: array
+        description: Newest first
+        items:
+          $ref: '#/definitions/HladbVersion'
+  HladbVersion:
+    type: object
+    required:
+    - version
+    properties:
+      version:
+        type: string
+        example: 3.65.0
+      released:
+        type: string
+        description: Release month, as published by NMDP
+        example: 2026-07
   Genotypes:
     type: object
     required:
