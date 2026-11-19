@@ -23,6 +23,7 @@ package org.nmdp.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -102,6 +103,44 @@ public class GenotypesFileJobIntegrationTest {
 
         assertNotNull(finalStatus, "Job did not reach a terminal phase in time");
         assertEquals("DONE", finalStatus.get("phase"), "Job failed: " + finalStatus.get("error"));
+    }
+
+    // A pinned IMGT/HLA release that doesn't exist (3.2.0 predates the G-group file) used to be
+    // answered by silently analyzing against the bundled old table and reporting success. It must
+    // now fail the job, and say which version was the problem.
+    @Test
+    public void unavailableHladbVersionFailsTheJobWithAClearMessage() throws Exception {
+        uploadFile = Files.createTempFile("genotypes-integration-test-", ".txt").toFile();
+        Files.writeString(uploadFile.toPath(), "sample-1\t" + INLINE_GL_STRING + "\n", StandardCharsets.UTF_8);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new FileSystemResource(uploadFile));
+        body.add("hladbVersion", "3.2.0");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        ResponseEntity<Map> submitResponse = restTemplate.postForEntity(
+                url("/genotypes/file"), new HttpEntity<>(body, headers), Map.class);
+        assertEquals(HttpStatus.ACCEPTED, submitResponse.getStatusCode());
+        String jobId = (String) submitResponse.getBody().get("jobId");
+
+        Map<String, Object> finalStatus = null;
+        for (int i = 0; i < 400; i++) {
+            ResponseEntity<Map> statusResponse = restTemplate.getForEntity(url("/genotypes/jobs/" + jobId), Map.class);
+            String phase = (String) statusResponse.getBody().get("phase");
+            if ("DONE".equals(phase) || "FAILED".equals(phase)) {
+                finalStatus = statusResponse.getBody();
+                break;
+            }
+            Thread.sleep(50);
+        }
+
+        assertNotNull(finalStatus, "Job did not reach a terminal phase in time");
+        assertEquals("FAILED", finalStatus.get("phase"));
+        String error = (String) finalStatus.get("error");
+        assertNotNull(error);
+        assertTrue(error.contains("3.2.0"), "Error should name the version: " + error);
     }
 
     private String url(String path) {

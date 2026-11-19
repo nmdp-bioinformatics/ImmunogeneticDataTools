@@ -47,6 +47,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.dash.valid.ReferenceDataUnavailableException;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.xml.sax.SAXException;
@@ -92,10 +93,20 @@ public class AntigenRecognitionSiteLoader {
 				instanceHladb = hladb;
 			}
 			catch (IOException | ParserConfigurationException | SAXException e) {
-				LOGGER.info("Couldn't find IMGT file in the correct format for hladb: " + hladb);
-				instance = new AntigenRecognitionSiteLoader();
-				instance.init();
+				// Used to fall back to the bundled mmc1.xls here, silently, and (because instanceHladb
+				// was reset to null) retry the download on every single lookup. Both hid the real
+				// problem: the result looked like it used the requested release but did not. The
+				// bundled file is still available on purpose via the explicit ARS_DEFAULT setting.
+				instance = null;
 				instanceHladb = null;
+
+				if (usesDefaultArs) {
+					// The bundled file itself failed to load; that is not an IMGT/HLA download problem.
+					throw new IOException("Could not read the bundled antigen recognition site file", e);
+				}
+
+				throw ReferenceDataUnavailableException.forHladb(hladb == null ? GLStringConstants.LATEST_HLADB : hladb,
+						"antigen recognition site (G-group)", e);
 			}
 		}
 
