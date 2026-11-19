@@ -142,6 +142,11 @@ public class AntigenRecognitionSiteLoader {
 	//    directly off the live network socket -- measured ~24s streamed live vs. ~13s from an
 	//    otherwise-identical already-downloaded local file for this exact file, i.e. roughly
 	//    half the wall-clock cost was network-interleaving overhead, not parsing itself.
+	/** Where the G-group file for an IMGT/HLA release is downloaded from (3.65.0 -> tag 3650). */
+	public static String gGroupFileUrl(String hladb) {
+		return "https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip";
+	}
+
 	public static HashMap<String, HashSet<String>> loadGGroups(String hladb) throws MalformedURLException, IOException, ParserConfigurationException, SAXException {
 		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
 
@@ -150,7 +155,7 @@ public class AntigenRecognitionSiteLoader {
 			return cached;
 		}
 
-		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip");
+		URL url = new URL(gGroupFileUrl(hladb));
 
 		System.out.println(url.toString());
 
