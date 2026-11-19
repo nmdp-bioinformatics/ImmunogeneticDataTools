@@ -280,6 +280,17 @@ public class GenotypesApiController implements GenotypesApi {
         }
     }
 
+    // Blank, missing, or "latest" in any case all mean the latest release. The release is fetched by
+    // git tag/branch name on GitHub, which is case-sensitive ("latest" is a 404, "Latest" is not), and
+    // the UI's own placeholder says "latest", so people type it. An empty string used to build a URL
+    // with an empty path segment and fail the same way.
+    static String resolveHladb(String hladbVersion) {
+        if (hladbVersion == null || hladbVersion.isBlank() || hladbVersion.trim().equalsIgnoreCase(GLStringConstants.LATEST_HLADB)) {
+            return GLStringConstants.LATEST_HLADB;
+        }
+        return hladbVersion.trim();
+    }
+
     // Sets the same System properties AnalyzeGLStrings' CLI sets from its -v/-f flags, so
     // per-request selection here reaches the detection engine the identical way the CLI's
     // already does. hladbVersion genuinely takes effect per request (AntigenRecognitionSiteLoader
@@ -291,7 +302,7 @@ public class GenotypesApiController implements GenotypesApi {
     // already-cached ones). Must be called from inside the ANALYSIS_LOCK critical section.
     private void configure(String hladbVersion, String frequencySet) {
         LinkagesLoader.reset();
-        System.setProperty(GLStringConstants.HLADB_PROPERTY, hladbVersion != null ? hladbVersion : GLStringConstants.LATEST_HLADB);
+        System.setProperty(GLStringConstants.HLADB_PROPERTY, resolveHladb(hladbVersion));
         configureNamedFrequencySet(frequencySet);
     }
 
@@ -326,7 +337,7 @@ public class GenotypesApiController implements GenotypesApi {
     private void configureWithOptionalCustomFrequencies(String hladbVersion, String frequencySet,
             Set<File> frequencyFiles, File allelesFile) {
         LinkagesLoader.reset();
-        System.setProperty(GLStringConstants.HLADB_PROPERTY, hladbVersion != null ? hladbVersion : GLStringConstants.LATEST_HLADB);
+        System.setProperty(GLStringConstants.HLADB_PROPERTY, resolveHladb(hladbVersion));
 
         if (frequencyFiles == null || frequencyFiles.isEmpty()) {
             configureNamedFrequencySet(frequencySet);

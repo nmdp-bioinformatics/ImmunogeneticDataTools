@@ -244,3 +244,16 @@ details pre {
   font-size: 0.8rem;
   text-align: right;
 }
+
+.field-hint {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  background: var(--error-bg);
+  color: var(--error-fg);
+  font-size: 0.9rem;
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--error-fg);
+}
