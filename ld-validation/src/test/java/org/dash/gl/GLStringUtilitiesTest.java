@@ -70,7 +70,10 @@ public class GLStringUtilitiesTest {
 	@BeforeEach
 	public void setUp() {
 		originalHlaDb = System.getProperty("org.dash.hladb");
-		System.setProperty("org.dash.hladb", "3.10.0");
+		// Must be a release that has a G-group file. This used to be 3.10.0, which has none: the ARS
+		// loader silently fell back to the bundled table, so the assertions below ran against that
+		// instead of any IMGT/HLA release. 3.20.0 is real, small, and used by the other loader tests.
+		System.setProperty("org.dash.hladb", "3.20.0");
 	}
 	
     @AfterEach
