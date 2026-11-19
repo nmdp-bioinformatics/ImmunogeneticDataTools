@@ -15,6 +15,7 @@ import java.util.Set;
 
 import jakarta.validation.Valid;
 
+import org.dash.valid.ReferenceDataUnavailableException;
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Sample;
@@ -94,14 +95,24 @@ public class GenotypesApiController implements GenotypesApi {
         synchronized (ANALYSIS_LOCK) {
             configure(genotypes.getHladbVersion(), genotypes.getFrequencySet());
 
-            Samples samples = new Samples();
-            for (Genotype genotype : genotypes.getGenotype()) {
-                LinkageDisequilibriumGenotypeList linkedGLString = GLStringUtilities.inflateGenotypeList(genotype.getId(), genotype.getGlString(), null);
-                Sample sample = LinkageDisequilibriumAnalyzer.detectLinkages(linkedGLString);
-                samples.addSampleItem(populateSwaggerObject(sample));
-            }
+            try {
+                Samples samples = new Samples();
+                for (Genotype genotype : genotypes.getGenotype()) {
+                    LinkageDisequilibriumGenotypeList linkedGLString = GLStringUtilities.inflateGenotypeList(genotype.getId(), genotype.getGlString(), null);
+                    Sample sample = LinkageDisequilibriumAnalyzer.detectLinkages(linkedGLString);
+                    samples.addSampleItem(populateSwaggerObject(sample));
+                }
 
-            return ResponseEntity.ok(samples);
+                return ResponseEntity.ok(samples);
+            }
+            catch (ReferenceDataUnavailableException e) {
+                // An hladbVersion that doesn't exist (file not found) is the caller's input: 400, and the
+                // message says what to change. Any other failure (e.g. offline) is not the caller's
+                // fault: 502. (The async /genotypes/file path reports the same message as the job's error.)
+                HttpStatus status = e.getCause() instanceof java.io.FileNotFoundException
+                        ? HttpStatus.BAD_REQUEST : HttpStatus.BAD_GATEWAY;
+                throw new ResponseStatusException(status, e.getMessage(), e);
+            }
         }
     }
 
