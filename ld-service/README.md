@@ -102,7 +102,7 @@ engine with the `docker compose` command), installed **and running**. No Java or
 
 **Quickest — no clone, no build.** Each release is published as a ready-made image on
 [Docker Hub](https://hub.docker.com/r/nmdpbioinformatics/ld-service) (`nmdpbioinformatics/ld-service`),
-starting with 1.1.0:
+starting with 1.1.0 (multi-platform from 1.1.1):
 
 ```
 docker run --rm -p 127.0.0.1:8080:8080 nmdpbioinformatics/ld-service:latest
@@ -111,9 +111,9 @@ docker run --rm -p 127.0.0.1:8080:8080 nmdpbioinformatics/ld-service:latest
 In Docker Desktop you can instead search for `nmdpbioinformatics/ld-service`, pull it, and run it
 with host port 8080. A first start on a cold machine can take a couple of minutes.
 
-The published image is currently `linux/amd64` only. On an Apple Silicon Mac it runs under
-emulation (slower, and Docker may print a platform warning): add `--platform linux/amd64` to the
-command above to make that explicit.
+The image is published for both `linux/amd64` and `linux/arm64`, so it runs natively on Intel/AMD
+machines and on Apple Silicon Macs. Docker picks the right one automatically. (Release `1.1.0`
+is `linux/amd64` only; on an Apple Silicon Mac, use `1.1.1` or later, or `latest`.)
 
 Then open <http://localhost:8080/>; `Ctrl+C` stops (and removes) it. This version doesn't keep
 the downloaded HLA reference data between runs — use the compose route below for that.
