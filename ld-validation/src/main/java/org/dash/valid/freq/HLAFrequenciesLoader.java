@@ -136,10 +136,14 @@ public class HLAFrequenciesLoader {
 	public static HLAFrequenciesLoader getInstance() {
 		if (instance == null) {
 			Frequencies freq = Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY));
-			instance = new HLAFrequenciesLoader();
-			instance.init(freq);
+			HLAFrequenciesLoader loader = new HLAFrequenciesLoader();
+			// Only publish the loader once init succeeds: init(nmdp-2026) can throw (license not
+			// acknowledged, failed download), and a half-built singleton left behind would keep
+			// answering later calls with no data instead of failing again.
+			loader.init(freq);
+			instance = loader;
 		}
-		
+
 		return instance;
 	}
 	
@@ -207,6 +211,79 @@ public class HLAFrequenciesLoader {
 		}
 	}
 	
+	// Linkages -> the NMDP 2026 release file (Zenodo record 17966993) holding that exact locus
+	// combination. The release has no C~B or DRB345~DRB1~DQB1 file, so those two linkages are
+	// unsupported for nmdp-2026 and skipped with a warning.
+	private static final Map<Linkages, String> NMDP_2026_FILES = new EnumMap<Linkages, String>(Linkages.class);
+	static {
+		NMDP_2026_FILES.put(Linkages.A_B_C, "A~C~B.xlsx");
+		NMDP_2026_FILES.put(Linkages.DRB1_DQB1, "DRB1~DQB1.xlsx");
+		NMDP_2026_FILES.put(Linkages.DRB_DQ, "DRBX~DRB1~DQA1~DQB1.xlsx");
+		NMDP_2026_FILES.put(Linkages.DPA1_DPB1, "DPA1~DPB1.xlsx");
+		NMDP_2026_FILES.put(Linkages.FIVE_LOCUS, "A~C~B~DRB1~DQB1.xlsx");
+		NMDP_2026_FILES.put(Linkages.SIX_LOCUS, "A~C~B~DRBX~DRB1~DQB1.xlsx");
+		NMDP_2026_FILES.put(Linkages.NINE_LOCUS, "A~C~B~DRBX~DRB1~DQA1~DQB1~DPA1~DPB1.xlsx");
+	}
+
+	// Loads the NMDP 2026 release straight from its unmodified xlsx files, fetched on demand
+	// into the per-user cache by Nmdp2026FrequencyCache (never bundled, never converted).
+	private void loadNmdp2026() throws IOException, InvalidFormatException {
+		Nmdp2026FrequencyCache cache = new Nmdp2026FrequencyCache();
+
+		// Same reasoning as NormalizeFrequencyFile: the release's biggest files decompress
+		// past POI's default 100MB single-array cap, and this only ever reads a file this
+		// class itself verified against the release's pinned size and MD5 (a cached file is
+		// re-checked on every use, see Nmdp2026FrequencyCache.ensure).
+		org.apache.poi.util.IOUtils.setByteArrayMaxOverride(Integer.MAX_VALUE);
+
+		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
+			String fileName = NMDP_2026_FILES.get(linkage);
+			if (fileName == null) {
+				LOGGER.warning("The NMDP 2026 frequencies have no file for the " + linkage.getShortName() + " linkage; skipping it.");
+				continue;
+			}
+
+			try (InputStream in = cache.open(fileName)) {
+				this.disequilibriumElementsMap.put(linkage.getLoci(),
+						loadNMDPLinkageReferenceData(in, deriveLocusPositions(fileName)));
+			}
+
+			for (Locus locus : linkage.getLoci()) {
+				if (locus.hasIndividualFrequencies() && !individualLocusFrequencies.containsKey(locus)) {
+					String singleLocusFile = (Locus.HLA_DRB345.equals(locus) ? Locus.HLA_DRBX.getShortName() : locus.getShortName()) + ".xlsx";
+					if (Nmdp2026FrequencyCache.isKnownFile(singleLocusFile)) {
+						try (InputStream in = cache.open(singleLocusFile)) {
+							individualLocusFrequencies.put(locus, loadIndividualLocusFrequency(in));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Derives the per-column Locus order from a release file's own name: "A~C~B.xlsx" ->
+	// [HLA_A, HLA_C, HLA_B]. The 2026 release names each file with its exact column order,
+	// "~"-joined. "DRBX" resolves to its own Locus value in Locus.lookup(), but every
+	// reference-data locus set in this project keys on HLA_DRB345, so DRB3/4/5/X are
+	// normalized to it here (the NormalizeFrequencyFile tool skips this because it only reads
+	// the haplotype text, never the Locus keys).
+	public static Locus[] deriveLocusPositions(String fileName) {
+		int dot = fileName.lastIndexOf('.');
+		String stem = dot > 0 ? fileName.substring(0, dot) : fileName;
+		String[] tokens = stem.split(GLStringConstants.GENE_PHASE_DELIMITER);
+
+		Locus[] positions = new Locus[tokens.length];
+		for (int i = 0; i < tokens.length; i++) {
+			Locus locus = Locus.lookup(tokens[i]);
+			if (locus == null) {
+				throw new IllegalArgumentException("Could not recognize locus token \"" + tokens[i] + "\" in file name \"" + fileName + "\"");
+			}
+			positions[i] = Locus.normalizeLocus(locus);
+		}
+
+		return positions;
+	}
+
 	private void init(Frequencies freq) {
 		try {
 			switch(freq) {
@@ -254,6 +331,9 @@ public class HLAFrequenciesLoader {
 					}
 				}
 				loadIndividualLocusFrequencies(freq);
+				break;
+			case NMDP_2026:
+				loadNmdp2026();
 				break;
 			case NMDP_2007_STD:
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
