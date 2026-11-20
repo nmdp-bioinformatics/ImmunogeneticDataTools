@@ -45,6 +45,9 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/Samples'
+        403:
+          description: frequencySet nmdp-2026 needs a download and acceptNmdp2026Terms
+            was not set; the message carries the license notice
         405:
           description: Invalid input
   /genotypes/file:
@@ -98,6 +101,15 @@ paths:
           is not also supplied.
         required: false
         type: file
+      - in: formData
+        name: acceptNmdp2026Terms
+        description: set true to acknowledge the NMDP 2026 frequencies' CC BY-NC-ND 4.0
+          terms (non-commercial use only, no derivatives, attribution required; Zenodo
+          record 17966993). Required for frequencySet nmdp-2026 whenever its files still
+          have to be downloaded; ignored for every other set. Without it, a request that
+          needs the download fails (the job's error carries the notice) instead of fetching.
+        required: false
+        type: boolean
       responses:
         202:
           description: Accepted -- processing runs asynchronously (real frequency
@@ -206,6 +218,11 @@ definitions:
           licensed dataset this project never redistributes. To use your own
           frequency file(s) instead of a named set, use POST /genotypes/file's
           frequencyFiles field -- this JSON endpoint can't carry file uploads.
+      acceptNmdp2026Terms:
+        type: boolean
+        description: acknowledges the NMDP 2026 frequencies' CC BY-NC-ND 4.0 terms
+          (see POST /genotypes/file). Needed for frequencySet nmdp-2026 when its files
+          are not cached yet; otherwise the response is 403 carrying the notice.
     xml:
       name: genotypes
   Genotype:

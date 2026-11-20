@@ -50,4 +50,7 @@ EXPOSE 8080
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -fsS http://localhost:8080/actuator/health || exit 1
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
+# The nmdp-2026 frequency files, downloaded on first use, are cached under the same volume-mounted
+# directory as the other reference data (docker-compose.yml) so they are not fetched again on every
+# start. Set before $JAVA_OPTS so overriding JAVA_OPTS doesn't lose it.
+ENTRYPOINT ["sh", "-c", "exec java -Dorg.dash.frequencies.cache=/home/app/.dash-cache/nmdp-2026 $JAVA_OPTS -jar /app/app.jar"]

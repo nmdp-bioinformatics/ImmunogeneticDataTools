@@ -55,6 +55,14 @@ public class StaticUiTest {
     }
 
     @Test
+    public void indexOffersNmdp2026WithItsTermsCheckbox() {
+        String html = restTemplate.getForEntity("http://localhost:" + port + "/", String.class).getBody();
+        assertTrue(html.contains("value=\"nmdp-2026\""), "frequency set dropdown should offer nmdp-2026");
+        assertTrue(html.contains("id=\"acceptNmdp2026Terms\""), "the terms checkbox should be on the page");
+        assertTrue(html.contains("CC BY-NC-ND 4.0") && html.contains("10.5281/zenodo.17966993"), "the notice should name the license and DOI");
+    }
+
+    @Test
     public void cssAndJsAssetsAreServed() {
         ResponseEntity<String> css = restTemplate.getForEntity("http://localhost:" + port + "/css/app.css", String.class);
         assertEquals(HttpStatus.OK, css.getStatusCode());

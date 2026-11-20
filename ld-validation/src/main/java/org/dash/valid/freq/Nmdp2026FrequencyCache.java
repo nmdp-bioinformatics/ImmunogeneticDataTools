@@ -99,6 +99,19 @@ public class Nmdp2026FrequencyCache {
 		MANIFEST = Collections.unmodifiableMap(m);
 	}
 
+	/**
+	 * A download is needed but the CC BY-NC-ND terms have not been acknowledged. A distinct type
+	 * (still an {@link IllegalStateException}) so a service can answer 403 instead of a generic
+	 * failure.
+	 */
+	public static class LicenseNotAcceptedException extends IllegalStateException {
+		private static final long serialVersionUID = 1L;
+
+		public LicenseNotAcceptedException(String message) {
+			super(message);
+		}
+	}
+
 	private final Path cacheDirectory;
 	private final URI filesBase;
 	private final Map<String, Object[]> manifest;
@@ -189,7 +202,7 @@ public class Nmdp2026FrequencyCache {
 		}
 
 		if (!licenseAccepted) {
-			throw new IllegalStateException(licenseNotice(fileName, present));
+			throw new LicenseNotAcceptedException(licenseNotice(fileName, present));
 		}
 
 		try {

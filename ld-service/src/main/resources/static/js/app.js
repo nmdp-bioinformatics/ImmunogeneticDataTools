@@ -26,6 +26,8 @@
 
   // Populated once a job reaches DONE; used only by the download button.
   let lastResult = null;
+  // Whether the in-flight job asked for nmdp-2026 (the controls may change while it runs).
+  let lastSubmittedNmdp2026 = false;
 
   function toggleInputMode() {
     const isPaste = pasteRadio.checked;
@@ -35,7 +37,22 @@
   pasteRadio.addEventListener("change", toggleInputMode);
   fileRadio.addEventListener("change", toggleInputMode);
 
+  const nmdp2026Terms = document.getElementById("nmdp2026-terms");
+  const acceptNmdp2026Terms = document.getElementById("acceptNmdp2026Terms");
+
+  // The notice shows only when it can matter: nmdp-2026 chosen and not overridden by uploaded
+  // files. The server enforces the acknowledgement itself; this is the page's half.
+  function usesNmdp2026() {
+    return frequencySet.value === "nmdp-2026" && !(useCustomFrequencies.checked && frequencyFilesInput.files.length);
+  }
+  function toggleNmdp2026Terms() {
+    nmdp2026Terms.hidden = !usesNmdp2026();
+  }
+  frequencySet.addEventListener("change", toggleNmdp2026Terms);
+  frequencyFilesInput.addEventListener("change", toggleNmdp2026Terms);
+
   useCustomFrequencies.addEventListener("change", function () {
+    toggleNmdp2026Terms();
     customFrequenciesDiv.hidden = !useCustomFrequencies.checked;
   });
 
@@ -150,6 +167,12 @@
       }
     }
 
+    if (usesNmdp2026() && !acceptNmdp2026Terms.checked) {
+      showError("Tick \u201cI have read the terms\u201d to use the nmdp-2026 frequencies; they are downloaded from NMDP\u2019s Zenodo record under CC BY-NC-ND 4.0.");
+      nmdp2026Terms.hidden = false;
+      return;
+    }
+
     resetOutput();
 
     let fileBlob;
@@ -189,8 +212,12 @@
       }
     } else if (frequencySet.value) {
       formData.append("frequencySet", frequencySet.value);
+      if (usesNmdp2026()) {
+        formData.append("acceptNmdp2026Terms", "true");
+      }
     }
 
+    lastSubmittedNmdp2026 = usesNmdp2026();
     submitBtn.disabled = true;
     try {
       const response = await fetch("/genotypes/file", { method: "POST", body: formData });
@@ -253,7 +280,9 @@
       progressBar.removeAttribute("value");
       progressCount.textContent = "";
     } else if (status.phase === "LOADING_REFERENCE_DATA") {
-      progressPhase.textContent = "Loading reference data… (large custom frequency files can take several minutes)";
+      progressPhase.textContent = lastSubmittedNmdp2026
+        ? "Preparing frequencies… the first run downloads the NMDP 2026 files (up to ~181 MB) and loads them into memory; this can take several minutes"
+        : "Loading reference data… (large custom frequency files can take several minutes)";
       progressBar.removeAttribute("value");
       progressCount.textContent = "";
     } else if (status.phase === "ANALYZING_GENOTYPES") {

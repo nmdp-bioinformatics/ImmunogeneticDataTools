@@ -21,6 +21,7 @@ import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Sample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
+import org.dash.valid.freq.Nmdp2026FrequencyCache;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
@@ -95,7 +96,7 @@ public class GenotypesApiController implements GenotypesApi {
         synchronized (ANALYSIS_LOCK) {
             configure(genotypes.getHladbVersion(), genotypes.getFrequencySet());
 
-            try {
+            try (TermsScope terms = TermsScope.open(genotypes.getAcceptNmdp2026Terms())) {
                 Samples samples = new Samples();
                 for (Genotype genotype : genotypes.getGenotype()) {
                     LinkageDisequilibriumGenotypeList linkedGLString = GLStringUtilities.inflateGenotypeList(genotype.getId(), genotype.getGlString(), null);
@@ -104,6 +105,9 @@ public class GenotypesApiController implements GenotypesApi {
                 }
 
                 return ResponseEntity.ok(samples);
+            }
+            catch (Nmdp2026FrequencyCache.LicenseNotAcceptedException e) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
             }
             catch (ReferenceDataUnavailableException e) {
                 // An hladbVersion that doesn't exist (file not found) is the caller's input: 400, and the
@@ -139,7 +143,7 @@ public class GenotypesApiController implements GenotypesApi {
     // immune to that real request-scoped cleanup.
     @Override
     public ResponseEntity<JobReference> submitGenotypesFile(MultipartFile file, String hladbVersion, String frequencySet,
-            List<MultipartFile> frequencyFiles, MultipartFile allelesFile) {
+            List<MultipartFile> frequencyFiles, MultipartFile allelesFile, Boolean acceptNmdp2026Terms) {
         if (frequencyFiles != null) {
             for (MultipartFile frequencyFile : frequencyFiles) {
                 validateFrequencyFileLooksReasonable(frequencyFile);
@@ -166,7 +170,7 @@ public class GenotypesApiController implements GenotypesApi {
         File jobAllelesFile = ownedAllelesFile;
         Job job = jobRegistry.submit(j -> {
             try {
-                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile);
+                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile, acceptNmdp2026Terms);
             }
             finally {
                 for (File tempFile : ownedTempFiles) {
@@ -197,18 +201,58 @@ public class GenotypesApiController implements GenotypesApi {
     // ANALYSIS_LOCK submitGenotypes uses, since both paths mutate the same process-wide
     // hladb/frequency-set configuration.
     private List<Sample> runGenotypesFileJob(Job job, File inputFile, String originalFilename, String hladbVersion, String frequencySet,
-            Set<File> frequencyFiles, File allelesFile) throws IOException {
+            Set<File> frequencyFiles, File allelesFile, Boolean acceptNmdp2026Terms) throws IOException {
         synchronized (ANALYSIS_LOCK) {
-            job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
-            configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
+            // Held across both configuring and analyzing: the named frequency set is loaded
+            // lazily, on first use during analysis, and that is where nmdp-2026 downloads.
+            try (TermsScope terms = TermsScope.open(acceptNmdp2026Terms)) {
+                job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
+                configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
+                // A named set is otherwise loaded lazily by the first genotype's analysis, which
+                // would make a minutes-long first fetch/parse (nmdp-2026) look like "analyzing 0
+                // of N". A no-op when the set is already loaded or came from uploaded files.
+                HLAFrequenciesLoader.getInstance();
 
-            job.setPhase(Job.Phase.ANALYZING_GENOTYPES);
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StandardCharsets.UTF_8))) {
-                String name = originalFilename != null ? originalFilename : "upload";
-                // Reuses the exact same parsing + analysis path analyze-gl-strings' CLI uses for
-                // its own batch input files, rather than reimplementing the tab-delimited
-                // "id<TAB>glString" format here.
-                return LinkageDisequilibriumAnalyzer.analyzeGLStringFile(name, reader, job::updateProgress);
+                job.setPhase(Job.Phase.ANALYZING_GENOTYPES);
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StandardCharsets.UTF_8))) {
+                    String name = originalFilename != null ? originalFilename : "upload";
+                    // Reuses the exact same parsing + analysis path analyze-gl-strings' CLI uses for
+                    // its own batch input files, rather than reimplementing the tab-delimited
+                    // "id<TAB>glString" format here.
+                    return LinkageDisequilibriumAnalyzer.analyzeGLStringFile(name, reader, job::updateProgress);
+                }
+            }
+        }
+    }
+
+    // Per-request acknowledgement of the NMDP 2026 terms. Nmdp2026FrequencyCache only downloads
+    // when the process-wide property org.dash.accept.license is set (what the CLI's
+    // --accept-license sets); this sets it for just this request's critical section (callers
+    // hold ANALYSIS_LOCK) and restores what was there before. So the gate is enforced here on
+    // the server, whatever the page does, and an operator who deliberately starts the service
+    // with -Dorg.dash.accept.license=nmdp-2026 keeps that behavior for every request.
+    private static final class TermsScope implements AutoCloseable {
+        private final String previous;
+
+        private TermsScope(String previous) {
+            this.previous = previous;
+        }
+
+        static TermsScope open(Boolean accepted) {
+            String previous = System.getProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY);
+            if (Boolean.TRUE.equals(accepted)) {
+                System.setProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY, Nmdp2026FrequencyCache.LICENSE_ACCEPTANCE_VALUE);
+            }
+            return new TermsScope(previous);
+        }
+
+        @Override
+        public void close() {
+            if (previous == null) {
+                System.clearProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY);
+            }
+            else {
+                System.setProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY, previous);
             }
         }
     }

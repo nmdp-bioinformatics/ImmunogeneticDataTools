@@ -93,6 +93,8 @@ separate setup. It supports:
 - Selecting `hladbVersion`/`frequencySet`, or uploading your own `frequencyFiles`/`allelesFile`.
   The version field suggests the usable releases as you type and checks the value when you leave
   the field (and again on submit), offering the nearest matches for a release that doesn't exist
+- The `nmdp-2026` frequency set (see "The `nmdp-2026` frequencies" below), with its license
+  notice and an "I have read the terms" checkbox
 - Live progress while the job runs (an indeterminate bar while reference data loads, a real
   percentage during genotype analysis)
 - Results per sample: an anomaly/clean badge, warnings, haplotype-pair frequency tables, and
@@ -202,6 +204,32 @@ java -Xmx6g -jar ld-service/target/ld-service-1.1.2.jar
 (`-Xmx6g` is the maximum memory the service may use — see "Heap size" below. Note that a plain
 `java` command does not read a `JAVA_OPTS` environment variable; only the Docker setup does.)
 Stop it with `Ctrl+C`.
+
+### The `nmdp-2026` frequencies
+
+`frequencySet=nmdp-2026` (also in the UI's dropdown) uses NMDP's 2026 release (Zenodo record
+17966993, [doi:10.5281/zenodo.17966993](https://doi.org/10.5281/zenodo.17966993)). It is owned by
+NMDP and licensed **CC BY-NC-ND 4.0** (non-commercial, no derivatives, attribution), so it is never
+bundled: the service downloads the unmodified `.xlsx` files from Zenodo on first use, checks each
+against its pinned size and MD5, caches the originals, and reads them in memory. It never writes a
+converted copy.
+
+- **Terms are enforced on the server.** A request that needs a download must carry
+  `acceptNmdp2026Terms=true` (the UI sends it from its checkbox). Without it, `POST /genotypes`
+  answers `403` and a `/genotypes/file` job ends `FAILED`, both with the license notice. Someone
+  who deliberately starts the service with `-Dorg.dash.accept.license=nmdp-2026` accepts for every
+  request. Files already cached need no download.
+- **First use is slow.** The nine-locus file is ~181 MB and about 6 GB of heap once loaded (see
+  "Heap size"); the UI shows "Preparing frequencies" while the job loads it.
+- **Concurrent requests share one download.** Analysis is serialized (one request at a time), so a
+  second request that needs the same files waits, then finds them cached. There is never a second
+  download in flight.
+- **It needs outbound network and a persistent cache.** The Docker image caches under
+  `/home/app/.dash-cache/nmdp-2026` (`org.dash.frequencies.cache`), inside the volume
+  `docker-compose.yml` mounts. A plain `docker run` without a volume re-downloads on every start:
+  add `-v ld-cache:/home/app/.dash-cache`. Outside Docker the default is your per-user cache directory.
+- Open question: whether fetching server-side for a *hosted* instance counts as distributing the
+  data to its viewers. This service is scoped as a local tool; confirm with NMDP before hosting one.
 
 ### Heap size
 
