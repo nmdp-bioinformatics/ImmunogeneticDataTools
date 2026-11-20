@@ -37,9 +37,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.freq.HLAFrequenciesLoader;
+import org.dash.valid.freq.Nmdp2026FrequencyCache;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -291,5 +294,67 @@ public class GenotypesApiControllerTest {
     public void getGenotypesJobReturns404ForUnknownJobId() throws Exception {
         mockMvc.perform(get("/genotypes/jobs/does-not-exist"))
             .andExpect(status().isNotFound());
+    }
+
+    // The nmdp-2026 terms gate is enforced here on the server, not just by the page. An empty
+    // temporary cache directory guarantees a download would be needed (so a developer's real
+    // cache can't make these pass by accident), and without acceptNmdp2026Terms nothing is
+    // fetched: the sync endpoint answers 403 and the async job FAILs, both carrying the notice.
+    private <T> T withEmptyNmdp2026Cache(java.util.concurrent.Callable<T> body) throws Exception {
+        Path empty = Files.createTempDirectory("nmdp2026-empty-cache");
+        String previous = System.getProperty(Nmdp2026FrequencyCache.CACHE_PROPERTY);
+        System.setProperty(Nmdp2026FrequencyCache.CACHE_PROPERTY, empty.toString());
+        try {
+            return body.call();
+        }
+        finally {
+            if (previous == null) {
+                System.clearProperty(Nmdp2026FrequencyCache.CACHE_PROPERTY);
+            }
+            else {
+                System.setProperty(Nmdp2026FrequencyCache.CACHE_PROPERTY, previous);
+            }
+            HLAFrequenciesLoader.reset();
+            Files.deleteIfExists(empty);
+        }
+    }
+
+    @Test
+    public void submitGenotypesRefusesNmdp2026WithoutAcceptingTheTerms() throws Exception {
+        String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],\"frequencySet\":\"nmdp-2026\"}";
+
+        withEmptyNmdp2026Cache(() -> {
+            mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isForbidden());
+            return null;
+        });
+
+        assertEquals(null, System.getProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY),
+                "a refused request must not leave the acceptance property set");
+    }
+
+    @Test
+    public void submitGenotypesFileFailsNmdp2026JobWithTheNoticeWhenTermsNotAccepted() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+
+        JsonNode finalStatus = withEmptyNmdp2026Cache(() -> {
+            var request = multipart("/genotypes/file").file(file).param("frequencySet", "nmdp-2026");
+            MvcResult submitted = mockMvc.perform(request).andExpect(status().isAccepted()).andReturn();
+            String jobId = objectMapper.readTree(submitted.getResponse().getContentAsString()).get("jobId").asText();
+            for (int i = 0; i < 300; i++) {
+                JsonNode status = objectMapper.readTree(mockMvc.perform(get("/genotypes/jobs/" + jobId)).andReturn().getResponse().getContentAsString());
+                String phase = status.get("phase").asText();
+                if (phase.equals("DONE") || phase.equals("FAILED")) {
+                    return status;
+                }
+                Thread.sleep(200);
+            }
+            return fail("Job did not reach a terminal phase in time");
+        });
+
+        assertEquals("FAILED", finalStatus.get("phase").asText(), finalStatus.toString());
+        assertTrue(finalStatus.get("error").asText().contains("CC BY-NC-ND 4.0"), finalStatus.toString());
+        assertEquals(null, System.getProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY));
     }
 }

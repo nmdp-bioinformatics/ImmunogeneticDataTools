@@ -257,3 +257,17 @@ details pre {
 input[aria-invalid="true"] {
   border-color: var(--error-fg);
 }
+
+.notice {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--warning-fg);
+  border-radius: 6px;
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  font-size: 0.9rem;
+}
+
+.notice a {
+  color: inherit;
+}
