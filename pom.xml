@@ -41,7 +41,6 @@
   <url>https://github.com/mpresteg/ImmunogeneticDataTools</url>
 
   <modules>
-    <module>hla-report-extraction</module>
     <module>ld-validation</module>
     <module>ld-tools</module>
     <module>ld-service</module>
