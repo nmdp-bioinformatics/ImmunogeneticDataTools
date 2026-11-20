@@ -36,6 +36,7 @@ import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Sample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
+import org.dash.valid.freq.Nmdp2026FrequencyCache;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.handler.CommonWellDocumentedFileHandler;
 import org.dash.valid.handler.HaplotypePairFileHandler;
@@ -213,12 +214,13 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         FileArgument inputFile = new FileArgument("i", "input-file", "input file, default stdin", false);
         FileArgument outputFile   = new FileArgument("o", "output-location", "specify an output file or an existing directory, default stdout", false);
         StringArgument hladb = new StringArgument("v", "hladb-version", "HLA DB version (e.g. 3.19.0), default latest", false);
-        StringArgument freq = new StringArgument("f", "frequencies", "Frequency Set (e.g. nmdp, nmdp-2007, wiki), default nmdp-2007", false);
+        StringArgument freq = new StringArgument("f", "frequencies", "Frequency Set (e.g. nmdp, nmdp-2007, nmdp-2026, wiki), default nmdp-2007", false);
         BooleanArgument warnings = new BooleanArgument("w", "warnings-only", "Only log warnings, default all GL String output", false);
         FileSetArgument frequencyFiles = new FileSetArgument("q", "frequency-file(s)", "frequency input files (comma separated), default nmdp-2007 five locus", false);
         FileArgument allelesFile = new FileArgument("l", "allele-file", "alleles known to have frequencies, default none", false);
+        BooleanArgument acceptLicense = new BooleanArgument("x", "accept-license", "accept the NMDP 2026 frequencies' CC BY-NC-ND 4.0 terms so they can be downloaded (nmdp-2026 only)", false);
 
-        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFiles, allelesFile);
+        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFiles, allelesFile, acceptLicense);
         CommandLine commandLine = new CommandLine(args);
 
         AnalyzeGLStrings analyzeGLStrings = null;
@@ -232,6 +234,10 @@ public class AnalyzeGLStrings implements Callable<Integer> {
             if (help.wasFound()) {
                 Usage.usage(About.header(), USAGE, null, commandLine, arguments, System.out);
                 System.exit(0);
+            }
+
+            if (acceptLicense.wasFound()) {
+                System.setProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY, Nmdp2026FrequencyCache.LICENSE_ACCEPTANCE_VALUE);
             }
 
             analyzeGLStrings = new AnalyzeGLStrings(inputFile.getValue(), outputFile.getValue(), hladb.getValue(), freq.getValue(), warnings.getValue(), frequencyFiles.getValue(), allelesFile.getValue());

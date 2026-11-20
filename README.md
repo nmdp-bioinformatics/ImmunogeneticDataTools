@@ -65,7 +65,7 @@ If you prefer to compile / package the software from source, follow these instru
 *Properties:*
 
 + **Name:**  org.dash.frequencies
-+ **Value(s):**  wiki, nmdp-2007 (nmdp-2007-std), nmdp (nmdp-std)
++ **Value(s):**  wiki, nmdp-2007 (nmdp-2007-std), nmdp (nmdp-std), nmdp-2026
 + **Description:**  Specifies the desired frequency set
 + **Note:**  The 2011 NMDP Frequencies (if specifying 'nmdp') are associated with a license agreement, specifying the allowance of use for research, but disallowing re-distribution.  If you wish to use the 2011 NMDP Frequencies, you'll need to install them in your local repository by following the frequency install instructions at the bottom of this file.
 
@@ -126,6 +126,18 @@ If you prefer to compile / package the software from source, follow these instru
 + Carefully read and accept the license agreement
 + Grab the following files and install at src/main/resources/frequencies/nmdp
 + *A.xlsx, A\~C\~B.xlsx, C.xlsx, B.xlsx, C\~B.xlsx, DRB3-4-5.xlsx, DRB1.xlsx, DQB1.xlsx, DRB3-4-5\~DRB1\~DQB1.xlsx*
+
+*2026 NMDP Frequency Release (nmdp-2026):*
+
++ NMDP's "Classical HLA Allele and Haplotype Frequency Estimates in US Populations" ([doi:10.5281/zenodo.17966993](https://doi.org/10.5281/zenodo.17966993), Zenodo version 1.0.0) is owned by NMDP and licensed [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/): non-commercial use only, no derivatives, attribution required. **It is not bundled with this software.**
++ Select it with `-f nmdp-2026` (or `-Dorg.dash.frequencies=nmdp-2026`). The first time a file is needed, the software downloads that one file, unmodified, from Zenodo into a per-user cache directory, checks its size and MD5 against the published release, and reads it directly -- no converted copy is written anywhere.
++ Downloading requires you to acknowledge the terms: without `--accept-license` (or `-Dorg.dash.accept.license=nmdp-2026`) the run stops and prints the notice instead. Already-cached files need no flag.
+  ```
+  bin/analyze-gl-strings -i input.txt -o output/ -f nmdp-2026 --accept-license
+  ```
++ Cache location: `~/Library/Caches/immunogenetic-data-tools/nmdp-2026` (macOS), `$XDG_CACHE_HOME` or `~/.cache/immunogenetic-data-tools/nmdp-2026` (Linux), `%LOCALAPPDATA%\immunogenetic-data-tools\nmdp-2026` (Windows); override with `-Dorg.dash.frequencies.cache=<dir>`. It is deliberately not the working directory, so the files can't be committed by accident. Offline? Download the file yourself from the Zenodo record and put it, unmodified, in that directory.
++ The default linkage is `five_loc` (`A~C~B~DRB1~DQB1.xlsx`, ~53 MB). Other linkages: `acb`, `drb1_dqb1`, `drb_dq`, `dpa1_dpb1`, `six_loc` and `nine_loc` (`-Dorg.dash.linkages=nine_loc`; the ~181 MB file needs about `-Xmx6g`, see above). The release has no `C~B` or `DRB345~DRB1~DQB1` file, so `cb` and `drb_dqb` are skipped with a warning.
++ Attribution is required by the license: if you use these frequencies in a publication, cite the Zenodo record (Gragert, Madbouly, Bashyal, Wadsworth, Kempenich, Bolon and Maiers; the DOI above).
 
 *2011 NMDP Frequency Re-Formatting Instructions:*
 

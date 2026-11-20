@@ -77,6 +77,11 @@ public enum Linkages {
 		else if (Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).equals(Frequencies.NMDP_STD)) {
 			return EnumSet.of(Linkages.FIVE_LOCUS);
 		}
+		// Five-locus (A~C~B~DRB1~DQB1, ~53 MB) rather than nine-locus (~181 MB, ~6 GB heap once
+		// loaded): same default as every other NMDP set, nine_loc stays an explicit opt-in.
+		else if (Frequencies.lookup(System.getProperty(Frequencies.FREQUENCIES_PROPERTY)).equals(Frequencies.NMDP_2026)) {
+			return EnumSet.of(Linkages.FIVE_LOCUS);
+		}
 		else {
 			return EnumSet.of(Linkages.B_C, Linkages.DRB_DQ);
 		}
