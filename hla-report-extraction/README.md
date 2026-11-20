@@ -18,7 +18,7 @@ wherever you run the command from, not relative to this module directory —
 this one points at a real fixture so it's copy-pasteable as-is):
 
 ```
-mvn -pl hla-report-extraction package
+mvn -pl hla-report-extraction -am package
 hla-report-extraction/target/appassembler/bin/detect-hla-report hla-report-extraction/src/test/resources/sample-reports/versiti-hla-c-high-resolution-sample.pdf
 ```
 
