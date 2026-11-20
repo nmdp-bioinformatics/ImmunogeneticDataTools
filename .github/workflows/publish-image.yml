@@ -10,6 +10,11 @@
 # success for the exact commit being published, and refuses to publish if it failed. CircleCI
 # is a separate system, so without this gate nothing stops a tag on a commit whose build is red.
 #
+# After a tag publish succeeds, a second job creates the GitHub Release for that tag (with
+# generated notes; a tag with a "-suffix" is marked a pre-release). It runs only on tag pushes,
+# only after the image is published, and skips if the Release already exists, so a re-run or a
+# hand-written Release is never overwritten. It is the only job with write access.
+#
 # The image is nmdpbioinformatics/ld-service on Docker Hub. A fork can publish to its own
 # namespace by setting the repository variable DOCKERHUB_IMAGE (e.g. <user>/ld-service-test).
 # Publishing needs two Actions secrets, DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (a Docker Hub
@@ -225,3 +230,32 @@ jobs:
         run: |
           first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
           docker buildx imagetools inspect "$first_tag"
+
+  # Separate job so that `contents: write` is held only by these few lines, which run no
+  # repository code and use no secrets beyond the workflow's own token.
+  release:
+    needs: publish
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create the GitHub Release (if there isn't one)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          # Only a genuine "release not found" may fall through to creating one; any other
+          # failure (network, auth, 5xx) should fail the job rather than be mistaken for it.
+          if out=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" 2>&1); then
+            echo "A Release for $TAG already exists; leaving it alone."
+            exit 0
+          elif ! grep -qi "release not found" <<<"$out"; then
+            echo "::error::Could not check for an existing Release: $out"
+            exit 1
+          fi
+          flags=()
+          case "$TAG" in *-*) flags+=(--prerelease) ;; esac
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "${TAG#v}" \
+            --generate-notes --verify-tag "${flags[@]}"
