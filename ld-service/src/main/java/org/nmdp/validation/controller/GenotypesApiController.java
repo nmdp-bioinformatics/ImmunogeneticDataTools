@@ -205,6 +205,7 @@ public class GenotypesApiController implements GenotypesApi {
         synchronized (ANALYSIS_LOCK) {
             // Held across both configuring and analyzing: the named frequency set is loaded
             // lazily, on first use during analysis, and that is where nmdp-2026 downloads.
+            Nmdp2026FrequencyCache.setDownloadListener(job::updateDownload);
             try (TermsScope terms = TermsScope.open(acceptNmdp2026Terms)) {
                 job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
                 configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
@@ -221,6 +222,10 @@ public class GenotypesApiController implements GenotypesApi {
                     // "id<TAB>glString" format here.
                     return LinkageDisequilibriumAnalyzer.analyzeGLStringFile(name, reader, job::updateProgress);
                 }
+            }
+            finally {
+                Nmdp2026FrequencyCache.setDownloadListener(null);
+                job.clearDownload();
             }
         }
     }
@@ -261,6 +266,12 @@ public class GenotypesApiController implements GenotypesApi {
         JobStatus status = new JobStatus();
         status.setJobId(job.getId());
         status.setPhase(JobStatus.PhaseEnum.valueOf(job.getPhase().name()));
+
+        if (job.getDownloadFile() != null) {
+            status.setDownloadFile(job.getDownloadFile());
+            status.setDownloadedBytes(job.getDownloadedBytes());
+            status.setDownloadTotalBytes(job.getDownloadTotalBytes());
+        }
 
         if (job.getPhase() == Job.Phase.ANALYZING_GENOTYPES) {
             status.setProcessed(job.getProcessed());

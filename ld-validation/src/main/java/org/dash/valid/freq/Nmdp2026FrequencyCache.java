@@ -112,6 +112,20 @@ public class Nmdp2026FrequencyCache {
 		}
 	}
 
+	/** Told how far along a download is, so a service can show progress. */
+	public interface DownloadListener {
+		/** Called at the start (0 bytes), about every 1% or 250 ms while streaming, and at the end. */
+		void onProgress(String fileName, long bytesDownloaded, long totalBytes);
+	}
+
+	// Process-wide rather than per instance: HLAFrequenciesLoader creates its own cache, and ld-service
+	// runs one analysis at a time, so whoever is loading sets this for the duration and clears it.
+	private static volatile DownloadListener downloadListener;
+
+	public static void setDownloadListener(DownloadListener listener) {
+		downloadListener = listener;
+	}
+
 	private final Path cacheDirectory;
 	private final URI filesBase;
 	private final Map<String, Object[]> manifest;
@@ -247,6 +261,12 @@ public class Nmdp2026FrequencyCache {
 						+ cacheDirectory);
 			}
 
+			DownloadListener listener = downloadListener;
+			if (listener != null) {
+				listener.onProgress(fileName, 0, expectedSize);
+			}
+			long lastReportedAt = System.nanoTime();
+			long lastReportedSize = 0;
 			MessageDigest md5 = MessageDigest.getInstance("MD5");
 			long size = 0;
 			try (InputStream in = response.body();
@@ -255,6 +275,12 @@ public class Nmdp2026FrequencyCache {
 				int read;
 				while ((read = in.read(buffer)) != -1) {
 					size += read;
+					long now = System.nanoTime();
+					if (listener != null && (size - lastReportedSize >= expectedSize / 100 || now - lastReportedAt >= 250_000_000L)) {
+						listener.onProgress(fileName, size, expectedSize);
+						lastReportedSize = size;
+						lastReportedAt = now;
+					}
 					if (size > expectedSize) {
 						throw new IllegalStateException("Downloaded " + fileName + " is larger than the expected " + expectedSize
 								+ " bytes; stopped and discarded it.");
@@ -271,6 +297,9 @@ public class Nmdp2026FrequencyCache {
 			}
 
 			Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+			if (listener != null) {
+				listener.onProgress(fileName, expectedSize, expectedSize);
+			}
 		}
 		catch (NoSuchAlgorithmException e) {
 			throw new IllegalStateException("MD5 is not available in this JVM", e);

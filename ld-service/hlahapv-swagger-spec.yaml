@@ -374,6 +374,18 @@ definitions:
       percent:
         type: integer
         description: only meaningful during ANALYZING_GENOTYPES
+      downloadFile:
+        type: string
+        description: only present during LOADING_REFERENCE_DATA while a reference file (the
+          nmdp-2026 frequencies) is being downloaded
+      downloadedBytes:
+        type: integer
+        format: int64
+        description: bytes of downloadFile received so far
+      downloadTotalBytes:
+        type: integer
+        format: int64
+        description: expected size of downloadFile
       result:
         $ref: '#/definitions/Samples'
       error:
