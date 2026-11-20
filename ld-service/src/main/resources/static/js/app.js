@@ -47,6 +47,76 @@
     lastResult = null;
   }
 
+  // The IMGT/HLA releases the service can actually use (GET /hladb-versions), newest first. null
+  // means the list couldn't be fetched (offline, endpoint unavailable): the field is then not
+  // checked here, and the server still rejects a bad version with a clear message.
+  let knownVersions = null;
+  let lastBlockedVersion = null;
+  const hladbHint = document.getElementById("hladbVersionHint");
+  const hladbList = document.getElementById("hladbVersionList");
+
+  async function loadHladbVersions() {
+    try {
+      const response = await fetch("/hladb-versions");
+      if (!response.ok) {
+        return;
+      }
+      const body = await response.json();
+      const versions = body.versions || [];
+      knownVersions = versions.map(function (v) { return v.version; });
+      hladbList.innerHTML = "";
+      versions.forEach(function (v) {
+        const option = document.createElement("option");
+        option.value = v.version;
+        if (v.released) {
+          option.label = v.version + " (" + v.released + ")";
+        }
+        hladbList.appendChild(option);
+      });
+      // The user may have typed before the list arrived.
+      checkHladbVersion();
+    } catch (e) {
+      // Leave knownVersions null: no client-side check.
+    }
+  }
+
+  function clearHladbHint() {
+    hladbHint.hidden = true;
+    hladbHint.textContent = "";
+    hladbVersion.removeAttribute("aria-invalid");
+  }
+
+  // True when the field is fine (blank or "latest" mean the latest release, or the list isn't
+  // known, or the value is a listed release); otherwise shows what to do and returns false.
+  function checkHladbVersion() {
+    clearHladbHint();
+    const typed = hladbVersion.value.trim();
+    if (!typed || typed.toLowerCase() === "latest" || !knownVersions || knownVersions.indexOf(typed) !== -1) {
+      return true;
+    }
+
+    // Suggest releases that share the start of what was typed ("3.2.0" -> "3.2" -> 3.20.0, 3.21.0...),
+    // else the newest ones.
+    const prefix = typed.replace(/(\.0)+$/, "");
+    // knownVersions is newest first; prefix matches are shown oldest first so "3.2" offers 3.20.0
+    // (the likely intent) before 3.29.0.
+    let suggestions = knownVersions.filter(function (v) { return v.startsWith(prefix); }).reverse();
+    if (!suggestions.length) {
+      suggestions = knownVersions;
+    }
+    suggestions = suggestions.slice(0, 3);
+
+    hladbHint.textContent = "\u201c" + typed + "\u201d isn\u2019t an IMGT/HLA release this service can use. "
+      + "Did you mean " + suggestions.join(", ") + "? Or clear the field to use the latest.";
+    hladbHint.hidden = false;
+    hladbVersion.setAttribute("aria-invalid", "true");
+    return false;
+  }
+
+  hladbVersion.addEventListener("blur", checkHladbVersion);
+  hladbVersion.addEventListener("input", clearHladbHint);
+  loadHladbVersions();
+
   function showError(message) {
     resetOutput();
     errorSection.hidden = false;
@@ -68,6 +138,18 @@
   // progress-tracked can't regress that, at the minor cost of a poll cycle even for a trivial
   // single-genotype submission.
   async function submitJob() {
+    // The list is cached server-side for a day, so a release published since could look unknown
+    // here. Block the first submit with the hint, but let the same value through if the user submits
+    // again: the server remains the authority and rejects a genuinely bad one with a clear message.
+    if (!checkHladbVersion()) {
+      if (hladbVersion.value.trim() !== lastBlockedVersion) {
+        lastBlockedVersion = hladbVersion.value.trim();
+        hladbHint.textContent += " Submit again to try it anyway.";
+        hladbVersion.focus();
+        return;
+      }
+    }
+
     resetOutput();
 
     let fileBlob;

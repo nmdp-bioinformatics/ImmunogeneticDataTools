@@ -47,6 +47,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.dash.valid.ReferenceDataUnavailableException;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.xml.sax.SAXException;
@@ -92,10 +93,20 @@ public class AntigenRecognitionSiteLoader {
 				instanceHladb = hladb;
 			}
 			catch (IOException | ParserConfigurationException | SAXException e) {
-				LOGGER.info("Couldn't find IMGT file in the correct format for hladb: " + hladb);
-				instance = new AntigenRecognitionSiteLoader();
-				instance.init();
+				// Used to fall back to the bundled mmc1.xls here, silently, and (because instanceHladb
+				// was reset to null) retry the download on every single lookup. Both hid the real
+				// problem: the result looked like it used the requested release but did not. The
+				// bundled file is still available on purpose via the explicit ARS_DEFAULT setting.
+				instance = null;
 				instanceHladb = null;
+
+				if (usesDefaultArs) {
+					// The bundled file itself failed to load; that is not an IMGT/HLA download problem.
+					throw new IOException("Could not read the bundled antigen recognition site file", e);
+				}
+
+				throw ReferenceDataUnavailableException.forHladb(hladb == null ? GLStringConstants.LATEST_HLADB : hladb,
+						"antigen recognition site (G-group)", e);
 			}
 		}
 
@@ -131,6 +142,11 @@ public class AntigenRecognitionSiteLoader {
 	//    directly off the live network socket -- measured ~24s streamed live vs. ~13s from an
 	//    otherwise-identical already-downloaded local file for this exact file, i.e. roughly
 	//    half the wall-clock cost was network-interleaving overhead, not parsing itself.
+	/** Where the G-group file for an IMGT/HLA release is downloaded from (3.65.0 -> tag 3650). */
+	public static String gGroupFileUrl(String hladb) {
+		return "https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip";
+	}
+
 	public static HashMap<String, HashSet<String>> loadGGroups(String hladb) throws MalformedURLException, IOException, ParserConfigurationException, SAXException {
 		if (hladb == null) hladb = GLStringConstants.LATEST_HLADB;
 
@@ -139,7 +155,7 @@ public class AntigenRecognitionSiteLoader {
 			return cached;
 		}
 
-		URL url = new URL("https://raw.githubusercontent.com/ANHIG/IMGTHLA/" + hladb.replace(GLStringConstants.PERIOD, GLStringConstants.EMPTY_STRING) + "/xml/hla_ambigs.xml.zip");
+		URL url = new URL(gGroupFileUrl(hladb));
 
 		System.out.println(url.toString());
 

@@ -35,7 +35,10 @@
       <legend>Reference data</legend>
 
       <label for="hladbVersion">IMGT/HLA database version</label>
-      <input type="text" id="hladbVersion" placeholder="latest (e.g. 3.19.0)">
+      <input type="text" id="hladbVersion" list="hladbVersionList" autocomplete="off"
+             placeholder="blank = latest (e.g. 3.19.0)" aria-describedby="hladbVersionHint">
+      <datalist id="hladbVersionList"></datalist>
+      <p id="hladbVersionHint" class="field-hint" role="alert" hidden></p>
 
       <label for="frequencySet">Frequency set</label>
       <select id="frequencySet">
