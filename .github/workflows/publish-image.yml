@@ -246,9 +246,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          # Only a genuine "release not found" may fall through to creating one; any other
+          # failure (network, auth, 5xx) should fail the job rather than be mistaken for it.
+          if out=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" 2>&1); then
             echo "A Release for $TAG already exists; leaving it alone."
             exit 0
+          elif ! grep -qi "release not found" <<<"$out"; then
+            echo "::error::Could not check for an existing Release: $out"
+            exit 1
           fi
           flags=()
           case "$TAG" in *-*) flags+=(--prerelease) ;; esac
