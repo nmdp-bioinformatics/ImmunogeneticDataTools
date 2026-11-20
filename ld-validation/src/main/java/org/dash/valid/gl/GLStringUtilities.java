@@ -428,34 +428,6 @@ public class GLStringUtilities {
 		return false;
 	}
 
-	/**
-	 * Expands locus-prefix-dropped GL String shorthand into the fully-qualified form
-	 * the published GL String specification (Milius RE, Mack SJ, Hollenbach JA, et al.
-	 * "Genotype List String: a grammar for describing HLA and KIR genotyping results in
-	 * a text string." Tissue Antigens. 2013; PMC3715123) actually calls for. The spec
-	 * itself doesn't recognize any shorthand as legitimate GL String syntax -- it gives
-	 * this as its own example of what NOT to do: an ambiguous allele pair "should
-	 * always be written as HLA-A*01:01:01:01/HLA-A*02:01:01:02L, and never as
-	 * HLA-A*01:01:01:01/02:01:01:02L". This method repairs exactly that one violation --
-	 * a dropped locus prefix, with every numeric field still written out in full on
-	 * each ambiguity-list member (see {@link #fillLocus(Locus, String)}).
-	 *
-	 * Deliberately does NOT attempt to resolve a different, more compact shorthand seen
-	 * in at least one real-world lab report source, where even the shared LEADING
-	 * numeric field gets dropped (e.g. "C*07:04/11" meaning "C*07:04 or C*07:11", not a
-	 * standalone "C*11" -- confirmed against real report data and lab domain knowledge
-	 * while building this repo's hla-report-extraction module, not by anything in this
-	 * spec). That's a genuinely different, and string-ambiguous, convention: the exact
-	 * same shorthand text could mean either "share the locus prefix only" (this
-	 * method's convention) or "share the locus prefix and leading numeric fields"
-	 * (that one), and only knowing which report source produced the string
-	 * disambiguates them. Extending this method to also guess at that second
-	 * convention would risk silently misinterpreting correctly-formed input using this
-	 * method's own convention -- report-specific shorthand like that belongs in the
-	 * consuming application's own domain-specific interpretation layer (see
-	 * hla-report-extraction's VersitiAmbiguityExpander for a concrete example), not
-	 * here.
-	 */
 	public static String fullyQualifyGLString(String shorthand) {
 		StringTokenizer st = new StringTokenizer(shorthand,
 				GL_STRING_DELIMITER_REGEX, true);
@@ -492,13 +464,6 @@ public class GLStringUtilities {
 		return sb.toString();
 	}
 
-	/**
-	 * Prepends {@code locus} to {@code segment} if it's not already locus-prefixed --
-	 * the one shorthand violation {@link #fullyQualifyGLString(String)} repairs (see
-	 * its own doc comment for the published spec's position on shorthand generally).
-	 * Assumes segment's own numeric fields are already complete; does not attempt to
-	 * fill in any fields beyond the locus prefix itself.
-	 */
 	public static String fillLocus(Locus locus, String segment) {
 		if (!segment.substring(0, 1).matches(ALPHA_REGEX)) {
 			segment = locus + GLStringConstants.ASTERISK + segment;
