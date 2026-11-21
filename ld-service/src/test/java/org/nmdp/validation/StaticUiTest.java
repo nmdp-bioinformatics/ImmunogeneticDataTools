@@ -63,6 +63,12 @@ public class StaticUiTest {
     }
 
     @Test
+    public void indexOffersLinkageSelection() {
+        String html = restTemplate.getForEntity("http://localhost:" + port + "/", String.class).getBody();
+        assertTrue(html.contains("name=\"linkage\" value=\"nine_loc\""), "linkage checkboxes should be on the page");
+    }
+
+    @Test
     public void cssAndJsAssetsAreServed() {
         ResponseEntity<String> css = restTemplate.getForEntity("http://localhost:" + port + "/css/app.css", String.class);
         assertEquals(HttpStatus.OK, css.getStatusCode());

@@ -45,10 +45,23 @@
   function usesNmdp2026() {
     return frequencySet.value === "nmdp-2026" && !(useCustomFrequencies.checked && frequencyFilesInput.files.length);
   }
+  const linkagesBox = document.getElementById("linkages-box");
+  const linkagesHint = document.getElementById("linkages-hint");
+  function usesCustomFiles() {
+    return useCustomFrequencies.checked && frequencyFilesInput.files.length > 0;
+  }
+  function selectedLinkages() {
+    return Array.prototype.map.call(
+      document.querySelectorAll('input[name="linkage"]:checked'), function (box) { return box.value; });
+  }
   function toggleNmdp2026Terms() {
     nmdp2026Terms.hidden = !usesNmdp2026();
+    // Linkages only apply to a named set; uploaded files define their own.
+    linkagesBox.hidden = usesCustomFiles();
+    linkagesHint.hidden = frequencySet.value !== "nmdp-2026";
   }
   frequencySet.addEventListener("change", toggleNmdp2026Terms);
+  toggleNmdp2026Terms();
   frequencyFilesInput.addEventListener("change", toggleNmdp2026Terms);
 
   useCustomFrequencies.addEventListener("change", function () {
@@ -212,6 +225,9 @@
       }
     } else if (frequencySet.value) {
       formData.append("frequencySet", frequencySet.value);
+      if (selectedLinkages().length) {
+        formData.append("linkages", selectedLinkages().join(" "));
+      }
       if (usesNmdp2026()) {
         formData.append("acceptNmdp2026Terms", "true");
       }

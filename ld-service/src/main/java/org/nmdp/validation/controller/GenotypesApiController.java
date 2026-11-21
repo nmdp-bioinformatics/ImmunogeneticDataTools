@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 
 import org.dash.valid.ReferenceDataUnavailableException;
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
+import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Sample;
 import org.dash.valid.freq.Frequencies;
@@ -93,10 +94,11 @@ public class GenotypesApiController implements GenotypesApi {
 
     @Override
     public ResponseEntity<Samples> submitGenotypes(@Parameter(description = "Genotypes", required = true) @Valid @RequestBody Genotypes genotypes) {
+        String linkages = normalizeLinkages(genotypes.getLinkages());
         synchronized (ANALYSIS_LOCK) {
-            configure(genotypes.getHladbVersion(), genotypes.getFrequencySet());
+            try (RequestScope scope = RequestScope.open(genotypes.getAcceptNmdp2026Terms(), linkages)) {
+                configure(genotypes.getHladbVersion(), genotypes.getFrequencySet());
 
-            try (TermsScope terms = TermsScope.open(genotypes.getAcceptNmdp2026Terms())) {
                 Samples samples = new Samples();
                 for (Genotype genotype : genotypes.getGenotype()) {
                     LinkageDisequilibriumGenotypeList linkedGLString = GLStringUtilities.inflateGenotypeList(genotype.getId(), genotype.getGlString(), null);
@@ -143,7 +145,9 @@ public class GenotypesApiController implements GenotypesApi {
     // immune to that real request-scoped cleanup.
     @Override
     public ResponseEntity<JobReference> submitGenotypesFile(MultipartFile file, String hladbVersion, String frequencySet,
-            List<MultipartFile> frequencyFiles, MultipartFile allelesFile, Boolean acceptNmdp2026Terms) {
+            List<MultipartFile> frequencyFiles, MultipartFile allelesFile, Boolean acceptNmdp2026Terms, String linkages) {
+        // Before any upload is copied or a job exists: a bad name is the caller's input, a 400.
+        String normalizedLinkages = normalizeLinkages(linkages);
         if (frequencyFiles != null) {
             for (MultipartFile frequencyFile : frequencyFiles) {
                 validateFrequencyFileLooksReasonable(frequencyFile);
@@ -170,7 +174,7 @@ public class GenotypesApiController implements GenotypesApi {
         File jobAllelesFile = ownedAllelesFile;
         Job job = jobRegistry.submit(j -> {
             try {
-                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile, acceptNmdp2026Terms);
+                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile, acceptNmdp2026Terms, normalizedLinkages);
             }
             finally {
                 for (File tempFile : ownedTempFiles) {
@@ -201,12 +205,12 @@ public class GenotypesApiController implements GenotypesApi {
     // ANALYSIS_LOCK submitGenotypes uses, since both paths mutate the same process-wide
     // hladb/frequency-set configuration.
     private List<Sample> runGenotypesFileJob(Job job, File inputFile, String originalFilename, String hladbVersion, String frequencySet,
-            Set<File> frequencyFiles, File allelesFile, Boolean acceptNmdp2026Terms) throws IOException {
+            Set<File> frequencyFiles, File allelesFile, Boolean acceptNmdp2026Terms, String linkages) throws IOException {
         synchronized (ANALYSIS_LOCK) {
             // Held across both configuring and analyzing: the named frequency set is loaded
             // lazily, on first use during analysis, and that is where nmdp-2026 downloads.
             Nmdp2026FrequencyCache.setDownloadListener(job::updateDownload);
-            try (TermsScope terms = TermsScope.open(acceptNmdp2026Terms)) {
+            try (RequestScope scope = RequestScope.open(acceptNmdp2026Terms, linkages)) {
                 job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
                 configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
                 // A named set is otherwise loaded lazily by the first genotype's analysis, which
@@ -230,36 +234,76 @@ public class GenotypesApiController implements GenotypesApi {
         }
     }
 
-    // Per-request acknowledgement of the NMDP 2026 terms. Nmdp2026FrequencyCache only downloads
-    // when the process-wide property org.dash.accept.license is set (what the CLI's
-    // --accept-license sets); this sets it for just this request's critical section (callers
-    // hold ANALYSIS_LOCK) and restores what was there before. So the gate is enforced here on
-    // the server, whatever the page does, and an operator who deliberately starts the service
-    // with -Dorg.dash.accept.license=nmdp-2026 keeps that behavior for every request.
-    private static final class TermsScope implements AutoCloseable {
-        private final String previous;
+    // Per-request settings that the reference-data classes read from process-wide System
+    // properties, set for just this request's critical section (callers hold ANALYSIS_LOCK) and
+    // restored afterwards, so an operator's own -D values still apply to requests that don't
+    // set them:
+    //  - acceptNmdp2026Terms -> org.dash.accept.license (what the CLI's --accept-license sets).
+    //    Nmdp2026FrequencyCache only downloads when it is set, so the terms gate is enforced here
+    //    on the server whatever the page does.
+    //  - linkages -> org.dash.linkages (the CLI's -Dorg.dash.linkages), which LinkagesLoader
+    //    reads when it is rebuilt at the start of every request.
+    private static final class RequestScope implements AutoCloseable {
+        private final String previousLicense;
+        private final String previousLinkages;
 
-        private TermsScope(String previous) {
-            this.previous = previous;
+        private RequestScope(String previousLicense, String previousLinkages) {
+            this.previousLicense = previousLicense;
+            this.previousLinkages = previousLinkages;
         }
 
-        static TermsScope open(Boolean accepted) {
-            String previous = System.getProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY);
-            if (Boolean.TRUE.equals(accepted)) {
+        static RequestScope open(Boolean acceptedTerms, String linkages) {
+            RequestScope scope = new RequestScope(System.getProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY),
+                    System.getProperty(Linkages.LINKAGES_PROPERTY));
+            if (Boolean.TRUE.equals(acceptedTerms)) {
                 System.setProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY, Nmdp2026FrequencyCache.LICENSE_ACCEPTANCE_VALUE);
             }
-            return new TermsScope(previous);
+            if (linkages != null) {
+                System.setProperty(Linkages.LINKAGES_PROPERTY, linkages);
+            }
+            return scope;
         }
 
         @Override
         public void close() {
+            restore(Nmdp2026FrequencyCache.LICENSE_PROPERTY, previousLicense);
+            restore(Linkages.LINKAGES_PROPERTY, previousLinkages);
+        }
+
+        private static void restore(String property, String previous) {
             if (previous == null) {
-                System.clearProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY);
+                System.clearProperty(property);
             }
             else {
-                System.setProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY, previous);
+                System.setProperty(property, previous);
             }
         }
+    }
+
+    // Blank/missing -> null (keep the set's default). Otherwise a space- or comma-separated list
+    // of Linkages short names (acb, drb1_dqb1, ...), each checked here: LinkagesLoader would
+    // otherwise only warn about an unknown name and quietly fall back to a default. Returns the
+    // names space-separated, which is what org.dash.linkages expects.
+    static String normalizeLinkages(String linkages) {
+        if (linkages == null || linkages.isBlank()) {
+            return null;
+        }
+
+        Set<String> valid = new java.util.LinkedHashSet<>();
+        for (Linkages linkage : Linkages.values()) {
+            valid.add(linkage.getShortName());
+        }
+
+        Set<String> chosen = new java.util.LinkedHashSet<>();
+        for (String name : linkages.trim().split("[\\s,]+")) {
+            if (!valid.contains(name)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Unknown linkage '" + name + "'. Use any of: " + String.join(", ", valid));
+            }
+            chosen.add(name);
+        }
+
+        return String.join(" ", chosen);
     }
 
     private JobStatus toJobStatus(Job job) {
@@ -370,9 +414,12 @@ public class GenotypesApiController implements GenotypesApi {
         String resolvedFrequencySet = frequencySet != null ? frequencySet : Frequencies.NMDP_2007_STD.getShortName();
         System.setProperty(Frequencies.FREQUENCIES_PROPERTY, resolvedFrequencySet);
 
-        if (!resolvedFrequencySet.equals(currentFrequencySet)) {
+        // What is loaded depends on the linkages too (which files are read), so a different
+        // linkage choice for the same set must reload; an unchanged one still reuses the data.
+        String loadedKey = resolvedFrequencySet + " | " + System.getProperty(Linkages.LINKAGES_PROPERTY, "");
+        if (!loadedKey.equals(currentFrequencySet)) {
             HLAFrequenciesLoader.reset();
-            currentFrequencySet = resolvedFrequencySet;
+            currentFrequencySet = loadedKey;
         }
     }
 
