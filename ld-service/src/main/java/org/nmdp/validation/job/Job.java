@@ -26,6 +26,9 @@ public class Job {
     private volatile int total;
     private volatile List<Sample> result;
     private volatile String error;
+    private volatile String downloadFile;
+    private volatile long downloadedBytes;
+    private volatile long downloadTotalBytes;
 
     public String getId() {
         return id;
@@ -54,6 +57,30 @@ public class Job {
     public void updateProgress(int processed, int total) {
         this.processed = processed;
         this.total = total;
+    }
+
+    /** Set while a reference-data file is downloading; null otherwise. */
+    public String getDownloadFile() {
+        return downloadFile;
+    }
+
+    public long getDownloadedBytes() {
+        return downloadedBytes;
+    }
+
+    public long getDownloadTotalBytes() {
+        return downloadTotalBytes;
+    }
+
+    public void updateDownload(String file, long downloaded, long total) {
+        this.downloadedBytes = downloaded;
+        this.downloadTotalBytes = total;
+        // Last, so a reader that sees the file name sees its sizes.
+        this.downloadFile = downloaded >= total ? null : file;
+    }
+
+    public void clearDownload() {
+        this.downloadFile = null;
     }
 
     public List<Sample> getResult() {

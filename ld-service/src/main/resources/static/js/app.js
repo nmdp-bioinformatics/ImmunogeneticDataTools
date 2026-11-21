@@ -274,17 +274,30 @@
   // LOADING_REFERENCE_DATA has no processed/total/percent (the parsing loop itself has no
   // progress signal -- see JobStatus's phase description in the spec), so that phase shows an
   // indeterminate <progress> bar (no value attribute) rather than a fake/frozen percentage.
+  function formatMb(bytes) {
+    return (bytes / 1048576).toFixed(bytes >= 10485760 ? 0 : 1) + " MB";
+  }
+
   function updateProgress(status) {
     if (status.phase === "QUEUED") {
       progressPhase.textContent = "Queued…";
       progressBar.removeAttribute("value");
       progressCount.textContent = "";
     } else if (status.phase === "LOADING_REFERENCE_DATA") {
-      progressPhase.textContent = lastSubmittedNmdp2026
-        ? "Preparing frequencies… the first run downloads the NMDP 2026 files (up to ~181 MB) and loads them into memory; this can take several minutes"
-        : "Loading reference data… (large custom frequency files can take several minutes)";
-      progressBar.removeAttribute("value");
-      progressCount.textContent = "";
+      if (status.downloadFile && status.downloadTotalBytes > 0) {
+        // A real percentage while a reference file downloads; the parse that follows has no
+        // progress signal, so the bar goes indeterminate again after this.
+        const done = status.downloadedBytes || 0;
+        progressPhase.textContent = "Downloading " + status.downloadFile + " from NMDP\u2019s Zenodo record\u2026";
+        progressBar.value = Math.min(100, Math.floor((done * 100) / status.downloadTotalBytes));
+        progressCount.textContent = formatMb(done) + " of " + formatMb(status.downloadTotalBytes);
+      } else {
+        progressPhase.textContent = lastSubmittedNmdp2026
+          ? "Preparing frequencies\u2026 loading the NMDP 2026 files into memory (the first run also downloads them; large files can take several minutes)"
+          : "Loading reference data\u2026 (large custom frequency files can take several minutes)";
+        progressBar.removeAttribute("value");
+        progressCount.textContent = "";
+      }
     } else if (status.phase === "ANALYZING_GENOTYPES") {
       progressPhase.textContent = "Analyzing genotypes…";
       progressBar.value = status.percent || 0;

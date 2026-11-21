@@ -220,7 +220,9 @@ converted copy.
   who deliberately starts the service with `-Dorg.dash.accept.license=nmdp-2026` accepts for every
   request. Files already cached need no download.
 - **First use is slow.** The nine-locus file is ~181 MB and about 6 GB of heap once loaded (see
-  "Heap size"); the UI shows "Preparing frequencies" while the job loads it.
+  "Heap size"). While a file downloads the UI shows a percentage bar (the job status carries
+  `downloadFile`/`downloadedBytes`/`downloadTotalBytes`); the parse that follows has no progress
+  signal, so the bar is indeterminate again under "Preparing frequencies".
 - **Concurrent requests share one download.** Analysis is serialized (one request at a time), so a
   second request that needs the same files waits, then finds them cached. There is never a second
   download in flight.

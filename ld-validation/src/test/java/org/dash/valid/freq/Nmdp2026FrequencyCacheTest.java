@@ -116,6 +116,28 @@ public class Nmdp2026FrequencyCacheTest {
 	}
 
 	@Test
+	public void testReportsDownloadProgressFromZeroToTheExpectedSize() throws Exception {
+		java.util.List<long[]> seen = new java.util.concurrent.CopyOnWriteArrayList<>();
+		Nmdp2026FrequencyCache.setDownloadListener((name, done, total) -> {
+			assertEquals(FILE, name);
+			seen.add(new long[] {done, total});
+		});
+		try {
+			cache(true).ensure(FILE);
+			assertEquals(0, seen.get(0)[0]);
+			assertEquals(CONTENT.length, seen.get(seen.size() - 1)[0]);
+			assertEquals(CONTENT.length, seen.get(seen.size() - 1)[1]);
+
+			seen.clear();
+			cache(true).ensure(FILE);
+			assertTrue(seen.isEmpty(), "a cache hit downloads nothing, so reports nothing");
+		}
+		finally {
+			Nmdp2026FrequencyCache.setDownloadListener(null);
+		}
+	}
+
+	@Test
 	public void testCacheHitNeedsNoLicenseAcknowledgement() throws Exception {
 		cache(true).ensure(FILE);
 
