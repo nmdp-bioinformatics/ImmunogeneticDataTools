@@ -45,6 +45,14 @@
   function usesNmdp2026() {
     return frequencySet.value === "nmdp-2026" && !(useCustomFrequencies.checked && frequencyFilesInput.files.length);
   }
+  // Mirrors HLAFrequenciesLoader#supportedLinkages.
+  const SUPPORTED_LINKAGES = {
+    "nmdp-2007-std": ["acb", "cb", "drb_dqb", "five_loc"],
+    "nmdp-2007": ["acb", "cb", "drb1_dqb1", "five_loc"],
+    "nmdp-std": ["acb", "cb", "drb_dqb", "five_loc", "six_loc"],
+    "wiki": ["cb", "drb_dq"],
+    "nmdp-2026": ["acb", "drb_dq", "drb1_dqb1", "dpa1_dpb1", "five_loc", "six_loc", "nine_loc"]
+  };
   const linkagesBox = document.getElementById("linkages-box");
   const linkagesHint = document.getElementById("linkages-hint");
   function usesCustomFiles() {
@@ -60,13 +68,15 @@
     linkagesBox.hidden = usesCustomFiles();
     const is2026 = frequencySet.value === "nmdp-2026";
     linkagesHint.hidden = !is2026;
-    // The release has no file for these; the server rejects them too (400).
-    ["cb", "drb_dqb"].forEach(function (name) {
-      const box = document.querySelector('input[name="linkage"][value="' + name + '"]');
-      if (is2026) {
+    // Which linkages each set has data for. The server is the authority (a request for another one
+    // is a 400 that lists the valid names); this only keeps the boxes from offering the rest.
+    const supported = SUPPORTED_LINKAGES[frequencySet.value];
+    document.querySelectorAll('input[name="linkage"]').forEach(function (box) {
+      const ok = !supported || supported.indexOf(box.value) !== -1;
+      if (!ok) {
         box.checked = false;
       }
-      box.disabled = is2026;
+      box.disabled = !ok;
     });
   }
   frequencySet.addEventListener("change", toggleNmdp2026Terms);

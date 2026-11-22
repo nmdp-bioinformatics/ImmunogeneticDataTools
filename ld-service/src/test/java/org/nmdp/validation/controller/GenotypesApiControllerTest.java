@@ -426,4 +426,13 @@ public class GenotypesApiControllerTest {
         mockMvc.perform(multipart("/genotypes/file").file(file).param("frequencySet", "nmdp-2026").param("linkages", "acb drb_dqb"))
             .andExpect(status().isBadRequest());
     }
+
+    // The same rule for every named set, not just nmdp-2026: wiki only has cb and drb_dq.
+    @Test
+    public void everyNamedSetRejectsLinkagesItHasNoDataFor() throws Exception {
+        String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],\"frequencySet\":\"wiki\",\"linkages\":\"five_loc\"}";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().reason(containsString("wiki frequencies have no file for linkage 'five_loc'. Use any of: cb, drb_dq")));
+    }
 }

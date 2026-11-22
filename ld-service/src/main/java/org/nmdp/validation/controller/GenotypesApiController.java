@@ -304,18 +304,17 @@ public class GenotypesApiController implements GenotypesApi {
             chosen.add(name);
         }
 
-        // nmdp-2026 has no file for some linkages; without this they only log a warning and the
-        // analysis returns no linkages at all, which looks like a clean "nothing found".
-        if (Frequencies.NMDP_2026.getShortName().equals(frequencySet)) {
-            Set<String> offered = new java.util.LinkedHashSet<>();
-            for (Linkages linkage : HLAFrequenciesLoader.nmdp2026Linkages()) {
-                offered.add(linkage.getShortName());
-            }
-            for (String name : chosen) {
-                if (!offered.contains(name)) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "The nmdp-2026 frequencies have no file for linkage '" + name + "'. Use any of: " + String.join(", ", offered));
-                }
+        // A set only has data for some linkages; the loader quietly ignores the rest, so the
+        // analysis would come back with no linkages at all, which reads as a clean "nothing found".
+        Frequencies set = frequencySet == null || frequencySet.isBlank() ? Frequencies.NMDP_2007_STD : Frequencies.lookup(frequencySet);
+        Set<String> offered = new java.util.LinkedHashSet<>();
+        for (Linkages linkage : HLAFrequenciesLoader.supportedLinkages(set)) {
+            offered.add(linkage.getShortName());
+        }
+        for (String name : chosen) {
+            if (!offered.contains(name)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "The " + set.getShortName() + " frequencies have no file for linkage '" + name + "'. Use any of: " + String.join(", ", offered));
             }
         }
 
