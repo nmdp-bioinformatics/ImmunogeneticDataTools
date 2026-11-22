@@ -225,6 +225,11 @@ public class HLAFrequenciesLoader {
 		NMDP_2026_FILES.put(Linkages.NINE_LOCUS, "A~C~B~DRBX~DRB1~DQA1~DQB1~DPA1~DPB1.xlsx");
 	}
 
+	/** The linkages the NMDP 2026 release has a file for (it has none for C~B or DRB345~DRB1~DQB1). */
+	public static Set<Linkages> nmdp2026Linkages() {
+		return java.util.Collections.unmodifiableSet(NMDP_2026_FILES.keySet());
+	}
+
 	// Loads the NMDP 2026 release straight from its unmodified xlsx files, fetched on demand
 	// into the per-user cache by Nmdp2026FrequencyCache (never bundled, never converted).
 	private void loadNmdp2026() throws IOException, InvalidFormatException {

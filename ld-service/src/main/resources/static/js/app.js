@@ -58,7 +58,16 @@
     nmdp2026Terms.hidden = !usesNmdp2026();
     // Linkages only apply to a named set; uploaded files define their own.
     linkagesBox.hidden = usesCustomFiles();
-    linkagesHint.hidden = frequencySet.value !== "nmdp-2026";
+    const is2026 = frequencySet.value === "nmdp-2026";
+    linkagesHint.hidden = !is2026;
+    // The release has no file for these; the server rejects them too (400).
+    ["cb", "drb_dqb"].forEach(function (name) {
+      const box = document.querySelector('input[name="linkage"][value="' + name + '"]');
+      if (is2026) {
+        box.checked = false;
+      }
+      box.disabled = is2026;
+    });
   }
   frequencySet.addEventListener("change", toggleNmdp2026Terms);
   toggleNmdp2026Terms();

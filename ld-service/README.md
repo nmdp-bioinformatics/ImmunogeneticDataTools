@@ -231,8 +231,8 @@ converted copy.
   `five_loc`, `six_loc`, `nine_loc`) — the CLI's `-Dorg.dash.linkages`. Blank keeps the set's default
   (`five_loc` for nmdp-2026, nothing is inferred from your GL strings). Only the matching files are
   fetched and loaded, so `acb` alone skips the 53 MB five-locus file. nmdp-2026 has no `cb` or
-  `drb_dqb` file (skipped with a warning); `nine_loc` needs about 6 GB of heap. An unknown name is
-  a 400; it is ignored when you upload your own `frequencyFiles`, whose loci define the linkages.
+  `drb_dqb` file, so asking for those with nmdp-2026 is a 400 (the UI disables them); `nine_loc`
+  needs about 6 GB of heap. An unknown name is a 400; it is ignored when you upload your own `frequencyFiles`, whose loci define the linkages.
   Changing the choice reloads the frequencies; repeating it reuses them.
 - **It needs outbound network and a persistent cache.** The Docker image caches under
   `/home/app/.dash-cache/nmdp-2026` (`org.dash.frequencies.cache`), inside the volume

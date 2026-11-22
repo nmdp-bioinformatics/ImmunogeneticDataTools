@@ -94,7 +94,7 @@ public class GenotypesApiController implements GenotypesApi {
 
     @Override
     public ResponseEntity<Samples> submitGenotypes(@Parameter(description = "Genotypes", required = true) @Valid @RequestBody Genotypes genotypes) {
-        String linkages = normalizeLinkages(genotypes.getLinkages());
+        String linkages = normalizeLinkages(genotypes.getLinkages(), genotypes.getFrequencySet());
         synchronized (ANALYSIS_LOCK) {
             try (RequestScope scope = RequestScope.open(genotypes.getAcceptNmdp2026Terms(), linkages)) {
                 configure(genotypes.getHladbVersion(), genotypes.getFrequencySet());
@@ -147,7 +147,8 @@ public class GenotypesApiController implements GenotypesApi {
     public ResponseEntity<JobReference> submitGenotypesFile(MultipartFile file, String hladbVersion, String frequencySet,
             List<MultipartFile> frequencyFiles, MultipartFile allelesFile, Boolean acceptNmdp2026Terms, String linkages) {
         // Before any upload is copied or a job exists: a bad name is the caller's input, a 400.
-        String normalizedLinkages = normalizeLinkages(linkages);
+        boolean customFiles = frequencyFiles != null && !frequencyFiles.isEmpty();
+        String normalizedLinkages = customFiles ? null : normalizeLinkages(linkages, frequencySet);
         if (frequencyFiles != null) {
             for (MultipartFile frequencyFile : frequencyFiles) {
                 validateFrequencyFileLooksReasonable(frequencyFile);
@@ -284,7 +285,7 @@ public class GenotypesApiController implements GenotypesApi {
     // of Linkages short names (acb, drb1_dqb1, ...), each checked here: LinkagesLoader would
     // otherwise only warn about an unknown name and quietly fall back to a default. Returns the
     // names space-separated, which is what org.dash.linkages expects.
-    static String normalizeLinkages(String linkages) {
+    static String normalizeLinkages(String linkages, String frequencySet) {
         if (linkages == null || linkages.isBlank()) {
             return null;
         }
@@ -301,6 +302,21 @@ public class GenotypesApiController implements GenotypesApi {
                         "Unknown linkage '" + name + "'. Use any of: " + String.join(", ", valid));
             }
             chosen.add(name);
+        }
+
+        // nmdp-2026 has no file for some linkages; without this they only log a warning and the
+        // analysis returns no linkages at all, which looks like a clean "nothing found".
+        if (Frequencies.NMDP_2026.getShortName().equals(frequencySet)) {
+            Set<String> offered = new java.util.LinkedHashSet<>();
+            for (Linkages linkage : HLAFrequenciesLoader.nmdp2026Linkages()) {
+                offered.add(linkage.getShortName());
+            }
+            for (String name : chosen) {
+                if (!offered.contains(name)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "The nmdp-2026 frequencies have no file for linkage '" + name + "'. Use any of: " + String.join(", ", offered));
+                }
+            }
         }
 
         return String.join(" ", chosen);

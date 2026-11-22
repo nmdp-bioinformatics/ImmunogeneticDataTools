@@ -411,4 +411,19 @@ public class GenotypesApiControllerTest {
         mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(base + "five_loc\"}")).andExpect(status().isOk());
         assertNotSame(first, HLAFrequenciesLoader.getInstance(), "different linkages need different files, so reload");
     }
+
+    // nmdp-2026 has no C~B or DRB345~DRB1~DQB1 file. Accepting them used to log a warning and
+    // return an empty result that looked like "nothing found"; now a 400 says what is available.
+    @Test
+    public void nmdp2026RejectsLinkagesItHasNoFileFor() throws Exception {
+        String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],\"frequencySet\":\"nmdp-2026\",\"linkages\":\"cb\"}";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().reason(containsString("no file for linkage 'cb'")));
+
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+        mockMvc.perform(multipart("/genotypes/file").file(file).param("frequencySet", "nmdp-2026").param("linkages", "acb drb_dqb"))
+            .andExpect(status().isBadRequest());
+    }
 }
