@@ -68,6 +68,25 @@
         </label>
       </div>
 
+      <fieldset id="linkages-box" class="inner-fieldset">
+        <legend>Linkages to search for (optional)</legend>
+        <p class="field-hint-plain">Leave all unticked for the set&rsquo;s default (five-locus for nmdp-2026). Greyed-out
+          linkages have no data in the chosen set. Not used with your own frequency files, which define their own.</p>
+        <div id="linkage-options">
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="acb"> A~C~B</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="cb"> C~B</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="drb1_dqb1"> DRB1~DQB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="drb_dq"> DRBX~DRB1~DQA1~DQB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="drb_dqb"> DRB345~DRB1~DQB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="dpa1_dpb1"> DPA1~DPB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="five_loc"> five-locus (A~C~B~DRB1~DQB1)</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="six_loc"> six-locus (+DRBX)</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="nine_loc"> nine-locus (all)</label>
+        </div>
+        <p id="linkages-hint" class="field-hint-plain" hidden>nmdp-2026 has no C~B or DRB345~DRB1~DQB1 file, so those two are unavailable.
+          Nine-locus is a ~181&nbsp;MB file and needs about 6&nbsp;GB of memory.</p>
+      </fieldset>
+
       <label class="checkbox-label">
         <input type="checkbox" id="useCustomFrequencies">
         Use my own frequency file(s) instead

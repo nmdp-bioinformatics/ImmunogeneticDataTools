@@ -226,6 +226,23 @@ converted copy.
 - **Concurrent requests share one download.** Analysis is serialized (one request at a time), so a
   second request that needs the same files waits, then finds them cached. There is never a second
   download in flight.
+- **Choosing linkages.** The `linkages` request field (the UI's "Linkages to search for" boxes) takes
+  space- or comma-separated names — the CLI's `-Dorg.dash.linkages`. Blank keeps the set's default
+  (`five_loc` for nmdp-2026); nothing is inferred from your GL strings. Each set only has data for
+  some linkages, and asking for another is a 400 that lists the valid ones (the UI greys them out):
+
+  | Frequency set | Linkages |
+  |---|---|
+  | nmdp-2007-std | `acb`, `cb`, `drb_dqb`, `five_loc` |
+  | nmdp-2007 | `acb`, `cb`, `drb1_dqb1`, `five_loc` |
+  | nmdp-std | `acb`, `cb`, `drb_dqb`, `five_loc`, `six_loc` |
+  | wiki | `cb`, `drb_dq` |
+  | nmdp-2026 | `acb`, `drb_dq`, `drb1_dqb1`, `dpa1_dpb1`, `five_loc`, `six_loc`, `nine_loc` |
+
+  For nmdp-2026 only the matching files are fetched and loaded, so `acb` alone skips the 53 MB
+  five-locus file; `nine_loc` needs about 6 GB of heap. An unknown name is also a 400. The field is
+  ignored when you upload your own `frequencyFiles`, whose loci define the linkages. Changing the
+  choice reloads the frequencies; repeating it reuses them.
 - **It needs outbound network and a persistent cache.** The Docker image caches under
   `/home/app/.dash-cache/nmdp-2026` (`org.dash.frequencies.cache`), inside the volume
   `docker-compose.yml` mounts. A plain `docker run` without a volume re-downloads on every start:

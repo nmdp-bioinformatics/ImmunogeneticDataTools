@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.freq.Nmdp2026FrequencyCache;
@@ -356,5 +357,82 @@ public class GenotypesApiControllerTest {
         assertEquals("FAILED", finalStatus.get("phase").asText(), finalStatus.toString());
         assertTrue(finalStatus.get("error").asText().contains("CC BY-NC-ND 4.0"), finalStatus.toString());
         assertEquals(null, System.getProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY));
+    }
+
+    // linkages: the CLI's org.dash.linkages, per request. Validated up front, applied for just
+    // that request (an operator's own -D is restored), and a different choice reloads the
+    // frequency data while an unchanged one reuses it.
+    @Test
+    public void unknownLinkageIsABadRequestOnBothEndpoints() throws Exception {
+        String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],\"linkages\":\"acb nonsense\"}";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().reason(containsString("nonsense")));
+
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+        mockMvc.perform(multipart("/genotypes/file").file(file).param("linkages", "nonsense"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void requestedLinkagesApplyForThatRequestOnlyAndRestoreTheOperatorsValue() throws Exception {
+        String previous = System.getProperty(Linkages.LINKAGES_PROPERTY);
+        System.setProperty(Linkages.LINKAGES_PROPERTY, "drb1_dqb1");
+        try {
+            String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],"
+                    + "\"frequencySet\":\"nmdp-2007-std\",\"linkages\":\"acb,five_loc\"}";
+            mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk());
+
+            assertEquals(java.util.EnumSet.of(Linkages.A_B_C, Linkages.FIVE_LOCUS),
+                    java.util.EnumSet.copyOf(LinkagesLoader.getInstance().getLinkages()));
+            assertEquals("drb1_dqb1", System.getProperty(Linkages.LINKAGES_PROPERTY), "the operator's own value is restored");
+        }
+        finally {
+            if (previous == null) {
+                System.clearProperty(Linkages.LINKAGES_PROPERTY);
+            }
+            else {
+                System.setProperty(Linkages.LINKAGES_PROPERTY, previous);
+            }
+        }
+    }
+
+    @Test
+    public void changingLinkagesReloadsTheFrequenciesAndRepeatingThemDoesNot() throws Exception {
+        String base = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],\"frequencySet\":\"nmdp-2007-std\",\"linkages\":\"";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(base + "acb\"}")).andExpect(status().isOk());
+        HLAFrequenciesLoader first = HLAFrequenciesLoader.getInstance();
+
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(base + "acb\"}")).andExpect(status().isOk());
+        assertSame(first, HLAFrequenciesLoader.getInstance(), "same linkages should reuse the loaded data");
+
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(base + "five_loc\"}")).andExpect(status().isOk());
+        assertNotSame(first, HLAFrequenciesLoader.getInstance(), "different linkages need different files, so reload");
+    }
+
+    // nmdp-2026 has no C~B or DRB345~DRB1~DQB1 file. Accepting them used to log a warning and
+    // return an empty result that looked like "nothing found"; now a 400 says what is available.
+    @Test
+    public void nmdp2026RejectsLinkagesItHasNoFileFor() throws Exception {
+        String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],\"frequencySet\":\"nmdp-2026\",\"linkages\":\"cb\"}";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().reason(containsString("no file for linkage 'cb'")));
+
+        MockMultipartFile file = new MockMultipartFile("file", "batch.txt", "text/plain",
+                ("sample-1\t" + INLINE_GL_STRING + "\n").getBytes(StandardCharsets.UTF_8));
+        mockMvc.perform(multipart("/genotypes/file").file(file).param("frequencySet", "nmdp-2026").param("linkages", "acb drb_dqb"))
+            .andExpect(status().isBadRequest());
+    }
+
+    // The same rule for every named set, not just nmdp-2026: wiki only has cb and drb_dq.
+    @Test
+    public void everyNamedSetRejectsLinkagesItHasNoDataFor() throws Exception {
+        String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING + "\"}],\"frequencySet\":\"wiki\",\"linkages\":\"five_loc\"}";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().reason(containsString("wiki frequencies have no file for linkage 'five_loc'. Use any of: cb, drb_dq")));
     }
 }

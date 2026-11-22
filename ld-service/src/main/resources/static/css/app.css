@@ -271,3 +271,19 @@ input[aria-invalid="true"] {
 .notice a {
   color: inherit;
 }
+
+.inner-fieldset {
+  margin: 1rem 0;
+}
+
+#linkage-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}
+
+.field-hint-plain {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+}

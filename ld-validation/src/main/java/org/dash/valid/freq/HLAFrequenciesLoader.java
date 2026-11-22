@@ -225,6 +225,30 @@ public class HLAFrequenciesLoader {
 		NMDP_2026_FILES.put(Linkages.NINE_LOCUS, "A~C~B~DRBX~DRB1~DQA1~DQB1~DPA1~DPB1.xlsx");
 	}
 
+	/**
+	 * The linkages a named frequency set has reference data for. Anything else a caller asks for is
+	 * silently ignored by {@link #init(Frequencies)}, leaving no linkages loaded and an analysis that
+	 * reports nothing, so a service should reject it up front. Mirrors the switch in init(Frequencies);
+	 * HLAFrequenciesLoaderSupportedLinkagesTest fails if the two drift apart (for the bundled sets).
+	 */
+	public static Set<Linkages> supportedLinkages(Frequencies freq) {
+		switch (freq) {
+		case NMDP_2007:
+			return java.util.EnumSet.of(Linkages.A_B_C, Linkages.B_C, Linkages.DRB1_DQB1, Linkages.FIVE_LOCUS);
+		case NMDP_2007_STD:
+			return java.util.EnumSet.of(Linkages.A_B_C, Linkages.B_C, Linkages.DRB_DQB, Linkages.FIVE_LOCUS);
+		case NMDP_STD:
+		case NMDP:
+			return java.util.EnumSet.of(Linkages.A_B_C, Linkages.B_C, Linkages.DRB_DQB, Linkages.FIVE_LOCUS, Linkages.SIX_LOCUS);
+		case WIKIVERSITY:
+			return java.util.EnumSet.of(Linkages.B_C, Linkages.DRB_DQ);
+		case NMDP_2026:
+			return java.util.Collections.unmodifiableSet(NMDP_2026_FILES.keySet());
+		default:
+			return java.util.EnumSet.noneOf(Linkages.class);
+		}
+	}
+
 	// Loads the NMDP 2026 release straight from its unmodified xlsx files, fetched on demand
 	// into the per-user cache by Nmdp2026FrequencyCache (never bundled, never converted).
 	private void loadNmdp2026() throws IOException, InvalidFormatException {

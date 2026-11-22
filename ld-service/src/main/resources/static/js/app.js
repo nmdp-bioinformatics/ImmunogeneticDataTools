@@ -45,10 +45,42 @@
   function usesNmdp2026() {
     return frequencySet.value === "nmdp-2026" && !(useCustomFrequencies.checked && frequencyFilesInput.files.length);
   }
+  // Mirrors HLAFrequenciesLoader#supportedLinkages.
+  const SUPPORTED_LINKAGES = {
+    "nmdp-2007-std": ["acb", "cb", "drb_dqb", "five_loc"],
+    "nmdp-2007": ["acb", "cb", "drb1_dqb1", "five_loc"],
+    "nmdp-std": ["acb", "cb", "drb_dqb", "five_loc", "six_loc"],
+    "wiki": ["cb", "drb_dq"],
+    "nmdp-2026": ["acb", "drb_dq", "drb1_dqb1", "dpa1_dpb1", "five_loc", "six_loc", "nine_loc"]
+  };
+  const linkagesBox = document.getElementById("linkages-box");
+  const linkagesHint = document.getElementById("linkages-hint");
+  function usesCustomFiles() {
+    return useCustomFrequencies.checked && frequencyFilesInput.files.length > 0;
+  }
+  function selectedLinkages() {
+    return Array.prototype.map.call(
+      document.querySelectorAll('input[name="linkage"]:checked'), function (box) { return box.value; });
+  }
   function toggleNmdp2026Terms() {
     nmdp2026Terms.hidden = !usesNmdp2026();
+    // Linkages only apply to a named set; uploaded files define their own.
+    linkagesBox.hidden = usesCustomFiles();
+    const is2026 = frequencySet.value === "nmdp-2026";
+    linkagesHint.hidden = !is2026;
+    // Which linkages each set has data for. The server is the authority (a request for another one
+    // is a 400 that lists the valid names); this only keeps the boxes from offering the rest.
+    const supported = SUPPORTED_LINKAGES[frequencySet.value];
+    document.querySelectorAll('input[name="linkage"]').forEach(function (box) {
+      const ok = !supported || supported.indexOf(box.value) !== -1;
+      if (!ok) {
+        box.checked = false;
+      }
+      box.disabled = !ok;
+    });
   }
   frequencySet.addEventListener("change", toggleNmdp2026Terms);
+  toggleNmdp2026Terms();
   frequencyFilesInput.addEventListener("change", toggleNmdp2026Terms);
 
   useCustomFrequencies.addEventListener("change", function () {
@@ -212,6 +244,9 @@
       }
     } else if (frequencySet.value) {
       formData.append("frequencySet", frequencySet.value);
+      if (selectedLinkages().length) {
+        formData.append("linkages", selectedLinkages().join(" "));
+      }
       if (usesNmdp2026()) {
         formData.append("acceptNmdp2026Terms", "true");
       }
