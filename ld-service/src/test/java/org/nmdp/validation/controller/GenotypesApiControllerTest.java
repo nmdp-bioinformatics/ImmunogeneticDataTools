@@ -183,6 +183,22 @@ public class GenotypesApiControllerTest {
         assertNotSame(afterRepeat, afterChange, "A genuinely different frequencySet should still get freshly loaded data");
     }
 
+    // nmdp-std (and nmdp) are in the dropdown but their data files are not bundled. That used to
+    // reach HLAFrequenciesLoader's System.exit(-1) and kill the whole service (and, here, the test
+    // JVM). It must be an ordinary 400 for that request, and the service must keep working after.
+    @Test
+    public void aNamedSetWhoseDataIsNotBundledIsRejectedWithoutKillingTheService() throws Exception {
+        String missing = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING
+                + "\"}],\"frequencySet\":\"nmdp-std\"}";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(missing))
+            .andExpect(status().isBadRequest());
+
+        String fine = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"" + INLINE_GL_STRING
+                + "\"}],\"frequencySet\":\"nmdp-2007-std\"}";
+        mockMvc.perform(post("/genotypes").contentType(MediaType.APPLICATION_JSON).content(fine))
+            .andExpect(status().isOk());
+    }
+
     // Phase 8a's third gap: the API previously had no way to submit a batch file at all, unlike
     // analyze-gl-strings' actual primary use case. Reuses the same tab-delimited
     // "id<TAB>glString"-per-line format the CLI reads (confirmed against

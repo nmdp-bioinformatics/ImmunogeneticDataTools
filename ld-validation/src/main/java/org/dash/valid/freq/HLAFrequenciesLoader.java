@@ -21,6 +21,7 @@
 */
 package org.dash.valid.freq;
 
+import org.dash.valid.ReferenceDataUnavailableException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -428,9 +429,14 @@ public class HLAFrequenciesLoader {
 				LOGGER.warning("2011 NMDP Frequencies are not included by default.  Please be sure you've loaded them according to the instructions in the README.");
 			}
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
-			ioe.printStackTrace();
-			
-			System.exit(-1);
+
+			// Was System.exit(-1): a request for a named set whose data isn't bundled (nmdp-std,
+			// nmdp) killed the whole ld-service process. Throw instead; the CLI still exits
+			// non-zero through its existing catch, and the service reports it for that request only.
+			throw new ReferenceDataUnavailableException("The " + freq.getShortName() + " frequencies could not be loaded: "
+					+ (ioe instanceof FileNotFoundException ? "their data files are not included with this build" : ioe.toString())
+					+ ". Choose another frequency set or upload your own frequency files.",
+					ioe instanceof FileNotFoundException ? ioe : new IOException(ioe));
 		}
 	}
 	
