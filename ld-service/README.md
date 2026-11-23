@@ -235,9 +235,12 @@ converted copy.
   |---|---|
   | nmdp-2007-std | `acb`, `cb`, `drb_dqb`, `five_loc` |
   | nmdp-2007 | `acb`, `cb`, `drb1_dqb1`, `five_loc` |
-  | nmdp-std | `acb`, `cb`, `drb_dqb`, `five_loc`, `six_loc` |
   | wiki | `cb`, `drb_dq` |
   | nmdp-2026 | `acb`, `drb_dq`, `drb1_dqb1`, `dpa1_dpb1`, `five_loc`, `six_loc`, `nine_loc` |
+
+  The 2011 NMDP frequencies (`nmdp`, `nmdp-std`) are not in the UI's dropdown: their license forbids
+  redistribution, so their data is not bundled and the service answers a request for them with a 400.
+  Install them locally for the CLI (see the top-level README) or upload your own `frequencyFiles`.
 
   For nmdp-2026 only the matching files are fetched and loaded, so `acb` alone skips the 53 MB
   five-locus file; `nine_loc` needs about 6 GB of heap. An unknown name is also a 400. The field is
