@@ -777,17 +777,13 @@ public class HLAFrequenciesLoader {
 			}
 
 			for (Map.Entry<Locus, Set<String>> entry : allelesByLocus.entrySet()) {
+				Set<String> merged = new java.util.LinkedHashSet<String>();
 				List<String> existing = individualLocusFrequencies.get(entry.getKey());
-				if (existing == null) {
-					individualLocusFrequencies.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+				if (existing != null) {
+					merged.addAll(existing);
 				}
-				else {
-					for (String allele : entry.getValue()) {
-						if (!existing.contains(allele)) {
-							existing.add(allele);
-						}
-					}
-				}
+				merged.addAll(entry.getValue());
+				individualLocusFrequencies.put(entry.getKey(), new ArrayList<String>(merged));
 			}
 		}
 	}
