@@ -107,4 +107,44 @@ public class DerivedAllelePruningTest {
 
 		assertTrue(out.toString().contains("originalValue="), out.toString());
 	}
+
+	// hasFrequency is indexed; it must still return exactly what the front-to-back scan with
+	// fieldLevelComparison / checkAntigenRecognitionSite did (first matching entry in list order).
+	@Test
+	public void testIndexedHasFrequencyMatchesLinearScan() throws Exception {
+		String std = "src/main/resources/frequencies/std/";
+		HLAFrequenciesLoader loader = HLAFrequenciesLoader.getInstance(new java.util.LinkedHashSet<File>(Arrays.asList(
+				new File(std + "NMDP_2007_ACB_Freqs.csv"), new File(std + "NMDP_2007_DRB1DQB1_Freqs.csv"),
+				new File(std + "NMDP_2007_FiveLocus_Freqs.csv"))), (File) null);
+
+		java.util.List<String> probes = new java.util.ArrayList<String>();
+		for (String line : Files.readAllLines(Path.of("src/test/resources/syntheticExamples.txt"))) {
+			for (String alleleList : line.split("[\\^+~|]")) {
+				for (String allele : alleleList.split("/")) {
+					probes.add(allele.startsWith("HLA-") ? allele : alleleList.substring(0, alleleList.indexOf('*') + 1) + allele);
+				}
+			}
+		}
+		probes.add("HLA-B*52");
+		probes.add("HLA-C*07:01:01:01");
+		probes.add("HLA-A*99:99");
+
+		int matched = 0;
+		for (Locus locus : Arrays.asList(Locus.HLA_A, Locus.HLA_B, Locus.HLA_C, Locus.HLA_DRB1, Locus.HLA_DQB1)) {
+			java.util.List<String> list = loader.getIndividualLocusFrequencies().get(locus);
+			for (String allele : probes) {
+				String expected = null;
+				for (String candidate : list) {
+					if (org.dash.valid.gl.GLStringUtilities.fieldLevelComparison(allele, candidate)
+							|| org.dash.valid.gl.GLStringUtilities.checkAntigenRecognitionSite(allele, candidate)) {
+						expected = candidate;
+						break;
+					}
+				}
+				assertEquals(expected, loader.hasFrequency(locus, allele), locus + " " + allele);
+				if (expected != null) matched++;
+			}
+		}
+		assertTrue(matched > 100, "probe set should exercise real matches, got " + matched);
+	}
 }
