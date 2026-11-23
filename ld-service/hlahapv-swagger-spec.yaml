@@ -97,13 +97,6 @@ paths:
           type: file
         collectionFormat: multi
       - in: formData
-        name: allelesFile
-        description: optional individual-locus allele frequency file accompanying
-          frequencyFiles (the CLI's -l/--allele-file). Ignored if frequencyFiles
-          is not also supplied.
-        required: false
-        type: file
-      - in: formData
         name: acceptNmdp2026Terms
         description: set true to acknowledge the NMDP 2026 frequencies' CC BY-NC-ND 4.0
           terms (non-commercial use only, no derivatives, attribution required; Zenodo

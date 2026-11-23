@@ -12,7 +12,6 @@
   const useCustomFrequencies = document.getElementById("useCustomFrequencies");
   const customFrequenciesDiv = document.getElementById("custom-frequencies");
   const frequencyFilesInput = document.getElementById("frequencyFiles");
-  const allelesFileInput = document.getElementById("allelesFile");
   const submitBtn = document.getElementById("submitBtn");
   const progressSection = document.getElementById("progress-section");
   const progressPhase = document.getElementById("progress-phase");
@@ -237,9 +236,6 @@
     if (useCustomFrequencies.checked && frequencyFilesInput.files.length) {
       for (const f of frequencyFilesInput.files) {
         formData.append("frequencyFiles", f, f.name);
-      }
-      if (allelesFileInput.files.length) {
-        formData.append("allelesFile", allelesFileInput.files[0], allelesFileInput.files[0].name);
       }
     } else if (frequencySet.value) {
       formData.append("frequencySet", frequencySet.value);

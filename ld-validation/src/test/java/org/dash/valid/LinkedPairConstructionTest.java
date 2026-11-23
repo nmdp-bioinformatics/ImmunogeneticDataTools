@@ -67,7 +67,7 @@ public class LinkedPairConstructionTest {
 		Path frequencyFile = tempDir.resolve("freqs.csv");
 		Files.write(frequencyFile, frequencyRows.getBytes(StandardCharsets.UTF_8));
 
-		HLAFrequenciesLoader.getInstance(Collections.singleton(frequencyFile.toFile()), (File) null);
+		HLAFrequenciesLoader.getInstance(Collections.singleton(frequencyFile.toFile()));
 
 		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(new LinkageDisequilibriumGenotypeList("test", glString));
 

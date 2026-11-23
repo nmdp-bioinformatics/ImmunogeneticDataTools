@@ -2,7 +2,6 @@ package org.dash.valid;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -45,7 +44,7 @@ public class DerivedAllelePruningTest {
 	private Haplotype firstHaplotype(String glString) throws IOException {
 		Path file = tempDir.resolve("freqs.csv");
 		Files.write(file, ROWS.getBytes(StandardCharsets.UTF_8));
-		HLAFrequenciesLoader.getInstance(Collections.singleton(file.toFile()), (File) null);
+		HLAFrequenciesLoader.getInstance(Collections.singleton(file.toFile()));
 
 		Sample sample = HLALinkageDisequilibrium.hasLinkageDisequilibrium(new LinkageDisequilibriumGenotypeList("test", glString));
 		HaplotypePair pair = sample.getFindings().getLinkedPairs().iterator().next();
@@ -70,26 +69,13 @@ public class DerivedAllelePruningTest {
 	}
 
 	@Test
-	public void testExplicitAllelesFileOverridesDerivation() throws IOException {
-		Path file = tempDir.resolve("freqs.csv");
-		Files.write(file, ROWS.getBytes(StandardCharsets.UTF_8));
-		Path alleles = tempDir.resolve("alleles.txt");
-		Files.write(alleles, "HLA-B*15:01\n".getBytes(StandardCharsets.UTF_8));
-
-		HLAFrequenciesLoader loader = HLAFrequenciesLoader.getInstance(Collections.singleton(file.toFile()), alleles.toFile());
-
-		assertEquals("HLA-B*15:01", loader.hasFrequency(Locus.HLA_B, "HLA-B*15:01:01:01"));
-		assertNull(loader.hasFrequency(Locus.HLA_B, "HLA-B*07:02:01"));
-	}
-
-	@Test
 	public void testDerivedAllelesAreUnionedAcrossFilesSharingALocus() throws IOException {
 		Path cb = tempDir.resolve("cb.csv");
 		Files.write(cb, ROWS.getBytes(StandardCharsets.UTF_8));
 		Path acb = tempDir.resolve("acb.csv");
 		Files.write(acb, "HIS,HLA-A*01:01~HLA-C*03:04~HLA-B*15:01,1.0E-4\n".getBytes(StandardCharsets.UTF_8));
 
-		HLAFrequenciesLoader loader = HLAFrequenciesLoader.getInstance(new java.util.LinkedHashSet<File>(Arrays.asList(cb.toFile(), acb.toFile())), (File) null);
+		HLAFrequenciesLoader loader = HLAFrequenciesLoader.getInstance(new java.util.LinkedHashSet<File>(Arrays.asList(cb.toFile(), acb.toFile())));
 
 		assertEquals("HLA-B*15:01", loader.hasFrequency(Locus.HLA_B, "HLA-B*15:01:01:01"));
 		assertEquals("HLA-B*07:02", loader.hasFrequency(Locus.HLA_B, "HLA-B*07:02:01"));
@@ -115,7 +101,7 @@ public class DerivedAllelePruningTest {
 		String std = "src/main/resources/frequencies/std/";
 		HLAFrequenciesLoader loader = HLAFrequenciesLoader.getInstance(new java.util.LinkedHashSet<File>(Arrays.asList(
 				new File(std + "NMDP_2007_ACB_Freqs.csv"), new File(std + "NMDP_2007_DRB1DQB1_Freqs.csv"),
-				new File(std + "NMDP_2007_FiveLocus_Freqs.csv"))), (File) null);
+				new File(std + "NMDP_2007_FiveLocus_Freqs.csv"))));
 
 		java.util.List<String> probes = new java.util.ArrayList<String>();
 		for (String line : Files.readAllLines(Path.of("src/test/resources/syntheticExamples.txt"))) {
