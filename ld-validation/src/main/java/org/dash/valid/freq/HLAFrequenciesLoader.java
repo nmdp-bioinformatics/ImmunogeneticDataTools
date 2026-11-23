@@ -197,6 +197,11 @@ public class HLAFrequenciesLoader {
 			if (allelesFile != null) {
 				loadIndividualLocusFrequencies(allelesFile);
 			}
+			else {
+				// Every allele in an uploaded haplotype file has a frequency, so no separate
+				// alleles list is needed to prune ambiguous genotypes against it.
+				deriveIndividualLocusFrequencies();
+			}
 		}
 		catch (IOException e) { //| ApiException e) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
@@ -747,6 +752,46 @@ public class HLAFrequenciesLoader {
 		}
 	}
 	
+	// Builds the per-locus allowed-allele lists from the loaded haplotype elements (union across
+	// files covering the same locus), in first-seen order so the result is deterministic.
+	private void deriveIndividualLocusFrequencies() {
+		for (List<DisequilibriumElement> elements : disequilibriumElementsMap.values()) {
+			Map<Locus, Set<String>> allelesByLocus = new EnumMap<Locus, Set<String>>(Locus.class);
+
+			for (DisequilibriumElement element : elements) {
+				for (Locus locus : element.getLoci()) {
+					if (!locus.hasIndividualFrequencies()) {
+						continue;
+					}
+					Set<String> alleles = allelesByLocus.get(locus);
+					if (alleles == null) {
+						alleles = new java.util.LinkedHashSet<String>();
+						allelesByLocus.put(locus, alleles);
+					}
+					for (String allele : element.getHlaElement(locus)) {
+						if (!GLStringConstants.DASH.equals(allele) && !GLStringConstants.NNNN.equals(allele)) {
+							alleles.add(allele);
+						}
+					}
+				}
+			}
+
+			for (Map.Entry<Locus, Set<String>> entry : allelesByLocus.entrySet()) {
+				List<String> existing = individualLocusFrequencies.get(entry.getKey());
+				if (existing == null) {
+					individualLocusFrequencies.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+				}
+				else {
+					for (String allele : entry.getValue()) {
+						if (!existing.contains(allele)) {
+							existing.add(allele);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	private void loadIndividualLocusFrequencies(File allelesFile) throws IOException {
 		String row;
 		String parts[];
