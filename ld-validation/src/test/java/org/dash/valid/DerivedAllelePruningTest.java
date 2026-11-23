@@ -62,6 +62,9 @@ public class DerivedAllelePruningTest {
 		Haplotype haplotype = firstHaplotype(HET_C + "^HLA-B*08:01:01:01/HLA-B*15:01:01:01+HLA-B*07:02:01");
 
 		assertFalse(haplotype.getFullHaplotypeString().contains("B*15:01"), haplotype.getFullHaplotypeString());
+		// Kept alleles stay as submitted: swapping in the derived list's spelling (08:01g) could
+		// pick a spelling other haplotype rows don't match and silently drop linkages.
+		assertTrue(haplotype.getFullHaplotypeString().contains("HLA-B*08:01:01:01"), haplotype.getFullHaplotypeString());
 		assertTrue(haplotype.getOriginalFullHaplotypeString().contains("HLA-B*08:01:01:01/HLA-B*15:01:01:01"),
 				haplotype.getOriginalFullHaplotypeString());
 	}

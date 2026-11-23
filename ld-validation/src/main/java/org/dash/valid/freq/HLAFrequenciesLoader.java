@@ -62,6 +62,15 @@ import org.dash.valid.race.FrequencyByRaceComparator;
 public class HLAFrequenciesLoader {	
 	private HashMap<EnumSet<Locus>, List<DisequilibriumElement>> disequilibriumElementsMap = new HashMap<EnumSet<Locus>, List<DisequilibriumElement>>();
 	private final HashMap<Locus, List<String>> individualLocusFrequencies = new HashMap<Locus, List<String>>();
+	// True when the per-locus lists were derived from uploaded haplotype files rather than loaded
+	// from a single-locus list. Derived lists only decide which submitted alleles to keep: swapping
+	// in the list's spelling could pick a different spelling (e.g. C*07:01 vs C*07:01g) than the
+	// haplotype row a genotype has to match, silently losing linkages.
+	private boolean individualFrequenciesDerived = false;
+
+	public boolean swapsInFrequencyAllele() {
+		return !individualFrequenciesDerived;
+	}
 	
 	private static final String UNDERSCORE = "_";
 	
@@ -201,6 +210,7 @@ public class HLAFrequenciesLoader {
 				// Every allele in an uploaded haplotype file has a frequency, so no separate
 				// alleles list is needed to prune ambiguous genotypes against it.
 				deriveIndividualLocusFrequencies();
+				individualFrequenciesDerived = true;
 			}
 		}
 		catch (IOException e) { //| ApiException e) {

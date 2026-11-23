@@ -298,9 +298,10 @@ public class LinkageDisequilibriumGenotypeList {
 					LOGGER.info("Removing allele with no frequency: " + allele);
 				}
 				else {
-					if (!replacementAlleles.contains(alleleWithFrequency)) {
-						LOGGER.finest("Swapping in allele with frequency: " + alleleWithFrequency);
-						replacementAlleles.add(alleleWithFrequency);
+					String kept = freqLoader.swapsInFrequencyAllele() ? alleleWithFrequency : allele;
+					if (!replacementAlleles.contains(kept)) {
+						LOGGER.finest("Keeping allele with frequency: " + kept);
+						replacementAlleles.add(kept);
 					}
 				}	
 			}	
