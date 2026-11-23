@@ -123,7 +123,23 @@ public class LinkageDisequilibriumGenotypeList {
 
 	public boolean hasHomozygous(Locus locus) {
 		locus = Locus.normalizeLocus(locus);
-		return GLStringUtilities.checkHomozygous(getAlleles(locus));
+		List<List<String>> alleles = getAlleles(locus);
+		if (alleles.size() <= 1) {
+			return true;
+		}
+
+		// Lists from different "|" alternatives are never present together, so only lists in
+		// the same alternative can make the locus homozygous.
+		List<int[]> refs = entryRefsMap.get(locus);
+		for (int i = 0; i < alleles.size(); i++) {
+			for (int j = 0; j < alleles.size(); j++) {
+				if (i != j && refs.get(i)[1] == refs.get(j)[1] && alleles.get(i).containsAll(alleles.get(j))) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 	
 	public boolean hasHomozygous(Set<Locus> loci) {
