@@ -399,4 +399,46 @@ public class DetectedLinkageFindingsTest {
 		assertEquals("0.1*0.2", pair.getFrequency());
 		assertNull(findings.getMinimumDifference(Locus.C_B_LOCI));
 	}
+
+	private static DetectedDisequilibriumElement linkage(String freq, String... alleles) {
+		HashMap<Locus, List<String>> map = new HashMap<Locus, List<String>>();
+		for (String allele : alleles) {
+			map.put(Locus.lookup(allele.split("\\*")[0]), new ArrayList<String>(Collections.singletonList(allele)));
+		}
+		return new DetectedDisequilibriumElement(new BaseDisequilibriumElement(map, freq, "note"));
+	}
+
+	// A linkage covered by a wider one (same alleles on its loci) is dropped. The wider one used to be
+	// kept or not depending on which was added first, because DisequilibriumElement#equals is one-way.
+	@Test
+	public void testCoveredLinkageIsDroppedWhateverTheOrder() {
+		DetectedDisequilibriumElement narrow = linkage("1", "HLA-C*04:01", "HLA-B*52:01");
+		DetectedDisequilibriumElement wide = linkage("2", "HLA-A*01:01", "HLA-C*04:01", "HLA-B*52:01");
+		DetectedDisequilibriumElement other = linkage("3", "HLA-C*07:01", "HLA-B*08:01");
+
+		List<List<DetectedDisequilibriumElement>> orders = new ArrayList<List<DetectedDisequilibriumElement>>();
+		orders.add(java.util.Arrays.asList(narrow, wide, other));
+		orders.add(java.util.Arrays.asList(wide, narrow, other));
+		orders.add(java.util.Arrays.asList(other, wide, narrow));
+
+		for (List<DetectedDisequilibriumElement> order : orders) {
+			// all at once
+			DetectedLinkageFindings together = new DetectedLinkageFindings();
+			together.addLinkages(new ArrayList<DetectedDisequilibriumElement>(order));
+			assertEquals(2, together.getLinkages().size());
+			assertTrue(together.getLinkages().contains(wide));
+			assertTrue(together.getLinkages().contains(other));
+			assertEquals(1, together.getLinkageCount(java.util.EnumSet.of(Locus.HLA_A, Locus.HLA_C, Locus.HLA_B)));
+			assertEquals(1, together.getLinkageCount(java.util.EnumSet.of(Locus.HLA_C, Locus.HLA_B)));
+
+			// one call per linkage, as the analyzer does per locus combination
+			DetectedLinkageFindings apart = new DetectedLinkageFindings();
+			for (DetectedDisequilibriumElement linkage : order) {
+				apart.addLinkages(Collections.singleton(linkage));
+			}
+			assertEquals(2, apart.getLinkages().size());
+			assertTrue(apart.getLinkages().contains(wide));
+			assertTrue(apart.getLinkages().contains(other));
+		}
+	}
 }
