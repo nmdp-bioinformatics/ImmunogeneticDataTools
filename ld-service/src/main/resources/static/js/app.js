@@ -49,7 +49,6 @@
   const SUPPORTED_LINKAGES = {
     "nmdp-2007-std": ["acb", "cb", "drb_dqb", "five_loc"],
     "nmdp-2007": ["acb", "cb", "drb1_dqb1", "five_loc"],
-    "nmdp-std": ["acb", "cb", "drb_dqb", "five_loc", "six_loc"],
     "wiki": ["cb", "drb_dq"],
     "nmdp-2026": ["acb", "drb_dq", "drb1_dqb1", "dpa1_dpb1", "five_loc", "six_loc", "nine_loc"]
   };

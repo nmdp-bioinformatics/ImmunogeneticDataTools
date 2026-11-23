@@ -62,6 +62,15 @@ public class StaticUiTest {
         assertTrue(html.contains("CC BY-NC-ND 4.0") && html.contains("10.5281/zenodo.17966993"), "the notice should name the license and DOI");
     }
 
+    // The 2011 NMDP sets are license-restricted and their data isn't bundled, so offering them
+    // would only lead to an error.
+    @Test
+    public void indexDoesNotOfferTheUnbundled2011NmdpSets() {
+        String html = restTemplate.getForEntity("http://localhost:" + port + "/", String.class).getBody();
+        assertFalse(html.contains("value=\"nmdp-std\""), "nmdp-std has no bundled data");
+        assertFalse(html.contains("value=\"nmdp\""), "nmdp has no bundled data");
+    }
+
     // Over a real server (MockMvc can't show this): the explanatory text of a deliberate 4xx must
     // reach the caller, not just the status. Spring Boot hides it unless
     // server.error.include-message is set.
