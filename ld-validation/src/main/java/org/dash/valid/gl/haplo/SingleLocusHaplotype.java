@@ -43,9 +43,22 @@ public class SingleLocusHaplotype {
 		return this.locus;
 	}
 	
+	// The allele list as submitted, before frequency-based pruning (see
+	// LinkageDisequilibriumGenotypeList#setAlleles). Same as alleles when nothing was pruned.
+	private List<String> originalAlleles;
+
+	public List<String> getOriginalAlleles() {
+		return this.originalAlleles;
+	}
+
 	public SingleLocusHaplotype(Locus locus, List<String> alleles, int haplotypeInstance) {
+		this(locus, alleles, haplotypeInstance, alleles);
+	}
+
+	public SingleLocusHaplotype(Locus locus, List<String> alleles, int haplotypeInstance, List<String> originalAlleles) {
 		this.locus = locus;
 		this.alleles = alleles;
 		this.haplotypeInstance = haplotypeInstance;
+		this.originalAlleles = originalAlleles;
 	}
 }

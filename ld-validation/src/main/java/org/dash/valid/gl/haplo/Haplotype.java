@@ -98,6 +98,19 @@ public abstract class Haplotype {
 	@XmlAttribute(name="fullValue")
 	public abstract String getFullHaplotypeString();
 	
+	/**
+	 * The {@link #getFullHaplotypeString() fullValue} as originally submitted, before alleles
+	 * with no reference frequency were pruned from each ambiguity list.
+	 *
+	 * @return the unpruned allele-level representation — reported as {@code originalValue} in
+	 *         output XML — or {@code null} (attribute omitted) when pruning removed or rewrote
+	 *         nothing, i.e. it would just repeat {@code fullValue}
+	 */
+	@XmlAttribute(name="originalValue")
+	public String getOriginalFullHaplotypeString() {
+		return null;
+	}
+
 	public abstract List<String> getAlleles();
 	public abstract Map<Locus, List<String>> getAlleleMap();
 	public abstract HashMap<Locus, Integer> getHaplotypeInstanceMap();

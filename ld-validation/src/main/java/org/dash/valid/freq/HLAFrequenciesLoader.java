@@ -50,6 +50,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.dash.valid.DisequilibriumElement;
 import org.dash.valid.Linkages;
+import org.dash.valid.ars.AntigenRecognitionSiteLoader;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Locus;
 import org.dash.valid.base.BaseDisequilibriumElement;
@@ -62,6 +63,15 @@ import org.dash.valid.race.FrequencyByRaceComparator;
 public class HLAFrequenciesLoader {	
 	private HashMap<EnumSet<Locus>, List<DisequilibriumElement>> disequilibriumElementsMap = new HashMap<EnumSet<Locus>, List<DisequilibriumElement>>();
 	private final HashMap<Locus, List<String>> individualLocusFrequencies = new HashMap<Locus, List<String>>();
+	// True when the per-locus lists were derived from uploaded haplotype files rather than loaded
+	// from a single-locus list. Derived lists only decide which submitted alleles to keep: swapping
+	// in the list's spelling could pick a different spelling (e.g. C*07:01 vs C*07:01g) than the
+	// haplotype row a genotype has to match, silently losing linkages.
+	private boolean individualFrequenciesDerived = false;
+
+	public boolean swapsInFrequencyAllele() {
+		return !individualFrequenciesDerived;
+	}
 	
 	private static final String UNDERSCORE = "_";
 	
@@ -158,22 +168,118 @@ public class HLAFrequenciesLoader {
 		return false;
 	}
 	
+	// Returns the first entry, in list order, of the locus's frequency list that matches allele
+	// (field-level prefix match or antigen recognition site), or null. Was a linear scan calling
+	// both comparisons against every entry -- about 60 ms per genotype once a locus lists
+	// thousands of distinct alleles -- so the list is indexed once, with the same first-match
+	// result (see AlleleMatchIndex).
 	public String hasFrequency(Locus locus, String allele) {
 		HashMap<Locus, List<String>> individualFrequencies = getIndividualLocusFrequencies();
 		if (individualFrequencies == null || individualFrequencies.get(locus) == null) {
 			return null;
 		}
-		
-		for (String alleleWithFrequency : individualFrequencies.get(locus)) {
-			if (GLStringUtilities.fieldLevelComparison(allele, alleleWithFrequency) || 
-					GLStringUtilities.checkAntigenRecognitionSite(allele, alleleWithFrequency)) {
-				return alleleWithFrequency;
+
+		List<String> alleles = individualFrequencies.get(locus);
+		AlleleMatchIndex index;
+		synchronized (matchIndexes) {
+			index = matchIndexes.get(locus);
+			if (index == null || !index.isFor(alleles)) {
+				index = new AlleleMatchIndex(alleles);
+				matchIndexes.put(locus, index);
 			}
 		}
-		
-		return null;
+
+		return index.firstMatch(allele);
 	}
-	
+
+	private final Map<Locus, AlleleMatchIndex> matchIndexes = new HashMap<Locus, AlleleMatchIndex>();
+
+	/**
+	 * Index over one locus's frequency list answering "which entry would a front-to-back scan with
+	 * {@link GLStringUtilities#fieldLevelComparison} or {@link GLStringUtilities#checkAntigenRecognitionSite}
+	 * stop at first". fieldLevelComparison is a prefix match on colon-separated fields in either
+	 * direction, so an entry matches when it is a field prefix of the allele (looked up by each prefix
+	 * of the allele) or the allele is a field prefix of it (looked up by the allele itself). The ARS
+	 * check is keyed by the entry, so it is inverted once into protein -> first entry. The ARS map
+	 * can be swapped (HLA DB version change), so the inverted part is rebuilt when it is.
+	 */
+	private static class AlleleMatchIndex {
+		private final List<String> source;
+		private final int sourceSize;
+		private final Map<String, Integer> exact = new HashMap<String, Integer>();
+		private final Map<String, Integer> prefix = new HashMap<String, Integer>();
+		private HashMap<String, HashSet<String>> arsMapUsed;
+		private Map<String, Integer> arsFirst;
+
+		AlleleMatchIndex(List<String> alleles) {
+			this.source = alleles;
+			this.sourceSize = alleles.size();
+			for (int i = 0; i < alleles.size(); i++) {
+				String entry = alleles.get(i);
+				exact.putIfAbsent(entry, i);
+				for (int colon = entry.indexOf(':'); colon >= 0; colon = entry.indexOf(':', colon + 1)) {
+					prefix.putIfAbsent(entry.substring(0, colon), i);
+				}
+				prefix.putIfAbsent(entry, i);
+			}
+		}
+
+		boolean isFor(List<String> alleles) {
+			return alleles == source && alleles.size() == sourceSize;
+		}
+
+		String firstMatch(String allele) {
+			if (allele == null) {
+				return null;
+			}
+
+			int best = Integer.MAX_VALUE;
+
+			for (int colon = allele.indexOf(':'); colon >= 0; colon = allele.indexOf(':', colon + 1)) {
+				Integer i = exact.get(allele.substring(0, colon));
+				if (i != null && i < best) best = i;
+			}
+			Integer i = exact.get(allele);
+			if (i != null && i < best) best = i;
+			i = prefix.get(allele);
+			if (i != null && i < best) best = i;
+
+			Integer ars = arsFirst().get(GLStringUtilities.convertToProteinLevel(allele));
+			if (ars != null && ars < best) best = ars;
+
+			return best == Integer.MAX_VALUE ? null : source.get(best);
+		}
+
+		private synchronized Map<String, Integer> arsFirst() {
+			HashMap<String, HashSet<String>> arsMap = null;
+			try {
+				arsMap = AntigenRecognitionSiteLoader.getInstance().getArsMap();
+			}
+			catch (IOException | InvalidFormatException e) {
+				LOGGER.warning("Could not load ars data.");
+				e.printStackTrace();
+			}
+
+			if (arsFirst == null || arsMap != arsMapUsed) {
+				Map<String, Integer> inverted = new HashMap<String, Integer>();
+				if (arsMap != null) {
+					for (int i = 0; i < source.size(); i++) {
+						HashSet<String> proteins = arsMap.get(source.get(i));
+						if (proteins != null) {
+							for (String protein : proteins) {
+								inverted.putIfAbsent(protein, i);
+							}
+						}
+					}
+				}
+				arsFirst = inverted;
+				arsMapUsed = arsMap;
+			}
+
+			return arsFirst;
+		}
+	}
+
 	private void init(Set<File> frequencyFiles, File allelesFile) {
 		Set<Linkages> linkages = new HashSet<Linkages>();
 		try {
@@ -196,6 +302,12 @@ public class HLAFrequenciesLoader {
 			
 			if (allelesFile != null) {
 				loadIndividualLocusFrequencies(allelesFile);
+			}
+			else {
+				// Every allele in an uploaded haplotype file has a frequency, so no separate
+				// alleles list is needed to prune ambiguous genotypes against it.
+				deriveIndividualLocusFrequencies();
+				individualFrequenciesDerived = true;
 			}
 		}
 		catch (IOException e) { //| ApiException e) {
@@ -747,6 +859,42 @@ public class HLAFrequenciesLoader {
 		}
 	}
 	
+	// Builds the per-locus allowed-allele lists from the loaded haplotype elements (union across
+	// files covering the same locus), in first-seen order so the result is deterministic.
+	private void deriveIndividualLocusFrequencies() {
+		for (List<DisequilibriumElement> elements : disequilibriumElementsMap.values()) {
+			Map<Locus, Set<String>> allelesByLocus = new EnumMap<Locus, Set<String>>(Locus.class);
+
+			for (DisequilibriumElement element : elements) {
+				for (Locus locus : element.getLoci()) {
+					if (!locus.hasIndividualFrequencies()) {
+						continue;
+					}
+					Set<String> alleles = allelesByLocus.get(locus);
+					if (alleles == null) {
+						alleles = new java.util.LinkedHashSet<String>();
+						allelesByLocus.put(locus, alleles);
+					}
+					for (String allele : element.getHlaElement(locus)) {
+						if (!GLStringConstants.DASH.equals(allele) && !GLStringConstants.NNNN.equals(allele)) {
+							alleles.add(allele);
+						}
+					}
+				}
+			}
+
+			for (Map.Entry<Locus, Set<String>> entry : allelesByLocus.entrySet()) {
+				Set<String> merged = new java.util.LinkedHashSet<String>();
+				List<String> existing = individualLocusFrequencies.get(entry.getKey());
+				if (existing != null) {
+					merged.addAll(existing);
+				}
+				merged.addAll(entry.getValue());
+				individualLocusFrequencies.put(entry.getKey(), new ArrayList<String>(merged));
+			}
+		}
+	}
+
 	private void loadIndividualLocusFrequencies(File allelesFile) throws IOException {
 		String row;
 		String parts[];

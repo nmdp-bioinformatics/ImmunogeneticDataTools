@@ -44,6 +44,9 @@ public class LinkageDisequilibriumGenotypeList {
 	private String submittedGlString;
 	
 	private HashMap<Locus, List<List<String>>> allelesMap = new HashMap<Locus, List<List<String>>>();
+	// Parallel to allelesMap (same locus, same index): each ambiguity list as submitted, before
+	// setAlleles pruned it down to alleles with a reference frequency.
+	private HashMap<Locus, List<List<String>>> originalAllelesMap = new HashMap<Locus, List<List<String>>>();
 	private HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>> possibleHaplotypeMap = new HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>>();
 	
 	public static final boolean EXPECTING_DQA1;
@@ -278,6 +281,7 @@ public class LinkageDisequilibriumGenotypeList {
 
 
 	private void setAlleles(Locus locus, List<String> alleleAmbiguities) {
+		List<String> submittedAmbiguities = alleleAmbiguities;
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		List<String> replacementAlleles = new ArrayList<String>();
 		
@@ -294,9 +298,10 @@ public class LinkageDisequilibriumGenotypeList {
 					LOGGER.info("Removing allele with no frequency: " + allele);
 				}
 				else {
-					if (!replacementAlleles.contains(alleleWithFrequency)) {
-						LOGGER.finest("Swapping in allele with frequency: " + alleleWithFrequency);
-						replacementAlleles.add(alleleWithFrequency);
+					String kept = freqLoader.swapsInFrequencyAllele() ? alleleWithFrequency : allele;
+					if (!replacementAlleles.contains(kept)) {
+						LOGGER.finest("Keeping allele with frequency: " + kept);
+						replacementAlleles.add(kept);
 					}
 				}	
 			}	
@@ -324,6 +329,13 @@ public class LinkageDisequilibriumGenotypeList {
 		
 		alleles.add(alleleAmbiguities);
 		this.allelesMap.put(locus, alleles);
+
+		List<List<String>> originals = originalAllelesMap.get(locus);
+		if (originals == null) {
+			originals = new ArrayList<List<String>>();
+			originalAllelesMap.put(locus, originals);
+		}
+		originals.add(submittedAmbiguities);
 	}
 
 	public static List<List<Object>> cartesianProduct(List<?>... sets) {
@@ -383,8 +395,12 @@ public class LinkageDisequilibriumGenotypeList {
 					drb345Homozygous = true;
 				}
 				
+				int haplotypeIndex = getHaplotypeIndex(locus, (List<String>) haplotypePart);
+				List<List<String>> originals = originalAllelesMap.get(locus);
+				List<String> original = originals != null && haplotypeIndex >= 0 && haplotypeIndex < originals.size()
+						? originals.get(haplotypeIndex) : (List<String>) haplotypePart;
 				singleLocusHaplotypes.put(locus, new SingleLocusHaplotype(
-						locus, (List<String>) haplotypePart, getHaplotypeIndex(locus, (List<String>) haplotypePart)));
+						locus, (List<String>) haplotypePart, haplotypeIndex, original));
 			}
 			possibleHaplotypes.add(new MultiLocusHaplotype(
 					singleLocusHaplotypes, drb345Homozygous));

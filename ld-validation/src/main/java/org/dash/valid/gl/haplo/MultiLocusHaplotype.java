@@ -44,6 +44,9 @@ import org.dash.valid.gl.GLStringConstants;
 public class MultiLocusHaplotype extends Haplotype {
 	private Map<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
+	// Per-locus allele lists as submitted, before pruning; empty for haplotypes not built from a
+	// genotype (reference data), where getAlleles(locus) is the only list there is.
+	private Map<Locus, List<String>> originalAlleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	
 	private Integer sequence;
 	
@@ -134,6 +137,9 @@ public class MultiLocusHaplotype extends Haplotype {
 		for (SingleLocusHaplotype singleLocusHaplotype : singleLocusHaplotypes.values()) {
 			alleleMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getAlleles());
 			haplotypeInstanceMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getHaplotypeInstance());
+			if (singleLocusHaplotype.getOriginalAlleles() != null) {
+				originalAlleleMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getOriginalAlleles());
+			}
 		}
 		setDRB345Homozygous(drb345Homozygous);
 	}
@@ -167,6 +173,17 @@ public class MultiLocusHaplotype extends Haplotype {
 	
 	@Override
 	public String getFullHaplotypeString() {
+		return buildFullHaplotypeString(false);
+	}
+
+	@Override
+	public String getOriginalFullHaplotypeString() {
+		String original = buildFullHaplotypeString(true);
+
+		return original.equals(getFullHaplotypeString()) ? null : original;
+	}
+
+	private String buildFullHaplotypeString(boolean original) {
 		StringBuffer fullValue = new StringBuffer();
 		Set<Locus> loci = new LocusSet(new LocusComparator());
 
@@ -175,7 +192,12 @@ public class MultiLocusHaplotype extends Haplotype {
 			loci.addAll(haplotype.getLoci());
 			
 			for (Locus locus : loci) {
-				for (String allele : haplotype.getAlleles(locus)) {
+				List<String> locusAlleles = haplotype.getAlleles(locus);
+				if (original && haplotype instanceof MultiLocusHaplotype
+						&& ((MultiLocusHaplotype) haplotype).originalAlleleMap.containsKey(locus)) {
+					locusAlleles = ((MultiLocusHaplotype) haplotype).originalAlleleMap.get(locus);
+				}
+				for (String allele : locusAlleles) {
 					fullValue.append(allele);
 					fullValue.append(GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
 				}
