@@ -26,6 +26,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -47,6 +48,11 @@ public class LinkageDisequilibriumGenotypeList {
 	// Parallel to allelesMap (same locus, same index): each ambiguity list as submitted, before
 	// setAlleles pruned it down to alleles with a reference frequency.
 	private HashMap<Locus, List<List<String>>> originalAllelesMap = new HashMap<Locus, List<List<String>>>();
+	// Parallel to allelesMap (same locus, same index): {gene block, "|" alternative within that
+	// block} for each ambiguity list. Alternatives of one block are mutually exclusive, so two
+	// lists can only be the two copies of one genotype if they are in different blocks or the
+	// same alternative (see canBeDifferentCopies).
+	private HashMap<Locus, List<int[]>> entryRefsMap = new HashMap<Locus, List<int[]>>();
 	private HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>> possibleHaplotypeMap = new HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>>();
 	
 	public static final boolean EXPECTING_DQA1;
@@ -111,7 +117,7 @@ public class LinkageDisequilibriumGenotypeList {
 		if (!this.allelesMap.containsKey(Locus.HLA_DRB345) || this.allelesMap.get(Locus.HLA_DRB345).size() == 0) {
 			List<String> drb345Set = new ArrayList<String>();
 			drb345Set.add(GLStringConstants.NNNN);
-			setAlleles(Locus.HLA_DRB345, drb345Set);
+			setAlleles(Locus.HLA_DRB345, drb345Set, -1, 0);
 		}
 	}
 
@@ -245,10 +251,14 @@ public class LinkageDisequilibriumGenotypeList {
 
 		List<String> genes = GLStringUtilities.parse(glString,
 				GLStringConstants.GENE_DELIMITER);
+		int blockIndex = -1;
 		for (String gene : genes) {
+			blockIndex++;
 			List<String> genotypeAmbiguities = GLStringUtilities.parse(gene,
 					GLStringConstants.GENOTYPE_AMBIGUITY_DELIMITER);
+			int alternativeIndex = -1;
 			for (String genotypeAmbiguity : genotypeAmbiguities) {
+				alternativeIndex++;
 				List<String> geneCopies = GLStringUtilities.parse(
 						genotypeAmbiguity,
 						GLStringConstants.GENE_COPY_DELIMITER);
@@ -271,7 +281,7 @@ public class LinkageDisequilibriumGenotypeList {
 							locus = Locus.normalizeLocus(Locus.lookup(locusVal));
 							locusMap.put(locusVal, locus);
 						}
-						setAlleles(locus, alleleAmbiguities);
+						setAlleles(locus, alleleAmbiguities, blockIndex, alternativeIndex);
 					}
 				}
 			}
@@ -280,7 +290,7 @@ public class LinkageDisequilibriumGenotypeList {
 
 
 
-	private void setAlleles(Locus locus, List<String> alleleAmbiguities) {
+	private void setAlleles(Locus locus, List<String> alleleAmbiguities, int blockIndex, int alternativeIndex) {
 		List<String> submittedAmbiguities = alleleAmbiguities;
 		HLAFrequenciesLoader freqLoader = HLAFrequenciesLoader.getInstance();
 		List<String> replacementAlleles = new ArrayList<String>();
@@ -336,6 +346,40 @@ public class LinkageDisequilibriumGenotypeList {
 			originalAllelesMap.put(locus, originals);
 		}
 		originals.add(submittedAmbiguities);
+
+		List<int[]> refs = entryRefsMap.get(locus);
+		if (refs == null) {
+			refs = new ArrayList<int[]>();
+			entryRefsMap.put(locus, refs);
+		}
+		refs.add(new int[] { blockIndex, alternativeIndex });
+	}
+
+	/**
+	 * Whether a haplotype built from one of the ambiguity lists in {@code sources1} and a
+	 * haplotype built from one of those in {@code sources2} can be the two different copies of
+	 * this genotype at {@code locus}. Indexes are positions in {@link #getAlleles(Locus)}.
+	 * Two lists qualify if they are different lists and are not in different {@code |}
+	 * alternatives of the same gene block (alternatives are mutually exclusive).
+	 */
+	public boolean canBeDifferentCopies(Locus locus, Set<Integer> sources1, Set<Integer> sources2) {
+		List<int[]> refs = entryRefsMap.get(locus);
+		if (refs == null) {
+			return false;
+		}
+		// One list for the whole locus (e.g. a lone DRB4, or the NNNN placeholder when there is no
+		// DRB3/4/5): treated as homozygous, as GLStringUtilities.checkHomozygous always has.
+		if (refs.size() <= 1) {
+			return true;
+		}
+		for (Integer i : sources1) {
+			for (Integer j : sources2) {
+				if (!i.equals(j) && (refs.get(i)[0] != refs.get(j)[0] || refs.get(i)[1] == refs.get(j)[1])) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static List<List<Object>> cartesianProduct(List<?>... sets) {
@@ -367,7 +411,9 @@ public class LinkageDisequilibriumGenotypeList {
 		checkAmbiguityThresholds(loci);
 
 		HashMap<Locus, SingleLocusHaplotype> singleLocusHaplotypes = new HashMap<Locus, SingleLocusHaplotype>();
-		Set<MultiLocusHaplotype> possibleHaplotypes = new HashSet<MultiLocusHaplotype>();
+		// Keyed by haplotype so that combinations equal at the string level (e.g. from different
+		// | alternatives) keep the union of the lists they were built from.
+		HashMap<MultiLocusHaplotype, MultiLocusHaplotype> possibleHaplotypes = new HashMap<MultiLocusHaplotype, MultiLocusHaplotype>();
 
 		Locus[] locusArray = loci.toArray(new Locus[loci.size()]);
 		List<?>[] allelesByLocus = (List<?>[]) getAlleles(locusArray);
@@ -379,6 +425,7 @@ public class LinkageDisequilibriumGenotypeList {
 
 		for (List<Object> haplotypeCombo : haplotypeCombinations) {
 			boolean drb345Homozygous = false;
+			HashMap<Locus, Integer> entryIndexes = new HashMap<Locus, Integer>();
 			for (Object haplotypePart : haplotypeCombo) {
 				List<String> alleles = (List<String>) haplotypePart;
 				alleleParts = alleles.iterator().next()
@@ -399,14 +446,34 @@ public class LinkageDisequilibriumGenotypeList {
 				List<List<String>> originals = originalAllelesMap.get(locus);
 				List<String> original = originals != null && haplotypeIndex >= 0 && haplotypeIndex < originals.size()
 						? originals.get(haplotypeIndex) : (List<String>) haplotypePart;
+				// Position of this very list (identity: equal lists from different copies or
+				// alternatives must stay distinct) in the locus's ambiguity lists.
+				int entryIndex = 0;
+				for (List<String> entry : getAlleles(locus)) {
+					if (entry == haplotypePart) {
+						break;
+					}
+					entryIndex++;
+				}
+				entryIndexes.put(locus, entryIndex);
 				singleLocusHaplotypes.put(locus, new SingleLocusHaplotype(
 						locus, (List<String>) haplotypePart, haplotypeIndex, original));
 			}
-			possibleHaplotypes.add(new MultiLocusHaplotype(
-					singleLocusHaplotypes, drb345Homozygous));
+			MultiLocusHaplotype haplotype = new MultiLocusHaplotype(
+					singleLocusHaplotypes, drb345Homozygous);
+			for (Map.Entry<Locus, Integer> entryIndex : entryIndexes.entrySet()) {
+				haplotype.addEntrySource(entryIndex.getKey(), entryIndex.getValue());
+			}
+			MultiLocusHaplotype existing = possibleHaplotypes.get(haplotype);
+			if (existing == null) {
+				possibleHaplotypes.put(haplotype, haplotype);
+			}
+			else {
+				existing.mergeEntrySources(haplotype);
+			}
 		}
 
-		return possibleHaplotypes;
+		return new HashSet<MultiLocusHaplotype>(possibleHaplotypes.values());
 	}
 	
 	public Set<MultiLocusHaplotype> getPossibleHaplotypes(EnumSet<Locus> loci) {

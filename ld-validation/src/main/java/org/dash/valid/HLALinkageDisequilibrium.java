@@ -267,6 +267,7 @@ public class HLALinkageDisequilibrium {
 				DetectedDisequilibriumElement detectedElement = new DetectedDisequilibriumElement(match);
 				detectedElement.setHaplotype(element.getHaplotype());
 				clonedHaplotype.setLinkage(detectedElement);
+				clonedHaplotype.mergeEntrySources(possibleHaplotype);
 
 				String haplotypeValue = clonedHaplotype.getHaplotypeString();
 				MultiLocusHaplotype existingHaplotype = linkedHaplotypesByValue.get(haplotypeValue);
@@ -275,9 +276,13 @@ public class HLALinkageDisequilibrium {
 					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
 				}
 				else if (clonedHaplotype.getFullHaplotypeString().compareTo(existingHaplotype.getFullHaplotypeString()) < 0) {
+					clonedHaplotype.mergeEntrySources(existingHaplotype);
 					LOGGER.fine("Multiple raw allele candidates tie at G-group " + haplotypeValue + ": keeping "
 							+ clonedHaplotype.getFullHaplotypeString() + " over " + existingHaplotype.getFullHaplotypeString());
 					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
+				}
+				else {
+					existingHaplotype.mergeEntrySources(clonedHaplotype);
 				}
 			}
 		}
@@ -311,20 +316,20 @@ public class HLALinkageDisequilibrium {
 
 		findings.addLinkages(detectedDisequilibriumElements);
 
-		for (Haplotype haplotype1 : linkedHaplotypes) {
-			for (Haplotype haplotype2 : linkedHaplotypes) {
-				int idx = 0;
+		// A pair is valid only if, at every locus, the two haplotypes can be the two different
+		// copies of the genotype: different ambiguity lists, and not from different "|"
+		// alternatives (which are mutually exclusive).
+		for (MultiLocusHaplotype haplotype1 : linkedHaplotypes) {
+			for (MultiLocusHaplotype haplotype2 : linkedHaplotypes) {
+				boolean valid = true;
 				for (Locus locus : loci) {
-					if ((!glString.hasHomozygous(locus) && haplotype1.getHaplotypeInstance(locus) == haplotype2.getHaplotypeInstance(locus))) {
-						// move on to next haplotype2
+					if (!glString.canBeDifferentCopies(locus, haplotype1.getEntrySources(locus), haplotype2.getEntrySources(locus))) {
+						valid = false;
 						break;
 					}
-					
-					if (idx == loci.size() - 1) {
-						linkedPairs.add(new HaplotypePair(haplotype1, haplotype2));
-					}
-					
-					idx++;
+				}
+				if (valid) {
+					linkedPairs.add(new HaplotypePair(haplotype1, haplotype2));
 				}
 			}
 		}
