@@ -23,6 +23,7 @@ package org.dash.valid.gl.haplo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +49,45 @@ public class MultiLocusHaplotype extends Haplotype {
 	// genotype (reference data), where getAlleles(locus) is the only list there is.
 	private Map<Locus, List<String>> originalAlleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	
+	// Per locus, positions (in the genotype's ambiguity-list order) of the lists this haplotype
+	// was built from; several when equal haplotypes from different lists/alternatives merged.
+	private Map<Locus, Set<Integer>> entrySources = new HashMap<Locus, Set<Integer>>();
+
+	// The submitted (unpruned) lists in locus order; part of what distinguishes two candidates
+	// whose pruned lists are equal.
+	public String getOriginalAlleleString() {
+		Set<Locus> loci = new LocusSet(new LocusComparator());
+		loci.addAll(alleleMap.keySet());
+		StringBuilder sb = new StringBuilder();
+		for (Locus locus : loci) {
+			List<String> original = originalAlleleMap.get(locus);
+			sb.append(original != null ? original : getAlleles(locus)).append(GLStringConstants.GENE_DELIMITER);
+		}
+		return sb.toString();
+	}
+
+	public Set<Integer> getEntrySources(Locus locus) {
+		Set<Integer> sources = entrySources.get(locus);
+		return sources == null ? new HashSet<Integer>() : sources;
+	}
+
+	public void addEntrySource(Locus locus, int index) {
+		Set<Integer> sources = entrySources.get(locus);
+		if (sources == null) {
+			sources = new HashSet<Integer>();
+			entrySources.put(locus, sources);
+		}
+		sources.add(index);
+	}
+
+	public void mergeEntrySources(MultiLocusHaplotype other) {
+		for (Map.Entry<Locus, Set<Integer>> e : other.entrySources.entrySet()) {
+			for (Integer index : e.getValue()) {
+				addEntrySource(e.getKey(), index);
+			}
+		}
+	}
+
 	private Integer sequence;
 	
 	@Override

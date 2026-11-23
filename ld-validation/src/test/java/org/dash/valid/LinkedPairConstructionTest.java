@@ -184,4 +184,58 @@ public class LinkedPairConstructionTest {
 	public void testThreeLociNoPairWhenTheMiddleLocusIsTheSameCopy() throws IOException {
 		assertPairs(linkedPairs(A1_C1_B1 + A2_C1_B2, HET_A + "^" + HET_C + "^" + HET_B));
 	}
+
+	// "|" alternatives are mutually exclusive genotypes: B 08:01+07:02 or 08:01+44:03. C1~B3 (B*44:03,
+	// alternative 2) and C2~B2 (B*07:02, alternative 1) are never both present, so they must not pair;
+	// C1~B1 (08:01 occurs in both alternatives) pairs with either complement.
+	@Test
+	public void testPairsDoNotMixGenotypeAlternatives() throws IOException {
+		String c1b3 = "HIS,HLA-C*01:02~HLA-B*44:03,1.0E-4\n";
+		String c2b3 = "HIS,HLA-C*07:01~HLA-B*44:03,6.0E-5\n";
+		String altB = "HLA-B*08:01:01:01+HLA-B*07:02:01|HLA-B*08:01:01:01+HLA-B*44:03:01";
+		assertPairs(linkedPairs(C1_B1 + C2_B2 + c1b3 + c2b3, HET_C + "^" + altB),
+				"HLA-C*01:02~HLA-B*08:01g | HLA-C*07:01~HLA-B*07:02",
+				"HLA-C*01:02~HLA-B*08:01g | HLA-C*07:01~HLA-B*44:03");
+	}
+
+	// Lists from different alternatives that look identical (here B*08:01 once pruning or ambiguity makes
+	// them equal) are not two copies of one genotype: no alternative holds B*08:01 twice, so the
+	// "homozygous" shortcut must not fire and C1~B1 + C2~B1 is not a valid pair.
+	@Test
+	public void testIdenticalListsInDifferentAlternativesAreNotHomozygous() throws IOException {
+		String altB = "HLA-B*08:01:01:01+HLA-B*52:01:01:01|HLA-B*08:01:01:01+HLA-B*35:02:01";
+		assertPairs(linkedPairs(C1_B1 + C2_B1, HET_C + "^" + altB));
+	}
+
+	// A genuinely homozygous alternative still pairs the haplotype with itself.
+	@Test
+	public void testHomozygousWithinOneAlternativeStillPairs() throws IOException {
+		String altB = HOM_B + "|HLA-B*08:01:01:01+HLA-B*52:01:01:01";
+		assertPairs(linkedPairs(C1_B1 + C2_B1, HET_C + "^" + altB),
+				"HLA-C*01:02~HLA-B*08:01g | HLA-C*07:01~HLA-B*08:01g");
+	}
+
+	// A locus with a single ambiguity list (hemizygous / lone DRB4 / NNNN placeholder) counts as
+	// homozygous, so the haplotype still pairs with itself.
+	@Test
+	public void testSingleListLocusPairsHaplotypeWithItself() throws IOException {
+		assertPairs(linkedPairs(C1_B1, "HLA-C*01:02:01^" + HOM_B),
+				"HLA-C*01:02~HLA-B*08:01g | HLA-C*01:02~HLA-B*08:01g");
+	}
+
+	// Two copies whose lists prune to the same list still report their own submitted lists, one per
+	// haplotype of the pair (it used to be the first copy's original for both).
+	@Test
+	public void testPrunedEqualCopiesEachKeepTheirOwnOriginal() throws IOException {
+		String twoCopies = "HLA-B*08:01:01:01/HLA-B*08:18+HLA-B*08:01:01:01/HLA-B*08:39";
+		List<String> originals = new ArrayList<String>();
+		for (HaplotypePair pair : linkedPairs(C1_B1 + C2_B1, HET_C + "^" + twoCopies)) {
+			for (Haplotype haplotype : pair.getHaplotypes()) {
+				originals.add(haplotype.getOriginalFullHaplotypeString());
+			}
+		}
+		assertEquals(2, originals.size());
+		assertEquals(true, originals.get(0).contains("08:18") != originals.get(1).contains("08:18"));
+		assertEquals(true, originals.get(0).contains("08:39") != originals.get(1).contains("08:39"));
+	}
 }
