@@ -22,6 +22,8 @@
 package org.dash.valid;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -238,6 +240,11 @@ public class HLALinkageDisequilibrium {
 		// fullValue wins) instead of leaving it to HashSet iteration order.
 		Map<String, MultiLocusHaplotype> linkedHaplotypesByValue = new LinkedHashMap<String, MultiLocusHaplotype>();
 
+		// Every candidate per G-group value, kept so that pairs are built from candidates that
+		// actually come from two different copies of one "|" alternative (the winner alone
+		// may come from a different alternative than its partner).
+		Map<String, List<MultiLocusHaplotype>> candidatesByValue = new HashMap<String, List<MultiLocusHaplotype>>();
+
 		MultiLocusHaplotype clonedHaplotype = null;
 
 		// disequilibriumElements can be huge (900K+ rows for a real custom-uploaded frequency
@@ -268,6 +275,10 @@ public class HLALinkageDisequilibrium {
 				detectedElement.setHaplotype(element.getHaplotype());
 				clonedHaplotype.setLinkage(detectedElement);
 				clonedHaplotype.mergeEntrySources(possibleHaplotype);
+				if (!candidatesByValue.containsKey(clonedHaplotype.getHaplotypeString())) {
+					candidatesByValue.put(clonedHaplotype.getHaplotypeString(), new ArrayList<MultiLocusHaplotype>());
+				}
+				candidatesByValue.get(clonedHaplotype.getHaplotypeString()).add(clonedHaplotype);
 
 				String haplotypeValue = clonedHaplotype.getHaplotypeString();
 				MultiLocusHaplotype existingHaplotype = linkedHaplotypesByValue.get(haplotypeValue);
@@ -276,13 +287,9 @@ public class HLALinkageDisequilibrium {
 					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
 				}
 				else if (clonedHaplotype.getFullHaplotypeString().compareTo(existingHaplotype.getFullHaplotypeString()) < 0) {
-					clonedHaplotype.mergeEntrySources(existingHaplotype);
 					LOGGER.fine("Multiple raw allele candidates tie at G-group " + haplotypeValue + ": keeping "
 							+ clonedHaplotype.getFullHaplotypeString() + " over " + existingHaplotype.getFullHaplotypeString());
 					linkedHaplotypesByValue.put(haplotypeValue, clonedHaplotype);
-				}
-				else {
-					existingHaplotype.mergeEntrySources(clonedHaplotype);
 				}
 			}
 		}
@@ -318,22 +325,44 @@ public class HLALinkageDisequilibrium {
 
 		// A pair is valid only if, at every locus, the two haplotypes can be the two different
 		// copies of the genotype: different ambiguity lists, and not from different "|"
-		// alternatives (which are mutually exclusive).
-		for (MultiLocusHaplotype haplotype1 : linkedHaplotypes) {
-			for (MultiLocusHaplotype haplotype2 : linkedHaplotypes) {
-				boolean valid = true;
-				for (Locus locus : loci) {
-					if (!glString.canBeDifferentCopies(locus, haplotype1.getEntrySources(locus), haplotype2.getEntrySources(locus))) {
-						valid = false;
-						break;
+		// alternatives (which are mutually exclusive). The reported candidates for a pair are
+		// the first combination (in fullValue order) that satisfies that.
+		Comparator<MultiLocusHaplotype> byFullValue = new Comparator<MultiLocusHaplotype>() {
+			public int compare(MultiLocusHaplotype a, MultiLocusHaplotype b) {
+				int c = a.getFullHaplotypeString().compareTo(b.getFullHaplotypeString());
+				return c != 0 ? c : a.getOriginalAlleleString().compareTo(b.getOriginalAlleleString());
+			}
+		};
+		for (List<MultiLocusHaplotype> candidates : candidatesByValue.values()) {
+			Collections.sort(candidates, byFullValue);
+		}
+
+		for (MultiLocusHaplotype winner1 : linkedHaplotypes) {
+			for (MultiLocusHaplotype winner2 : linkedHaplotypes) {
+				HaplotypePair pair = null;
+				for (MultiLocusHaplotype haplotype1 : candidatesByValue.get(winner1.getHaplotypeString())) {
+					for (MultiLocusHaplotype haplotype2 : candidatesByValue.get(winner2.getHaplotypeString())) {
+						if (pair == null && canBeDifferentCopies(glString, loci, haplotype1, haplotype2)) {
+							pair = new HaplotypePair(haplotype1, haplotype2);
+						}
 					}
 				}
-				if (valid) {
-					linkedPairs.add(new HaplotypePair(haplotype1, haplotype2));
+				if (pair != null) {
+					linkedPairs.add(pair);
 				}
 			}
 		}
 		
 		return linkedPairs;
+	}
+
+	private static boolean canBeDifferentCopies(LinkageDisequilibriumGenotypeList glString, EnumSet<Locus> loci,
+			MultiLocusHaplotype haplotype1, MultiLocusHaplotype haplotype2) {
+		for (Locus locus : loci) {
+			if (!glString.canBeDifferentCopies(locus, haplotype1.getEntrySources(locus), haplotype2.getEntrySources(locus))) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

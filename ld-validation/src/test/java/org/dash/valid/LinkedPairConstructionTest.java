@@ -222,4 +222,20 @@ public class LinkedPairConstructionTest {
 		assertPairs(linkedPairs(C1_B1, "HLA-C*01:02:01^" + HOM_B),
 				"HLA-C*01:02~HLA-B*08:01g | HLA-C*01:02~HLA-B*08:01g");
 	}
+
+	// Two copies whose lists prune to the same list still report their own submitted lists, one per
+	// haplotype of the pair (it used to be the first copy's original for both).
+	@Test
+	public void testPrunedEqualCopiesEachKeepTheirOwnOriginal() throws IOException {
+		String twoCopies = "HLA-B*08:01:01:01/HLA-B*08:18+HLA-B*08:01:01:01/HLA-B*08:39";
+		List<String> originals = new ArrayList<String>();
+		for (HaplotypePair pair : linkedPairs(C1_B1 + C2_B1, HET_C + "^" + twoCopies)) {
+			for (Haplotype haplotype : pair.getHaplotypes()) {
+				originals.add(haplotype.getOriginalFullHaplotypeString());
+			}
+		}
+		assertEquals(2, originals.size());
+		assertEquals(true, originals.get(0).contains("08:18") != originals.get(1).contains("08:18"));
+		assertEquals(true, originals.get(0).contains("08:39") != originals.get(1).contains("08:39"));
+	}
 }

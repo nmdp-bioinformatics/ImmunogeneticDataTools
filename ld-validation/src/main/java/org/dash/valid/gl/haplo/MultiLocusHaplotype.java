@@ -53,6 +53,19 @@ public class MultiLocusHaplotype extends Haplotype {
 	// was built from; several when equal haplotypes from different lists/alternatives merged.
 	private Map<Locus, Set<Integer>> entrySources = new HashMap<Locus, Set<Integer>>();
 
+	// The submitted (unpruned) lists in locus order; part of what distinguishes two candidates
+	// whose pruned lists are equal.
+	public String getOriginalAlleleString() {
+		Set<Locus> loci = new LocusSet(new LocusComparator());
+		loci.addAll(alleleMap.keySet());
+		StringBuilder sb = new StringBuilder();
+		for (Locus locus : loci) {
+			List<String> original = originalAlleleMap.get(locus);
+			sb.append(original != null ? original : getAlleles(locus)).append(GLStringConstants.GENE_DELIMITER);
+		}
+		return sb.toString();
+	}
+
 	public Set<Integer> getEntrySources(Locus locus) {
 		Set<Integer> sources = entrySources.get(locus);
 		return sources == null ? new HashSet<Integer>() : sources;

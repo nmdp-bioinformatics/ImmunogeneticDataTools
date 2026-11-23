@@ -53,7 +53,7 @@ public class LinkageDisequilibriumGenotypeList {
 	// lists can only be the two copies of one genotype if they are in different blocks or the
 	// same alternative (see canBeDifferentCopies).
 	private HashMap<Locus, List<int[]>> entryRefsMap = new HashMap<Locus, List<int[]>>();
-	private HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>> possibleHaplotypeMap = new HashMap<EnumSet<Locus>, Set<MultiLocusHaplotype>>();
+	private HashMap<EnumSet<Locus>, List<MultiLocusHaplotype>> possibleHaplotypeMap = new HashMap<EnumSet<Locus>, List<MultiLocusHaplotype>>();
 	
 	public static final boolean EXPECTING_DQA1;
 	
@@ -406,14 +406,20 @@ public class LinkageDisequilibriumGenotypeList {
 		return ret;
 	}
 
-	@SuppressWarnings("unchecked")
 	public Set<MultiLocusHaplotype> constructPossibleHaplotypes(Set<Locus> loci) {
+		return new HashSet<MultiLocusHaplotype>(constructPossibleHaplotypeList(loci));
+	}
+
+	// Candidates equal at the string level stay separate when their submitted (unpruned) lists
+	// differ, so a candidate always reports the original lists of the copies it was built from.
+	@SuppressWarnings("unchecked")
+	public List<MultiLocusHaplotype> constructPossibleHaplotypeList(Set<Locus> loci) {
 		checkAmbiguityThresholds(loci);
 
 		HashMap<Locus, SingleLocusHaplotype> singleLocusHaplotypes = new HashMap<Locus, SingleLocusHaplotype>();
 		// Keyed by haplotype so that combinations equal at the string level (e.g. from different
 		// | alternatives) keep the union of the lists they were built from.
-		HashMap<MultiLocusHaplotype, MultiLocusHaplotype> possibleHaplotypes = new HashMap<MultiLocusHaplotype, MultiLocusHaplotype>();
+		HashMap<String, MultiLocusHaplotype> possibleHaplotypes = new HashMap<String, MultiLocusHaplotype>();
 
 		Locus[] locusArray = loci.toArray(new Locus[loci.size()]);
 		List<?>[] allelesByLocus = (List<?>[]) getAlleles(locusArray);
@@ -443,11 +449,9 @@ public class LinkageDisequilibriumGenotypeList {
 				}
 				
 				int haplotypeIndex = getHaplotypeIndex(locus, (List<String>) haplotypePart);
-				List<List<String>> originals = originalAllelesMap.get(locus);
-				List<String> original = originals != null && haplotypeIndex >= 0 && haplotypeIndex < originals.size()
-						? originals.get(haplotypeIndex) : (List<String>) haplotypePart;
 				// Position of this very list (identity: equal lists from different copies or
-				// alternatives must stay distinct) in the locus's ambiguity lists.
+				// alternatives must stay distinct) in the locus's ambiguity lists. Also selects
+				// the submitted list, so pruned-equal copies each keep their own original.
 				int entryIndex = 0;
 				for (List<String> entry : getAlleles(locus)) {
 					if (entry == haplotypePart) {
@@ -455,6 +459,9 @@ public class LinkageDisequilibriumGenotypeList {
 					}
 					entryIndex++;
 				}
+				List<List<String>> originals = originalAllelesMap.get(locus);
+				List<String> original = originals != null && entryIndex < originals.size()
+						? originals.get(entryIndex) : (List<String>) haplotypePart;
 				entryIndexes.put(locus, entryIndex);
 				singleLocusHaplotypes.put(locus, new SingleLocusHaplotype(
 						locus, (List<String>) haplotypePart, haplotypeIndex, original));
@@ -464,19 +471,20 @@ public class LinkageDisequilibriumGenotypeList {
 			for (Map.Entry<Locus, Integer> entryIndex : entryIndexes.entrySet()) {
 				haplotype.addEntrySource(entryIndex.getKey(), entryIndex.getValue());
 			}
-			MultiLocusHaplotype existing = possibleHaplotypes.get(haplotype);
+			String key = haplotype.getHaplotypeString() + GLStringConstants.NEWLINE + haplotype.getOriginalAlleleString();
+			MultiLocusHaplotype existing = possibleHaplotypes.get(key);
 			if (existing == null) {
-				possibleHaplotypes.put(haplotype, haplotype);
+				possibleHaplotypes.put(key, haplotype);
 			}
 			else {
 				existing.mergeEntrySources(haplotype);
 			}
 		}
 
-		return new HashSet<MultiLocusHaplotype>(possibleHaplotypes.values());
+		return new ArrayList<MultiLocusHaplotype>(possibleHaplotypes.values());
 	}
 	
-	public Set<MultiLocusHaplotype> getPossibleHaplotypes(EnumSet<Locus> loci) {
+	public List<MultiLocusHaplotype> getPossibleHaplotypes(EnumSet<Locus> loci) {
 		if (!this.possibleHaplotypeMap.containsKey(loci)) {
 			setPossibleHaplotypes(loci);
 		}
@@ -485,7 +493,7 @@ public class LinkageDisequilibriumGenotypeList {
 	}
 
 	public void setPossibleHaplotypes(EnumSet<Locus> loci) {
-		this.possibleHaplotypeMap.put(loci, constructPossibleHaplotypes(loci));
+		this.possibleHaplotypeMap.put(loci, constructPossibleHaplotypeList(loci));
 	}
 
 	public String getId() {
