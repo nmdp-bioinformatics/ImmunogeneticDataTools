@@ -17,10 +17,12 @@ import jakarta.validation.Valid;
 
 import org.dash.valid.ReferenceDataUnavailableException;
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
+import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Sample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
+import org.dash.valid.freq.Nmdp2026FrequencyCache;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
@@ -92,10 +94,11 @@ public class GenotypesApiController implements GenotypesApi {
 
     @Override
     public ResponseEntity<Samples> submitGenotypes(@Parameter(description = "Genotypes", required = true) @Valid @RequestBody Genotypes genotypes) {
+        String linkages = normalizeLinkages(genotypes.getLinkages(), genotypes.getFrequencySet());
         synchronized (ANALYSIS_LOCK) {
-            configure(genotypes.getHladbVersion(), genotypes.getFrequencySet());
+            try (RequestScope scope = RequestScope.open(genotypes.getAcceptNmdp2026Terms(), linkages)) {
+                configure(genotypes.getHladbVersion(), genotypes.getFrequencySet());
 
-            try {
                 Samples samples = new Samples();
                 for (Genotype genotype : genotypes.getGenotype()) {
                     LinkageDisequilibriumGenotypeList linkedGLString = GLStringUtilities.inflateGenotypeList(genotype.getId(), genotype.getGlString(), null);
@@ -104,6 +107,9 @@ public class GenotypesApiController implements GenotypesApi {
                 }
 
                 return ResponseEntity.ok(samples);
+            }
+            catch (Nmdp2026FrequencyCache.LicenseNotAcceptedException e) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
             }
             catch (ReferenceDataUnavailableException e) {
                 // An hladbVersion that doesn't exist (file not found) is the caller's input: 400, and the
@@ -139,7 +145,10 @@ public class GenotypesApiController implements GenotypesApi {
     // immune to that real request-scoped cleanup.
     @Override
     public ResponseEntity<JobReference> submitGenotypesFile(MultipartFile file, String hladbVersion, String frequencySet,
-            List<MultipartFile> frequencyFiles, MultipartFile allelesFile) {
+            List<MultipartFile> frequencyFiles, MultipartFile allelesFile, Boolean acceptNmdp2026Terms, String linkages) {
+        // Before any upload is copied or a job exists: a bad name is the caller's input, a 400.
+        boolean customFiles = frequencyFiles != null && !frequencyFiles.isEmpty();
+        String normalizedLinkages = customFiles ? null : normalizeLinkages(linkages, frequencySet);
         if (frequencyFiles != null) {
             for (MultipartFile frequencyFile : frequencyFiles) {
                 validateFrequencyFileLooksReasonable(frequencyFile);
@@ -166,7 +175,7 @@ public class GenotypesApiController implements GenotypesApi {
         File jobAllelesFile = ownedAllelesFile;
         Job job = jobRegistry.submit(j -> {
             try {
-                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile);
+                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile, acceptNmdp2026Terms, normalizedLinkages);
             }
             finally {
                 for (File tempFile : ownedTempFiles) {
@@ -197,26 +206,131 @@ public class GenotypesApiController implements GenotypesApi {
     // ANALYSIS_LOCK submitGenotypes uses, since both paths mutate the same process-wide
     // hladb/frequency-set configuration.
     private List<Sample> runGenotypesFileJob(Job job, File inputFile, String originalFilename, String hladbVersion, String frequencySet,
-            Set<File> frequencyFiles, File allelesFile) throws IOException {
+            Set<File> frequencyFiles, File allelesFile, Boolean acceptNmdp2026Terms, String linkages) throws IOException {
         synchronized (ANALYSIS_LOCK) {
-            job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
-            configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
+            // Held across both configuring and analyzing: the named frequency set is loaded
+            // lazily, on first use during analysis, and that is where nmdp-2026 downloads.
+            Nmdp2026FrequencyCache.setDownloadListener(job::updateDownload);
+            try (RequestScope scope = RequestScope.open(acceptNmdp2026Terms, linkages)) {
+                job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
+                configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
+                // A named set is otherwise loaded lazily by the first genotype's analysis, which
+                // would make a minutes-long first fetch/parse (nmdp-2026) look like "analyzing 0
+                // of N". A no-op when the set is already loaded or came from uploaded files.
+                HLAFrequenciesLoader.getInstance();
 
-            job.setPhase(Job.Phase.ANALYZING_GENOTYPES);
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StandardCharsets.UTF_8))) {
-                String name = originalFilename != null ? originalFilename : "upload";
-                // Reuses the exact same parsing + analysis path analyze-gl-strings' CLI uses for
-                // its own batch input files, rather than reimplementing the tab-delimited
-                // "id<TAB>glString" format here.
-                return LinkageDisequilibriumAnalyzer.analyzeGLStringFile(name, reader, job::updateProgress);
+                job.setPhase(Job.Phase.ANALYZING_GENOTYPES);
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StandardCharsets.UTF_8))) {
+                    String name = originalFilename != null ? originalFilename : "upload";
+                    // Reuses the exact same parsing + analysis path analyze-gl-strings' CLI uses for
+                    // its own batch input files, rather than reimplementing the tab-delimited
+                    // "id<TAB>glString" format here.
+                    return LinkageDisequilibriumAnalyzer.analyzeGLStringFile(name, reader, job::updateProgress);
+                }
+            }
+            finally {
+                Nmdp2026FrequencyCache.setDownloadListener(null);
+                job.clearDownload();
             }
         }
+    }
+
+    // Per-request settings that the reference-data classes read from process-wide System
+    // properties, set for just this request's critical section (callers hold ANALYSIS_LOCK) and
+    // restored afterwards, so an operator's own -D values still apply to requests that don't
+    // set them:
+    //  - acceptNmdp2026Terms -> org.dash.accept.license (what the CLI's --accept-license sets).
+    //    Nmdp2026FrequencyCache only downloads when it is set, so the terms gate is enforced here
+    //    on the server whatever the page does.
+    //  - linkages -> org.dash.linkages (the CLI's -Dorg.dash.linkages), which LinkagesLoader
+    //    reads when it is rebuilt at the start of every request.
+    private static final class RequestScope implements AutoCloseable {
+        private final String previousLicense;
+        private final String previousLinkages;
+
+        private RequestScope(String previousLicense, String previousLinkages) {
+            this.previousLicense = previousLicense;
+            this.previousLinkages = previousLinkages;
+        }
+
+        static RequestScope open(Boolean acceptedTerms, String linkages) {
+            RequestScope scope = new RequestScope(System.getProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY),
+                    System.getProperty(Linkages.LINKAGES_PROPERTY));
+            if (Boolean.TRUE.equals(acceptedTerms)) {
+                System.setProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY, Nmdp2026FrequencyCache.LICENSE_ACCEPTANCE_VALUE);
+            }
+            if (linkages != null) {
+                System.setProperty(Linkages.LINKAGES_PROPERTY, linkages);
+            }
+            return scope;
+        }
+
+        @Override
+        public void close() {
+            restore(Nmdp2026FrequencyCache.LICENSE_PROPERTY, previousLicense);
+            restore(Linkages.LINKAGES_PROPERTY, previousLinkages);
+        }
+
+        private static void restore(String property, String previous) {
+            if (previous == null) {
+                System.clearProperty(property);
+            }
+            else {
+                System.setProperty(property, previous);
+            }
+        }
+    }
+
+    // Blank/missing -> null (keep the set's default). Otherwise a space- or comma-separated list
+    // of Linkages short names (acb, drb1_dqb1, ...), each checked here: LinkagesLoader would
+    // otherwise only warn about an unknown name and quietly fall back to a default. Returns the
+    // names space-separated, which is what org.dash.linkages expects.
+    static String normalizeLinkages(String linkages, String frequencySet) {
+        if (linkages == null || linkages.isBlank()) {
+            return null;
+        }
+
+        Set<String> valid = new java.util.LinkedHashSet<>();
+        for (Linkages linkage : Linkages.values()) {
+            valid.add(linkage.getShortName());
+        }
+
+        Set<String> chosen = new java.util.LinkedHashSet<>();
+        for (String name : linkages.trim().split("[\\s,]+")) {
+            if (!valid.contains(name)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Unknown linkage '" + name + "'. Use any of: " + String.join(", ", valid));
+            }
+            chosen.add(name);
+        }
+
+        // A set only has data for some linkages; the loader quietly ignores the rest, so the
+        // analysis would come back with no linkages at all, which reads as a clean "nothing found".
+        Frequencies set = frequencySet == null || frequencySet.isBlank() ? Frequencies.NMDP_2007_STD : Frequencies.lookup(frequencySet);
+        Set<String> offered = new java.util.LinkedHashSet<>();
+        for (Linkages linkage : HLAFrequenciesLoader.supportedLinkages(set)) {
+            offered.add(linkage.getShortName());
+        }
+        for (String name : chosen) {
+            if (!offered.contains(name)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "The " + set.getShortName() + " frequencies have no file for linkage '" + name + "'. Use any of: " + String.join(", ", offered));
+            }
+        }
+
+        return String.join(" ", chosen);
     }
 
     private JobStatus toJobStatus(Job job) {
         JobStatus status = new JobStatus();
         status.setJobId(job.getId());
         status.setPhase(JobStatus.PhaseEnum.valueOf(job.getPhase().name()));
+
+        if (job.getDownloadFile() != null) {
+            status.setDownloadFile(job.getDownloadFile());
+            status.setDownloadedBytes(job.getDownloadedBytes());
+            status.setDownloadTotalBytes(job.getDownloadTotalBytes());
+        }
 
         if (job.getPhase() == Job.Phase.ANALYZING_GENOTYPES) {
             status.setProcessed(job.getProcessed());
@@ -315,9 +429,12 @@ public class GenotypesApiController implements GenotypesApi {
         String resolvedFrequencySet = frequencySet != null ? frequencySet : Frequencies.NMDP_2007_STD.getShortName();
         System.setProperty(Frequencies.FREQUENCIES_PROPERTY, resolvedFrequencySet);
 
-        if (!resolvedFrequencySet.equals(currentFrequencySet)) {
+        // What is loaded depends on the linkages too (which files are read), so a different
+        // linkage choice for the same set must reload; an unchanged one still reuses the data.
+        String loadedKey = resolvedFrequencySet + " | " + System.getProperty(Linkages.LINKAGES_PROPERTY, "");
+        if (!loadedKey.equals(currentFrequencySet)) {
             HLAFrequenciesLoader.reset();
-            currentFrequencySet = resolvedFrequencySet;
+            currentFrequencySet = loadedKey;
         }
     }
 

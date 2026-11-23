@@ -45,6 +45,11 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/Samples'
+        400:
+          description: linkages names an unknown linkage
+        403:
+          description: frequencySet nmdp-2026 needs a download and acceptNmdp2026Terms
+            was not set; the message carries the license notice
         405:
           description: Invalid input
   /genotypes/file:
@@ -98,6 +103,26 @@ paths:
           is not also supplied.
         required: false
         type: file
+      - in: formData
+        name: acceptNmdp2026Terms
+        description: set true to acknowledge the NMDP 2026 frequencies' CC BY-NC-ND 4.0
+          terms (non-commercial use only, no derivatives, attribution required; Zenodo
+          record 17966993). Required for frequencySet nmdp-2026 whenever its files still
+          have to be downloaded; ignored for every other set. Without it, a request that
+          needs the download fails (the job's error carries the notice) instead of fetching.
+        required: false
+        type: boolean
+      - in: formData
+        name: linkages
+        description: which linkages to search for with a named frequencySet, as
+          space- or comma-separated names (acb, cb, drb_dqb, drb_dq, drb1_dqb1,
+          dpa1_dpb1, five_loc, six_loc, nine_loc) -- the CLI's org.dash.linkages.
+          Blank keeps the set's default (five_loc for nmdp-2026). nmdp-2026 has no
+          cb or drb_dqb file, so those are skipped with a warning; nine_loc loads the
+          ~181 MB file and needs about 6 GB of heap. Ignored when frequencyFiles is
+          supplied (the linkages come from the uploaded file). An unknown name is a 400.
+        required: false
+        type: string
       responses:
         202:
           description: Accepted -- processing runs asynchronously (real frequency
@@ -206,6 +231,17 @@ definitions:
           licensed dataset this project never redistributes. To use your own
           frequency file(s) instead of a named set, use POST /genotypes/file's
           frequencyFiles field -- this JSON endpoint can't carry file uploads.
+      acceptNmdp2026Terms:
+        type: boolean
+        description: acknowledges the NMDP 2026 frequencies' CC BY-NC-ND 4.0 terms
+          (see POST /genotypes/file). Needed for frequencySet nmdp-2026 when its files
+          are not cached yet; otherwise the response is 403 carrying the notice.
+      linkages:
+        type: string
+        description: linkages to search for, space- or comma-separated (acb, cb,
+          drb_dqb, drb_dq, drb1_dqb1, dpa1_dpb1, five_loc, six_loc, nine_loc); blank
+          keeps the frequencySet's default. An unknown name is a 400. See
+          POST /genotypes/file.
     xml:
       name: genotypes
   Genotype:
@@ -357,6 +393,18 @@ definitions:
       percent:
         type: integer
         description: only meaningful during ANALYZING_GENOTYPES
+      downloadFile:
+        type: string
+        description: only present during LOADING_REFERENCE_DATA while a reference file (the
+          nmdp-2026 frequencies) is being downloaded
+      downloadedBytes:
+        type: integer
+        format: int64
+        description: bytes of downloadFile received so far
+      downloadTotalBytes:
+        type: integer
+        format: int64
+        description: expected size of downloadFile
       result:
         $ref: '#/definitions/Samples'
       error:

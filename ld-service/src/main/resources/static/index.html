@@ -44,9 +44,47 @@
       <select id="frequencySet">
         <option value="nmdp-2007-std" selected>nmdp-2007-std (default)</option>
         <option value="nmdp-2007">nmdp-2007</option>
-        <option value="nmdp-std">nmdp-std</option>
         <option value="wiki">wiki</option>
+        <option value="nmdp-2026">nmdp-2026 (2026 NMDP release, downloaded on first use)</option>
       </select>
+
+      <div id="nmdp2026-terms" class="notice" hidden>
+        <p><strong>Terms for the 2026 NMDP frequencies.</strong> These are NMDP&rsquo;s
+          &ldquo;Classical HLA Allele and Haplotype Frequency Estimates in US Populations&rdquo;
+          (<a href="https://doi.org/10.5281/zenodo.17966993" target="_blank" rel="noopener">doi:10.5281/zenodo.17966993</a>),
+          owned by NMDP and licensed
+          <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a>:
+          <strong>non-commercial use only, no derivatives, attribution required</strong>.
+          They are not part of this software. The unmodified files are downloaded from
+          <a href="https://zenodo.org/records/17966993" target="_blank" rel="noopener">Zenodo</a>
+          on first use and kept in this service&rsquo;s cache; the nine-locus file alone is about
+          181&nbsp;MB and needs roughly 6&nbsp;GB of memory once loaded.</p>
+        <p>Cite as: NMDP, Classical HLA Allele and Haplotype Frequency Estimates in US
+          Populations, Zenodo, doi:10.5281/zenodo.17966993.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" id="acceptNmdp2026Terms">
+          I have read the terms and will use these data accordingly
+        </label>
+      </div>
+
+      <fieldset id="linkages-box" class="inner-fieldset">
+        <legend>Linkages to search for (optional)</legend>
+        <p class="field-hint-plain">Leave all unticked for the set&rsquo;s default (five-locus for nmdp-2026). Greyed-out
+          linkages have no data in the chosen set. Not used with your own frequency files, which define their own.</p>
+        <div id="linkage-options">
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="acb"> A~C~B</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="cb"> C~B</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="drb1_dqb1"> DRB1~DQB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="drb_dq"> DRBX~DRB1~DQA1~DQB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="drb_dqb"> DRB345~DRB1~DQB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="dpa1_dpb1"> DPA1~DPB1</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="five_loc"> five-locus (A~C~B~DRB1~DQB1)</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="six_loc"> six-locus (+DRBX)</label>
+          <label class="checkbox-label"><input type="checkbox" name="linkage" value="nine_loc"> nine-locus (all)</label>
+        </div>
+        <p id="linkages-hint" class="field-hint-plain" hidden>nmdp-2026 has no C~B or DRB345~DRB1~DQB1 file, so those two are unavailable.
+          Nine-locus is a ~181&nbsp;MB file and needs about 6&nbsp;GB of memory.</p>
+      </fieldset>
 
       <label class="checkbox-label">
         <input type="checkbox" id="useCustomFrequencies">

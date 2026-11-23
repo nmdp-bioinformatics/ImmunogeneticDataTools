@@ -26,6 +26,8 @@
 
   // Populated once a job reaches DONE; used only by the download button.
   let lastResult = null;
+  // Whether the in-flight job asked for nmdp-2026 (the controls may change while it runs).
+  let lastSubmittedNmdp2026 = false;
 
   function toggleInputMode() {
     const isPaste = pasteRadio.checked;
@@ -35,7 +37,53 @@
   pasteRadio.addEventListener("change", toggleInputMode);
   fileRadio.addEventListener("change", toggleInputMode);
 
+  const nmdp2026Terms = document.getElementById("nmdp2026-terms");
+  const acceptNmdp2026Terms = document.getElementById("acceptNmdp2026Terms");
+
+  // The notice shows only when it can matter: nmdp-2026 chosen and not overridden by uploaded
+  // files. The server enforces the acknowledgement itself; this is the page's half.
+  function usesNmdp2026() {
+    return frequencySet.value === "nmdp-2026" && !(useCustomFrequencies.checked && frequencyFilesInput.files.length);
+  }
+  // Mirrors HLAFrequenciesLoader#supportedLinkages.
+  const SUPPORTED_LINKAGES = {
+    "nmdp-2007-std": ["acb", "cb", "drb_dqb", "five_loc"],
+    "nmdp-2007": ["acb", "cb", "drb1_dqb1", "five_loc"],
+    "wiki": ["cb", "drb_dq"],
+    "nmdp-2026": ["acb", "drb_dq", "drb1_dqb1", "dpa1_dpb1", "five_loc", "six_loc", "nine_loc"]
+  };
+  const linkagesBox = document.getElementById("linkages-box");
+  const linkagesHint = document.getElementById("linkages-hint");
+  function usesCustomFiles() {
+    return useCustomFrequencies.checked && frequencyFilesInput.files.length > 0;
+  }
+  function selectedLinkages() {
+    return Array.prototype.map.call(
+      document.querySelectorAll('input[name="linkage"]:checked'), function (box) { return box.value; });
+  }
+  function toggleNmdp2026Terms() {
+    nmdp2026Terms.hidden = !usesNmdp2026();
+    // Linkages only apply to a named set; uploaded files define their own.
+    linkagesBox.hidden = usesCustomFiles();
+    const is2026 = frequencySet.value === "nmdp-2026";
+    linkagesHint.hidden = !is2026;
+    // Which linkages each set has data for. The server is the authority (a request for another one
+    // is a 400 that lists the valid names); this only keeps the boxes from offering the rest.
+    const supported = SUPPORTED_LINKAGES[frequencySet.value];
+    document.querySelectorAll('input[name="linkage"]').forEach(function (box) {
+      const ok = !supported || supported.indexOf(box.value) !== -1;
+      if (!ok) {
+        box.checked = false;
+      }
+      box.disabled = !ok;
+    });
+  }
+  frequencySet.addEventListener("change", toggleNmdp2026Terms);
+  toggleNmdp2026Terms();
+  frequencyFilesInput.addEventListener("change", toggleNmdp2026Terms);
+
   useCustomFrequencies.addEventListener("change", function () {
+    toggleNmdp2026Terms();
     customFrequenciesDiv.hidden = !useCustomFrequencies.checked;
   });
 
@@ -150,6 +198,12 @@
       }
     }
 
+    if (usesNmdp2026() && !acceptNmdp2026Terms.checked) {
+      showError("Tick \u201cI have read the terms\u201d to use the nmdp-2026 frequencies; they are downloaded from NMDP\u2019s Zenodo record under CC BY-NC-ND 4.0.");
+      nmdp2026Terms.hidden = false;
+      return;
+    }
+
     resetOutput();
 
     let fileBlob;
@@ -189,8 +243,15 @@
       }
     } else if (frequencySet.value) {
       formData.append("frequencySet", frequencySet.value);
+      if (selectedLinkages().length) {
+        formData.append("linkages", selectedLinkages().join(" "));
+      }
+      if (usesNmdp2026()) {
+        formData.append("acceptNmdp2026Terms", "true");
+      }
     }
 
+    lastSubmittedNmdp2026 = usesNmdp2026();
     submitBtn.disabled = true;
     try {
       const response = await fetch("/genotypes/file", { method: "POST", body: formData });
@@ -247,15 +308,30 @@
   // LOADING_REFERENCE_DATA has no processed/total/percent (the parsing loop itself has no
   // progress signal -- see JobStatus's phase description in the spec), so that phase shows an
   // indeterminate <progress> bar (no value attribute) rather than a fake/frozen percentage.
+  function formatMb(bytes) {
+    return (bytes / 1048576).toFixed(bytes >= 10485760 ? 0 : 1) + " MB";
+  }
+
   function updateProgress(status) {
     if (status.phase === "QUEUED") {
       progressPhase.textContent = "Queued…";
       progressBar.removeAttribute("value");
       progressCount.textContent = "";
     } else if (status.phase === "LOADING_REFERENCE_DATA") {
-      progressPhase.textContent = "Loading reference data… (large custom frequency files can take several minutes)";
-      progressBar.removeAttribute("value");
-      progressCount.textContent = "";
+      if (status.downloadFile && status.downloadTotalBytes > 0) {
+        // A real percentage while a reference file downloads; the parse that follows has no
+        // progress signal, so the bar goes indeterminate again after this.
+        const done = status.downloadedBytes || 0;
+        progressPhase.textContent = "Downloading " + status.downloadFile + " from NMDP\u2019s Zenodo record\u2026";
+        progressBar.value = Math.min(100, Math.floor((done * 100) / status.downloadTotalBytes));
+        progressCount.textContent = formatMb(done) + " of " + formatMb(status.downloadTotalBytes);
+      } else {
+        progressPhase.textContent = lastSubmittedNmdp2026
+          ? "Preparing frequencies\u2026 loading the NMDP 2026 files into memory (the first run also downloads them; large files can take several minutes)"
+          : "Loading reference data\u2026 (large custom frequency files can take several minutes)";
+        progressBar.removeAttribute("value");
+        progressCount.textContent = "";
+      }
     } else if (status.phase === "ANALYZING_GENOTYPES") {
       progressPhase.textContent = "Analyzing genotypes…";
       progressBar.value = status.percent || 0;

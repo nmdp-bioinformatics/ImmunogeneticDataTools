@@ -55,6 +55,48 @@ public class StaticUiTest {
     }
 
     @Test
+    public void indexOffersNmdp2026WithItsTermsCheckbox() {
+        String html = restTemplate.getForEntity("http://localhost:" + port + "/", String.class).getBody();
+        assertTrue(html.contains("value=\"nmdp-2026\""), "frequency set dropdown should offer nmdp-2026");
+        assertTrue(html.contains("id=\"acceptNmdp2026Terms\""), "the terms checkbox should be on the page");
+        assertTrue(html.contains("CC BY-NC-ND 4.0") && html.contains("10.5281/zenodo.17966993"), "the notice should name the license and DOI");
+    }
+
+    // The 2011 NMDP sets are license-restricted and their data isn't bundled, so offering them
+    // would only lead to an error.
+    @Test
+    public void indexDoesNotOfferTheUnbundled2011NmdpSets() {
+        String html = restTemplate.getForEntity("http://localhost:" + port + "/", String.class).getBody();
+        assertFalse(html.contains("value=\"nmdp-std\""), "nmdp-std has no bundled data");
+        assertFalse(html.contains("value=\"nmdp\""), "nmdp has no bundled data");
+    }
+
+    // Over a real server (MockMvc can't show this): the explanatory text of a deliberate 4xx must
+    // reach the caller, not just the status. Spring Boot hides it unless
+    // server.error.include-message is set.
+    @Test
+    public void deliberateErrorMessagesReachTheCaller() {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        String body = "{\"genotype\":[{\"id\":\"s\",\"glString\":\"HLA-A*01:01+HLA-A*02:01\"}],\"linkages\":\"nonsense\"}";
+
+        org.springframework.web.client.HttpClientErrorException e = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.client.HttpClientErrorException.class,
+                () -> restTemplate.postForEntity("http://localhost:" + port + "/genotypes",
+                        new org.springframework.http.HttpEntity<>(body, headers), String.class));
+
+        assertEquals(HttpStatus.BAD_REQUEST, e.getStatusCode());
+        assertTrue(e.getResponseBodyAsString().contains("nonsense"), e.getResponseBodyAsString());
+        assertTrue(e.getResponseBodyAsString().contains("five_loc"), "the message should list the valid names");
+    }
+
+    @Test
+    public void indexOffersLinkageSelection() {
+        String html = restTemplate.getForEntity("http://localhost:" + port + "/", String.class).getBody();
+        assertTrue(html.contains("name=\"linkage\" value=\"nine_loc\""), "linkage checkboxes should be on the page");
+    }
+
+    @Test
     public void cssAndJsAssetsAreServed() {
         ResponseEntity<String> css = restTemplate.getForEntity("http://localhost:" + port + "/css/app.css", String.class);
         assertEquals(HttpStatus.OK, css.getStatusCode());
