@@ -20,6 +20,7 @@ import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Sample;
+import org.dash.valid.SkippedSample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.freq.Nmdp2026FrequencyCache;
@@ -52,6 +53,7 @@ import io.swagger.model.JobReference;
 import io.swagger.model.JobStatus;
 import io.swagger.model.SampleData;
 import io.swagger.model.Samples;
+import io.swagger.model.SkippedData;
 
 @Controller
 public class GenotypesApiController implements GenotypesApi {
@@ -336,7 +338,16 @@ public class GenotypesApiController implements GenotypesApi {
         if (job.getPhase() == Job.Phase.DONE) {
             Samples samples = new Samples();
             for (Sample sample : job.getResult()) {
-                samples.addSampleItem(populateSwaggerObject(sample));
+                if (sample instanceof SkippedSample) {
+                    SkippedData skipped = new SkippedData();
+                    skipped.setId(sample.getId());
+                    skipped.setLine(((SkippedSample) sample).getLine());
+                    skipped.setReason(((SkippedSample) sample).getReason());
+                    samples.addSkippedItem(skipped);
+                }
+                else {
+                    samples.addSampleItem(populateSwaggerObject(sample));
+                }
             }
             status.setResult(samples);
         }

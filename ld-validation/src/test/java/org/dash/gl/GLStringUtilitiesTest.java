@@ -21,12 +21,16 @@
 */
 package org.dash.gl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.dash.valid.Locus;
@@ -34,6 +38,7 @@ import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.GLStringConstants;
 import org.dash.valid.gl.GLStringUtilities;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
+import org.dash.valid.gl.SkippedGenotype;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,6 +120,32 @@ public class GLStringUtilitiesTest {
 		}
 	}
 	
+	@Test
+	public void testBlankLinesAreIgnoredAndSkippedGenotypesReported() throws IOException {
+		StringBuilder ambiguousB = new StringBuilder("HLA-B*99:01");
+		for (int i = 2; i <= 21; i++) {
+			ambiguousB.append(GLStringConstants.ALLELE_AMBIGUITY_DELIMITER).append(String.format("HLA-B*99:%02d", i));
+		}
+		String input = "ok1\tHLA-A*01:01+HLA-A*02:01\n"
+				+ "\n"
+				+ "   \n"
+				+ "tooAmbiguous\tHLA-A*01:01" + GLStringConstants.GENE_DELIMITER + ambiguousB + "\n"
+				+ "ok2\tHLA-A*01:01+HLA-A*02:01\n";
+
+		List<SkippedGenotype> skipped = new ArrayList<SkippedGenotype>();
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile("blankLines.txt",
+				new BufferedReader(new StringReader(input)), skipped);
+
+		assertEquals(2, glStrings.size(), "blank lines must not produce samples");
+		assertEquals("ok1", glStrings.get(0).getId());
+		assertEquals("ok2", glStrings.get(1).getId());
+
+		assertEquals(1, skipped.size());
+		assertEquals("tooAmbiguous", skipped.get(0).getId());
+		assertEquals(4, skipped.get(0).getLine());
+		assertTrue(skipped.get(0).getReason().contains("tooAmbiguous"));
+	}
+
 	@Test
 	public void testCommaDelimitedGLStringFile() {
 		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile("commaDelimitedExample.txt");

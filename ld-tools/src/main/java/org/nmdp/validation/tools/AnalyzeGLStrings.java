@@ -34,6 +34,7 @@ import java.util.concurrent.Callable;
 
 import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Sample;
+import org.dash.valid.SkippedSample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.freq.Nmdp2026FrequencyCache;
@@ -165,6 +166,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 	    	String summaryFindings = SummaryWriter.formatDetectedLinkages(allSamples);
     	
 		for (Sample sample : samplesList) {
+			if (sample instanceof SkippedSample) continue;
 			DetectedLinkageFindings findings = sample.getFindings();
     		if (warnings != null && warnings == Boolean.TRUE && !findings.hasAnomalies()) {
     			continue;
