@@ -115,6 +115,11 @@ If you prefer to compile / package the software from source, follow these instru
 * a consolidation of all of the information contained in the above logs may be found in summary.xml, for easy parsing
 * errors and basic logging in immuno.log
 
+*`fullValue` and `originalValue` in summary.xml:*
+
++ `fullValue` is the allele list the analysis matched on, after dropping ambiguous alleles that have no frequency in the frequency set. `originalValue` is the list as submitted (omitted when nothing was dropped or rewritten)
++ The spelling of a kept allele in `fullValue` depends on the frequency set: sets with per-locus allele files (nmdp-2007, nmdp-2026) write it as that list spells it (for example `HLA-B*08:01g`); sets whose lists are derived from the haplotype files (uploaded files, nmdp-2007-std, wiki) write it as submitted. The same genotype can therefore show different `fullValue` text under different sets with identical linkages and pairs
+
 *Common Well Documented 2.0 and Common Intermediate Well Documented 3.0 Behavior:*
 
 + In order to cut down on the amount of warnings produced for ambiguous alleles, the CWD 2.0 and CIWD 3.0 validations are performed only at the protein level
