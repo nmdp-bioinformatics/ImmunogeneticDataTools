@@ -117,9 +117,9 @@ public class HLAFrequenciesLoader {
 
     }
 
-    public static HLAFrequenciesLoader getInstance(Set<File> frequencyFiles, File allelesFile) {
+    public static HLAFrequenciesLoader getInstance(Set<File> frequencyFiles) {
     	instance = new HLAFrequenciesLoader();
-    	instance.init(frequencyFiles, allelesFile);
+    	instance.init(frequencyFiles);
 
     	return instance;
     }
@@ -280,7 +280,7 @@ public class HLAFrequenciesLoader {
 		}
 	}
 
-	private void init(Set<File> frequencyFiles, File allelesFile) {
+	private void init(Set<File> frequencyFiles) {
 		Set<Linkages> linkages = new HashSet<Linkages>();
 		try {
 			for (File frequencyFile : frequencyFiles) {
@@ -300,15 +300,10 @@ public class HLAFrequenciesLoader {
 			
 			LinkagesLoader.getInstance(linkages);
 			
-			if (allelesFile != null) {
-				loadIndividualLocusFrequencies(allelesFile);
-			}
-			else {
-				// Every allele in an uploaded haplotype file has a frequency, so no separate
-				// alleles list is needed to prune ambiguous genotypes against it.
-				deriveIndividualLocusFrequencies();
-				individualFrequenciesDerived = true;
-			}
+			// Every allele in an uploaded haplotype file has a frequency, so the allowed-allele
+			// lists used to prune ambiguous genotypes are derived from the files themselves.
+			deriveIndividualLocusFrequencies();
+			individualFrequenciesDerived = true;
 		}
 		catch (IOException e) { //| ApiException e) {
 			LOGGER.severe("Couldn't load disequilibrium element reference file.");
@@ -895,42 +890,6 @@ public class HLAFrequenciesLoader {
 		}
 	}
 
-	private void loadIndividualLocusFrequencies(File allelesFile) throws IOException {
-		String row;
-		String parts[];
-		HashMap<String, Locus> locusMap = new HashMap<String, Locus>();
-		Locus locus;
-		List<String> singleLocusFrequencies;
-		
-		InputStream inStream = new FileInputStream(allelesFile);
-		
-		InputStreamReader isr = new InputStreamReader(inStream);
-		BufferedReader reader = new BufferedReader(isr);
-		
-		while ((row = reader.readLine()) != null) {
-			parts = row.split(GLStringUtilities.ESCAPED_ASTERISK);
-			if (locusMap.containsKey(parts[0])) {
-				locus = locusMap.get(parts[0]);
-			}
-			else {
-				locus = Locus.lookup(parts[0]);
-				locusMap.put(parts[0], locus);
-			}
-			
-			if (individualLocusFrequencies.containsKey(locus)) {
-				singleLocusFrequencies = individualLocusFrequencies.get(locus);
-			}
-			else {
-				singleLocusFrequencies = new ArrayList<String>();
-			}
-			
-			singleLocusFrequencies.add(row);
-			individualLocusFrequencies.put(locus, singleLocusFrequencies);			
-		}
-		
-		reader.close();
-	}
-	
 	private void loadIndividualLocusFrequencies(Frequencies freq) throws IOException, InvalidFormatException {
 		for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
 			for (Locus locus : linkage.getLoci()) {

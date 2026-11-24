@@ -27,9 +27,8 @@ public class AnalyzeGLStringsTest {
 		String freq = null;
 		Boolean warnings = null;
 		Set<File> frequencyFiles = null;
-		File allelesFile = null;
 		
-		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFiles, allelesFile);
+		AnalyzeGLStrings analyzer = new AnalyzeGLStrings(inputFile, outputFile, hladb, freq, warnings, frequencyFiles);
 		List<Sample> samplesList = analyzer.performAnalysis(reader);
 		
 		assertNotNull(samplesList);

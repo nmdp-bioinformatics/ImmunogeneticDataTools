@@ -52,7 +52,7 @@ public class HLAFrequenciesLoaderTest {
 		Set<File> noRankFreqs = new HashSet<File>();
 		noRankFreqs.add(new File(uri));
 
-		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(noRankFreqs, null).getDisequilibriumElements(Linkages.FIVE_LOCUS.getLoci());
+		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(noRankFreqs).getDisequilibriumElements(Linkages.FIVE_LOCUS.getLoci());
 		assertTrue(disElements != null && disElements.size() > 0);
 	}
 
@@ -69,7 +69,7 @@ public class HLAFrequenciesLoaderTest {
 		Set<File> nineLocusFreqs = new HashSet<File>();
 		nineLocusFreqs.add(new File(uri));
 
-		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(nineLocusFreqs, null).getDisequilibriumElements(Locus.NINE_LOCUS);
+		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(nineLocusFreqs).getDisequilibriumElements(Locus.NINE_LOCUS);
 		assertTrue(disElements != null && disElements.size() > 0);
 	}
 
@@ -80,7 +80,7 @@ public class HLAFrequenciesLoaderTest {
 		Set<File> dpa1Dpb1Freqs = new HashSet<File>();
 		dpa1Dpb1Freqs.add(new File(uri));
 
-		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(dpa1Dpb1Freqs, null).getDisequilibriumElements(Locus.DPA1_DPB1_LOCI);
+		List<DisequilibriumElement> disElements = HLAFrequenciesLoader.getInstance(dpa1Dpb1Freqs).getDisequilibriumElements(Locus.DPA1_DPB1_LOCI);
 		assertTrue(disElements != null && disElements.size() > 0);
 	}
 

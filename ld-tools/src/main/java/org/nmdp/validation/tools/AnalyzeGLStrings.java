@@ -76,7 +76,6 @@ public class AnalyzeGLStrings implements Callable<Integer> {
     private final String freq;
     private final Boolean warnings;
     private final Set<File> frequencyFiles;
-    private final File allelesFile;
     private static final String USAGE = "analyze-gl-strings [args]";
 
 
@@ -92,16 +91,14 @@ public class AnalyzeGLStrings implements Callable<Integer> {
      * @param warnings whether to also write the *Warnings.log files
      * @param frequencyFiles custom frequency reference files, if any (standard format,
      *                       e.g. from {@code normalize-frequency-file})
-     * @param allelesFile custom individual-locus allele frequency file, if any
      */
-    public AnalyzeGLStrings(File inputFile, File outputFile, String hladb, String freq, Boolean warnings, Set<File> frequencyFiles, File allelesFile) {
+    public AnalyzeGLStrings(File inputFile, File outputFile, String hladb, String freq, Boolean warnings, Set<File> frequencyFiles) {
         this.inputFile = inputFile;
         this.outputFile   = outputFile;
         this.hladb = hladb;
         this.freq = freq;
         this.warnings = warnings;
         this.frequencyFiles = frequencyFiles;
-        this.allelesFile = allelesFile;
     }
     
     @Override
@@ -124,7 +121,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
 		List<Sample> samplesList;
     	    	
     	if (frequencyFiles !=  null) {
-    		HLAFrequenciesLoader.getInstance(frequencyFiles, allelesFile);
+    		HLAFrequenciesLoader.getInstance(frequencyFiles);
     	}
     	
     	System.setProperty(Frequencies.FREQUENCIES_PROPERTY, (freq != null) ? freq : "Inputted");
@@ -217,10 +214,9 @@ public class AnalyzeGLStrings implements Callable<Integer> {
         StringArgument freq = new StringArgument("f", "frequencies", "Frequency Set (e.g. nmdp, nmdp-2007, nmdp-2026, wiki), default nmdp-2007", false);
         BooleanArgument warnings = new BooleanArgument("w", "warnings-only", "Only log warnings, default all GL String output", false);
         FileSetArgument frequencyFiles = new FileSetArgument("q", "frequency-file(s)", "frequency input files (comma separated), default nmdp-2007 five locus", false);
-        FileArgument allelesFile = new FileArgument("l", "allele-file", "alleles known to have frequencies, default none", false);
         BooleanArgument acceptLicense = new BooleanArgument("x", "accept-license", "accept the NMDP 2026 frequencies' CC BY-NC-ND 4.0 terms so they can be downloaded (nmdp-2026 only)", false);
 
-        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFiles, allelesFile, acceptLicense);
+        ArgumentList arguments  = new ArgumentList(about, help, inputFile, outputFile, hladb, freq, warnings, frequencyFiles, acceptLicense);
         CommandLine commandLine = new CommandLine(args);
 
         AnalyzeGLStrings analyzeGLStrings = null;
@@ -240,7 +236,7 @@ public class AnalyzeGLStrings implements Callable<Integer> {
                 System.setProperty(Nmdp2026FrequencyCache.LICENSE_PROPERTY, Nmdp2026FrequencyCache.LICENSE_ACCEPTANCE_VALUE);
             }
 
-            analyzeGLStrings = new AnalyzeGLStrings(inputFile.getValue(), outputFile.getValue(), hladb.getValue(), freq.getValue(), warnings.getValue(), frequencyFiles.getValue(), allelesFile.getValue());
+            analyzeGLStrings = new AnalyzeGLStrings(inputFile.getValue(), outputFile.getValue(), hladb.getValue(), freq.getValue(), warnings.getValue(), frequencyFiles.getValue());
         }
         catch (CommandLineParseException | IllegalArgumentException e) {
             Usage.usage(USAGE, e, commandLine, arguments, System.err);

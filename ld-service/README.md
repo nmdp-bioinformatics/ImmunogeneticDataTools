@@ -34,7 +34,7 @@ analyzing against something else.
 Both accept optional `hladbVersion`/`frequencySet` fields to select the IMGT/HLA reference
 database version and frequency set for the request, mirroring the CLI's `-v`/`-f` flags —
 both genuinely apply per request. `POST /genotypes/file` additionally accepts
-`frequencyFiles`/`allelesFile` uploads (the CLI's `-q`/`-l`): your own frequency reference
+`frequencyFiles` uploads (the CLI's `-q`): your own frequency reference
 data, in the "standard format" `ld-tools`' `normalize-frequency-file` produces, from NMDP or
 any other source — this is the actual point of letting an end user bring their own
 frequencies rather than being limited to the handful of bundled named sets.
@@ -90,7 +90,7 @@ separate setup. It supports:
 - Pasting GL strings directly, or uploading a batch file — either way submits through the
   same async job API described above, so even a single pasted genotype gets progress
   tracking rather than a blocking request
-- Selecting `hladbVersion`/`frequencySet`, or uploading your own `frequencyFiles`/`allelesFile`.
+- Selecting `hladbVersion`/`frequencySet`, or uploading your own `frequencyFiles`.
   The version field suggests the usable releases as you type and checks the value when you leave
   the field (and again on submit), offering the nearest matches for a release that doesn't exist
 - The `nmdp-2026` frequency set (see "The `nmdp-2026` frequencies" below), with its license
