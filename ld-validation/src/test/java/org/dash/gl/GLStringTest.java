@@ -69,4 +69,14 @@ public class GLStringTest {
 		LinkageDisequilibriumGenotypeList homozygousCString = new LinkageDisequilibriumGenotypeList("HOMOZYGOUS-C", HOMOZYGOUS_C_STRING);
 		assertTrue(homozygousCString.hasHomozygous(Locus.HLA_C));
 	}
+
+	// Lists from different "|" alternatives are never present together, so identical lists in two
+	// alternatives do not make a locus homozygous; identical lists within one alternative still do.
+	@Test
+	public void testHomozygousIsPerAlternative() {
+		assertFalse(new LinkageDisequilibriumGenotypeList("ALT", "HLA-B*08:01:01:01+HLA-B*52:01:01:01|HLA-B*08:01:01:01+HLA-B*35:02:01")
+				.hasHomozygous(Locus.HLA_B));
+		assertTrue(new LinkageDisequilibriumGenotypeList("ALT-HOM", "HLA-B*08:01:01:01+HLA-B*08:01:01:01|HLA-B*07:02:01+HLA-B*35:02:01")
+				.hasHomozygous(Locus.HLA_B));
+	}
 }

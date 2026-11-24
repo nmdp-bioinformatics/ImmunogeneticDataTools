@@ -20,6 +20,7 @@ import org.dash.valid.LinkageDisequilibriumAnalyzer;
 import org.dash.valid.Linkages;
 import org.dash.valid.LinkagesLoader;
 import org.dash.valid.Sample;
+import org.dash.valid.SkippedSample;
 import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.freq.Nmdp2026FrequencyCache;
@@ -52,6 +53,7 @@ import io.swagger.model.JobReference;
 import io.swagger.model.JobStatus;
 import io.swagger.model.SampleData;
 import io.swagger.model.Samples;
+import io.swagger.model.SkippedData;
 
 @Controller
 public class GenotypesApiController implements GenotypesApi {
@@ -145,7 +147,7 @@ public class GenotypesApiController implements GenotypesApi {
     // immune to that real request-scoped cleanup.
     @Override
     public ResponseEntity<JobReference> submitGenotypesFile(MultipartFile file, String hladbVersion, String frequencySet,
-            List<MultipartFile> frequencyFiles, MultipartFile allelesFile, Boolean acceptNmdp2026Terms, String linkages) {
+            List<MultipartFile> frequencyFiles, Boolean acceptNmdp2026Terms, String linkages) {
         // Before any upload is copied or a job exists: a bad name is the caller's input, a 400.
         boolean customFiles = frequencyFiles != null && !frequencyFiles.isEmpty();
         String normalizedLinkages = customFiles ? null : normalizeLinkages(linkages, frequencySet);
@@ -160,22 +162,17 @@ public class GenotypesApiController implements GenotypesApi {
         String originalFilename = file.getOriginalFilename();
 
         Set<File> ownedFrequencyFiles = null;
-        File ownedAllelesFile = null;
         if (frequencyFiles != null && !frequencyFiles.isEmpty()) {
             ownedFrequencyFiles = new HashSet<>();
             for (MultipartFile frequencyFile : frequencyFiles) {
                 ownedFrequencyFiles.add(toTempFile(frequencyFile, ownedTempFiles));
             }
-            if (allelesFile != null && !allelesFile.isEmpty()) {
-                ownedAllelesFile = toTempFile(allelesFile, ownedTempFiles);
-            }
         }
 
         Set<File> jobFrequencyFiles = ownedFrequencyFiles;
-        File jobAllelesFile = ownedAllelesFile;
         Job job = jobRegistry.submit(j -> {
             try {
-                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, jobAllelesFile, acceptNmdp2026Terms, normalizedLinkages);
+                return runGenotypesFileJob(j, ownedInputFile, originalFilename, hladbVersion, frequencySet, jobFrequencyFiles, acceptNmdp2026Terms, normalizedLinkages);
             }
             finally {
                 for (File tempFile : ownedTempFiles) {
@@ -200,20 +197,20 @@ public class GenotypesApiController implements GenotypesApi {
     }
 
     // Runs on JobRegistry's background worker thread, not the HTTP thread that accepted the
-    // upload -- everything it touches (inputFile, frequencyFiles, allelesFile) is a temp file
+    // upload -- everything it touches (inputFile, frequencyFiles) is a temp file
     // submitGenotypesFile already copied the original uploads into, synchronously, before this
     // ever runs (see the comment there for why that copy is necessary). Held under the same
     // ANALYSIS_LOCK submitGenotypes uses, since both paths mutate the same process-wide
     // hladb/frequency-set configuration.
     private List<Sample> runGenotypesFileJob(Job job, File inputFile, String originalFilename, String hladbVersion, String frequencySet,
-            Set<File> frequencyFiles, File allelesFile, Boolean acceptNmdp2026Terms, String linkages) throws IOException {
+            Set<File> frequencyFiles, Boolean acceptNmdp2026Terms, String linkages) throws IOException {
         synchronized (ANALYSIS_LOCK) {
             // Held across both configuring and analyzing: the named frequency set is loaded
             // lazily, on first use during analysis, and that is where nmdp-2026 downloads.
             Nmdp2026FrequencyCache.setDownloadListener(job::updateDownload);
             try (RequestScope scope = RequestScope.open(acceptNmdp2026Terms, linkages)) {
                 job.setPhase(Job.Phase.LOADING_REFERENCE_DATA);
-                configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles, allelesFile);
+                configureWithOptionalCustomFrequencies(hladbVersion, frequencySet, frequencyFiles);
                 // A named set is otherwise loaded lazily by the first genotype's analysis, which
                 // would make a minutes-long first fetch/parse (nmdp-2026) look like "analyzing 0
                 // of N". A no-op when the set is already loaded or came from uploaded files.
@@ -341,7 +338,16 @@ public class GenotypesApiController implements GenotypesApi {
         if (job.getPhase() == Job.Phase.DONE) {
             Samples samples = new Samples();
             for (Sample sample : job.getResult()) {
-                samples.addSampleItem(populateSwaggerObject(sample));
+                if (sample instanceof SkippedSample) {
+                    SkippedData skipped = new SkippedData();
+                    skipped.setId(sample.getId());
+                    skipped.setLine(((SkippedSample) sample).getLine());
+                    skipped.setReason(((SkippedSample) sample).getReason());
+                    samples.addSkippedItem(skipped);
+                }
+                else {
+                    samples.addSampleItem(populateSwaggerObject(sample));
+                }
             }
             status.setResult(samples);
         }
@@ -440,8 +446,8 @@ public class GenotypesApiController implements GenotypesApi {
 
     // The /genotypes/file variant: when the caller uploads their own frequencyFiles (any
     // source, in the "standard format" normalize-frequency-file produces -- the same files the
-    // CLI's -q/-l flags take), those take precedence over frequencySet, mirroring
-    // AnalyzeGLStrings' own precedence. frequencyFiles/allelesFile are already temp files
+    // CLI's -q flag takes), those take precedence over frequencySet, mirroring
+    // AnalyzeGLStrings' own precedence. frequencyFiles are already temp files
     // submitGenotypesFile owns (copied from the original uploads before the job was submitted --
     // see there for why); this method doesn't create or clean up any files itself.
     //
@@ -452,7 +458,7 @@ public class GenotypesApiController implements GenotypesApi {
     // bad file instead of throwing at all -- fixed as part of Phase 8, since that would have
     // taken the whole service down over one bad request regardless of sync vs async.)
     private void configureWithOptionalCustomFrequencies(String hladbVersion, String frequencySet,
-            Set<File> frequencyFiles, File allelesFile) {
+            Set<File> frequencyFiles) {
         LinkagesLoader.reset();
         System.setProperty(GLStringConstants.HLADB_PROPERTY, resolveHladb(hladbVersion));
 
@@ -467,7 +473,7 @@ public class GenotypesApiController implements GenotypesApi {
         // the named-set path, there's no cheap way to tell whether a fresh upload is "the same
         // as last time" without hashing its content, and every genuine upload legitimately
         // needs to load, so no reset()-avoidance is possible or attempted here.
-        HLAFrequenciesLoader.getInstance(frequencyFiles, allelesFile);
+        HLAFrequenciesLoader.getInstance(frequencyFiles);
         // A subsequent named-set request must not think its target set is already loaded just
         // because it once was, before this custom-file request replaced it.
         currentFrequencySet = CUSTOM_FILES;

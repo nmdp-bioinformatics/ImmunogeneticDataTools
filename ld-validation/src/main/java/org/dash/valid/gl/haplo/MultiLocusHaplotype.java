@@ -23,6 +23,7 @@ package org.dash.valid.gl.haplo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +45,49 @@ import org.dash.valid.gl.GLStringConstants;
 public class MultiLocusHaplotype extends Haplotype {
 	private Map<Locus, List<String>> alleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	private HashMap<Locus, Integer> haplotypeInstanceMap = new HashMap<Locus, Integer>();
+	// Per-locus allele lists as submitted, before pruning; empty for haplotypes not built from a
+	// genotype (reference data), where getAlleles(locus) is the only list there is.
+	private Map<Locus, List<String>> originalAlleleMap = new ConcurrentHashMap<Locus, List<String>>();
 	
+	// Per locus, positions (in the genotype's ambiguity-list order) of the lists this haplotype
+	// was built from; several when equal haplotypes from different lists/alternatives merged.
+	private Map<Locus, Set<Integer>> entrySources = new HashMap<Locus, Set<Integer>>();
+
+	// The submitted (unpruned) lists in locus order; part of what distinguishes two candidates
+	// whose pruned lists are equal.
+	public String getOriginalAlleleString() {
+		Set<Locus> loci = new LocusSet(new LocusComparator());
+		loci.addAll(alleleMap.keySet());
+		StringBuilder sb = new StringBuilder();
+		for (Locus locus : loci) {
+			List<String> original = originalAlleleMap.get(locus);
+			sb.append(original != null ? original : getAlleles(locus)).append(GLStringConstants.GENE_DELIMITER);
+		}
+		return sb.toString();
+	}
+
+	public Set<Integer> getEntrySources(Locus locus) {
+		Set<Integer> sources = entrySources.get(locus);
+		return sources == null ? new HashSet<Integer>() : sources;
+	}
+
+	public void addEntrySource(Locus locus, int index) {
+		Set<Integer> sources = entrySources.get(locus);
+		if (sources == null) {
+			sources = new HashSet<Integer>();
+			entrySources.put(locus, sources);
+		}
+		sources.add(index);
+	}
+
+	public void mergeEntrySources(MultiLocusHaplotype other) {
+		for (Map.Entry<Locus, Set<Integer>> e : other.entrySources.entrySet()) {
+			for (Integer index : e.getValue()) {
+				addEntrySource(e.getKey(), index);
+			}
+		}
+	}
+
 	private Integer sequence;
 	
 	@Override
@@ -134,6 +177,9 @@ public class MultiLocusHaplotype extends Haplotype {
 		for (SingleLocusHaplotype singleLocusHaplotype : singleLocusHaplotypes.values()) {
 			alleleMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getAlleles());
 			haplotypeInstanceMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getHaplotypeInstance());
+			if (singleLocusHaplotype.getOriginalAlleles() != null) {
+				originalAlleleMap.put(singleLocusHaplotype.getLocus(), singleLocusHaplotype.getOriginalAlleles());
+			}
 		}
 		setDRB345Homozygous(drb345Homozygous);
 	}
@@ -167,6 +213,17 @@ public class MultiLocusHaplotype extends Haplotype {
 	
 	@Override
 	public String getFullHaplotypeString() {
+		return buildFullHaplotypeString(false);
+	}
+
+	@Override
+	public String getOriginalFullHaplotypeString() {
+		String original = buildFullHaplotypeString(true);
+
+		return original.equals(getFullHaplotypeString()) ? null : original;
+	}
+
+	private String buildFullHaplotypeString(boolean original) {
 		StringBuffer fullValue = new StringBuffer();
 		Set<Locus> loci = new LocusSet(new LocusComparator());
 
@@ -175,7 +232,12 @@ public class MultiLocusHaplotype extends Haplotype {
 			loci.addAll(haplotype.getLoci());
 			
 			for (Locus locus : loci) {
-				for (String allele : haplotype.getAlleles(locus)) {
+				List<String> locusAlleles = haplotype.getAlleles(locus);
+				if (original && haplotype instanceof MultiLocusHaplotype
+						&& ((MultiLocusHaplotype) haplotype).originalAlleleMap.containsKey(locus)) {
+					locusAlleles = ((MultiLocusHaplotype) haplotype).originalAlleleMap.get(locus);
+				}
+				for (String allele : locusAlleles) {
 					fullValue.append(allele);
 					fullValue.append(GLStringConstants.ALLELE_AMBIGUITY_DELIMITER);
 				}

@@ -2,9 +2,17 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
 	<xs:element name="samples">
 	    <xs:complexType>
-			<xs:sequence>
-				<xs:element ref="sample" minOccurs="0" maxOccurs="unbounded"/>
-			</xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element ref="sample"/>
+				<xs:element ref="skipped"/>
+			</xs:choice>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="skipped">
+		<xs:complexType>
+			<xs:attribute name="id" type="xs:string"/>
+			<xs:attribute name="line" type="xs:integer"/>
+			<xs:attribute name="reason" type="xs:string"/>
 		</xs:complexType>
 	</xs:element>
 	<xs:element name="sample">
@@ -61,6 +69,7 @@
     		<xs:attribute name="seq" type="xs:integer"/>
     		<xs:attribute name="value" type="xs:string"/>
     		<xs:attribute name="fullValue"  type="xs:string"/>
+    		<xs:attribute name="originalValue"  type="xs:string"/>
     	</xs:complexType>
     </xs:element>
     		

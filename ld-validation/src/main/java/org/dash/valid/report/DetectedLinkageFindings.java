@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -364,13 +365,49 @@ public class DetectedLinkageFindings {
 	}
 	
 	public void addLinkage(DetectedDisequilibriumElement linkage) {
-		this.linkages.add(linkage);
-		incrementLinkageCount(linkage);
+		addLinkages(Collections.singleton(linkage));
 	}
 	
-	public void addLinkages(Set<DetectedDisequilibriumElement> linkages) {
-		this.linkages.addAll(linkages);
+	// A linkage is dropped when another one covers it: same reference row, or a row over a superset
+	// of its loci that matches it on all of them (DisequilibriumElement#equals is that
+	// one-directional "covered by" test). Letting a TreeSet decide this made the surviving entries
+	// depend on insertion order, because that equals() is not symmetric. Candidates are taken
+	// widest first (ties by the comparator's order), so the result is the same for any order the
+	// linkages arrive in.
+	public void addLinkages(Collection<DetectedDisequilibriumElement> linkages) {
+		DisequilibriumElementComparator comparator = new DisequilibriumElementComparator();
+		List<DetectedDisequilibriumElement> candidates = new ArrayList<DetectedDisequilibriumElement>(this.linkages);
+		candidates.addAll(linkages);
 		
+		Collections.sort(candidates, new Comparator<DetectedDisequilibriumElement>() {
+			public int compare(DetectedDisequilibriumElement a, DetectedDisequilibriumElement b) {
+				int c = b.getDisequilibriumElement().getLoci().size() - a.getDisequilibriumElement().getLoci().size();
+				if (c != 0) {
+					return c;
+				}
+				// compare() starts with equals(), which is not an order; use only its ordering part
+				return new DisequilibriumElementComparator().compareOrder(a, b);
+			}
+		});
+		
+		List<DetectedDisequilibriumElement> kept = new ArrayList<DetectedDisequilibriumElement>();
+		for (DetectedDisequilibriumElement candidate : candidates) {
+			boolean covered = false;
+			for (DetectedDisequilibriumElement existing : kept) {
+				if (candidate.equals(existing)) {
+					covered = true;
+					break;
+				}
+			}
+			if (!covered) {
+				kept.add(candidate);
+			}
+		}
+		
+		this.linkages = new LinkageElementsSet(comparator);
+		this.linkages.addAll(kept);
+		
+		this.linkageCountsMap.clear();
 		for (DetectedDisequilibriumElement linkage : this.linkages) {
 			incrementLinkageCount(linkage);
 		}

@@ -30,12 +30,17 @@ public class DisequilibriumElementComparator implements Comparator<DetectedDiseq
 
 	@Override
 	public int compare(DetectedDisequilibriumElement element1, DetectedDisequilibriumElement element2) {
-		int ret;
-		
 		if (element1.equals(element2)) {
 			return 0;
 		}
-		else if (element1.getDisequilibriumElement() instanceof DisequilibriumElementByRace && element2.getDisequilibriumElement() instanceof DisequilibriumElementByRace) {
+		return compareOrder(element1, element2);
+	}
+
+	// The ordering part of compare(), without the equals() short-circuit.
+	public int compareOrder(DetectedDisequilibriumElement element1, DetectedDisequilibriumElement element2) {
+		int ret;
+		
+		if (element1.getDisequilibriumElement() instanceof DisequilibriumElementByRace && element2.getDisequilibriumElement() instanceof DisequilibriumElementByRace) {
 			// those with more linkages should sort first
 			ret = ((DisequilibriumElementByRace) element2.getDisequilibriumElement()).getFrequenciesByRace().size() - 
 					((DisequilibriumElementByRace) element1.getDisequilibriumElement()).getFrequenciesByRace().size();

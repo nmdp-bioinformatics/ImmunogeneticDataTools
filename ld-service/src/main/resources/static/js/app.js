@@ -12,7 +12,6 @@
   const useCustomFrequencies = document.getElementById("useCustomFrequencies");
   const customFrequenciesDiv = document.getElementById("custom-frequencies");
   const frequencyFilesInput = document.getElementById("frequencyFiles");
-  const allelesFileInput = document.getElementById("allelesFile");
   const submitBtn = document.getElementById("submitBtn");
   const progressSection = document.getElementById("progress-section");
   const progressPhase = document.getElementById("progress-phase");
@@ -238,9 +237,6 @@
       for (const f of frequencyFilesInput.files) {
         formData.append("frequencyFiles", f, f.name);
       }
-      if (allelesFileInput.files.length) {
-        formData.append("allelesFile", allelesFileInput.files[0], allelesFileInput.files[0].name);
-      }
     } else if (frequencySet.value) {
       formData.append("frequencySet", frequencySet.value);
       if (selectedLinkages().length) {
@@ -345,12 +341,18 @@
     lastResult = samples;
 
     const list = (samples && samples.sample) || [];
+    const skipped = (samples && samples.skipped) || [];
+    const skippedHtml = skipped.length === 0 ? "" :
+      "<p><strong>" + skipped.length + " genotype(s) skipped (too ambiguous):</strong></p><ul>" +
+      skipped.map(function (s) {
+        return "<li>" + escapeHtml(s.id) + (s.line ? " (line " + s.line + ")" : "") + ": " + escapeHtml(s.reason) + "</li>";
+      }).join("") + "</ul>";
     if (list.length === 0) {
-      resultsList.innerHTML = "<p>No samples in the result.</p>";
+      resultsList.innerHTML = skippedHtml + "<p>No samples in the result.</p>";
       return;
     }
 
-    resultsList.innerHTML = list.map(renderSample).join("");
+    resultsList.innerHTML = skippedHtml + list.map(renderSample).join("");
   }
 
   function escapeHtml(value) {
