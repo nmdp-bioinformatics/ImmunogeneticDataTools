@@ -488,6 +488,7 @@ public class HLAFrequenciesLoader {
 					}
 				}
 				loadIndividualLocusFrequencies(freq);
+				deriveWhenNoIndividualLocusFiles();
 				break;
 			case NMDP_STD:
 				for (Linkages linkage : LinkagesLoader.getInstance().getLinkages()) {
@@ -526,6 +527,7 @@ public class HLAFrequenciesLoader {
 						break;
 					}
 				}
+				deriveWhenNoIndividualLocusFiles();
 				break;
 			default:
 				break;
@@ -854,6 +856,17 @@ public class HLAFrequenciesLoader {
 		}
 	}
 	
+	// nmdp-2007-std and wiki ship no per-locus allele files, so without this they never prune
+	// ambiguous genotypes and a heavily ambiguous one is skipped as too ambiguous. Deriving the
+	// lists from the loaded haplotype data gives them the same pruning custom uploads get. Only
+	// when no per-locus list was loaded, so a set that has real per-locus files keeps them.
+	private void deriveWhenNoIndividualLocusFiles() {
+		if (individualLocusFrequencies.isEmpty()) {
+			deriveIndividualLocusFrequencies();
+			individualFrequenciesDerived = true;
+		}
+	}
+
 	// Builds the per-locus allowed-allele lists from the loaded haplotype elements (union across
 	// files covering the same locus), in first-seen order so the result is deterministic.
 	private void deriveIndividualLocusFrequencies() {
