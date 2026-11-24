@@ -115,10 +115,14 @@ public class LinkageDisequilibriumGenotypeListTest {
 		instanceField.set(null, null);
 		org.dash.valid.LinkagesLoader.getInstance(org.dash.valid.Linkages.lookup(org.dash.valid.Locus.C_B_LOCI));
 
-		StringBuilder alleleAmbiguities = new StringBuilder("HLA-B*07:01");
+		// HLA-B*99 has no frequency in any bundled set. Alleles with a frequency are pruned
+		// down to those (derived pruning now applies to the default set too), which would
+		// shrink a real family like B*07 below the threshold; with none of them having a
+		// frequency, pruning leaves the submitted list in place.
+		StringBuilder alleleAmbiguities = new StringBuilder("HLA-B*99:01");
 		for (int i = 2; i <= 21; i++) {
 			alleleAmbiguities.append(GLStringConstants.ALLELE_AMBIGUITY_DELIMITER)
-					.append(String.format("HLA-B*07:%02d", i));
+					.append(String.format("HLA-B*99:%02d", i));
 		}
 		String glString = "HLA-A*01:01" + GLStringConstants.GENE_DELIMITER + alleleAmbiguities;
 

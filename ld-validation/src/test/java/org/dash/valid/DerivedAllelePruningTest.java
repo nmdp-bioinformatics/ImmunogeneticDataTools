@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.dash.valid.freq.Frequencies;
 import org.dash.valid.freq.HLAFrequenciesLoader;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.Haplotype;
@@ -66,6 +67,38 @@ public class DerivedAllelePruningTest {
 		assertTrue(haplotype.getFullHaplotypeString().contains("HLA-B*08:01:01:01"), haplotype.getFullHaplotypeString());
 		assertTrue(haplotype.getOriginalFullHaplotypeString().contains("HLA-B*08:01:01:01/HLA-B*15:01:01:01"),
 				haplotype.getOriginalFullHaplotypeString());
+	}
+
+	private HLAFrequenciesLoader namedSet(String name) {
+		String saved = System.getProperty(Frequencies.FREQUENCIES_PROPERTY);
+		try {
+			System.setProperty(Frequencies.FREQUENCIES_PROPERTY, name);
+			return HLAFrequenciesLoader.getInstance();
+		}
+		finally {
+			if (saved == null) System.clearProperty(Frequencies.FREQUENCIES_PROPERTY);
+			else System.setProperty(Frequencies.FREQUENCIES_PROPERTY, saved);
+		}
+	}
+
+	// nmdp-2007-std and wiki have no per-locus allele files; without derivation they never prune.
+	@Test
+	public void testStdAndWikiSetsDeriveTheirPruningLists() {
+		for (String name : new String[] { "nmdp-2007-std", "wiki" }) {
+			HLAFrequenciesLoader loader = namedSet(name);
+			assertFalse(loader.getIndividualLocusFrequencies().isEmpty(), name);
+			assertFalse(loader.swapsInFrequencyAllele(), name);
+			HLAFrequenciesLoader.reset();
+			LinkagesLoader.reset();
+		}
+	}
+
+	// A set with real per-locus files keeps them (and their spelling swap) untouched.
+	@Test
+	public void testSetWithPerLocusFilesIsNotDerived() {
+		HLAFrequenciesLoader loader = namedSet("nmdp-2007");
+		assertFalse(loader.getIndividualLocusFrequencies().isEmpty());
+		assertTrue(loader.swapsInFrequencyAllele());
 	}
 
 	@Test
