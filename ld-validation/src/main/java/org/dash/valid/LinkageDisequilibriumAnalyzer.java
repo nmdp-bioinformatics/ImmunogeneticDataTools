@@ -30,6 +30,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.dash.valid.gl.GLStringUtilities;
+import org.dash.valid.gl.SkippedGenotype;
 import org.dash.valid.gl.LinkageDisequilibriumGenotypeList;
 import org.dash.valid.gl.haplo.Haplotype;
 import org.dash.valid.handler.ProgressConsoleHandler;
@@ -98,9 +99,13 @@ public class LinkageDisequilibriumAnalyzer {
 	 * @param listener notified after each genotype is processed
 	 */
 	public static List<Sample> analyzeGLStringFile(String name, BufferedReader reader, ProgressListener listener) throws IOException {
-		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile(name, reader);
+		List<SkippedGenotype> skipped = new ArrayList<SkippedGenotype>();
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile(name, reader, skipped);
 
 		List<Sample> samplesList = detectLinkages(glStrings, listener);
+		for (SkippedGenotype s : skipped) {
+			samplesList.add(new SkippedSample(s));
+		}
 
 		return samplesList;
 	}
@@ -109,7 +114,8 @@ public class LinkageDisequilibriumAnalyzer {
 	 * @param filename
 	 */
 	public static void analyzeGLStringFile(String filename) throws IOException {				
-		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile(filename);
+		List<SkippedGenotype> skipped = new ArrayList<SkippedGenotype>();
+		List<LinkageDisequilibriumGenotypeList> glStrings = GLStringUtilities.readGLStringFile(filename, skipped);
 		List<Sample> samplesList = null;
 		
 		samplesList = detectLinkages(glStrings);
@@ -123,7 +129,11 @@ public class LinkageDisequilibriumAnalyzer {
 		}
 		
 		SamplesList allSamples = new SamplesList();
-		allSamples.setSamples(samplesList);
+		List<Sample> reported = new ArrayList<Sample>(samplesList);
+		for (SkippedGenotype s : skipped) {
+			reported.add(new SkippedSample(s));
+		}
+		allSamples.setSamples(reported);
 		
 		SummaryWriter.getInstance().reportDetectedLinkages(allSamples);
 	}

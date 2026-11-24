@@ -472,10 +472,20 @@ public class GLStringUtilities {
 	}
 	
 	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String name, BufferedReader reader) {
+		return readGLStringFile(name, reader, new ArrayList<SkippedGenotype>());
+	}
+
+	/**
+	 * Same as {@link #readGLStringFile(String, BufferedReader)}, but every genotype skipped for
+	 * being too ambiguous is also added to {@code skipped} (id, line and reason), so the caller
+	 * can report it rather than leaving it in the log alone. Blank lines are ignored.
+	 */
+	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String name, BufferedReader reader,
+			List<SkippedGenotype> skipped) {
 		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = null;
 		
 		try {
-			linkedGLStrings = parseGLStringFile(name, reader);
+			linkedGLStrings = parseGLStringFile(name, reader, skipped);
 		} catch (IOException e) {
 			LOGGER.severe("Problem reading GL String file: " + name);
 			e.printStackTrace();
@@ -489,6 +499,10 @@ public class GLStringUtilities {
 	}
 
 	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String filename) {
+		return readGLStringFile(filename, new ArrayList<SkippedGenotype>());
+	}
+
+	public static List<LinkageDisequilibriumGenotypeList> readGLStringFile(String filename, List<SkippedGenotype> skipped) {
 		BufferedReader reader = null;
 		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = null;
 
@@ -501,7 +515,7 @@ public class GLStringUtilities {
 			
 			reader = new BufferedReader(new InputStreamReader(stream));
 
-			linkedGLStrings = parseGLStringFile(filename, reader);
+			linkedGLStrings = parseGLStringFile(filename, reader, skipped);
 			
 		} catch (FileNotFoundException e) {
 			LOGGER.severe("Couldn't find GL String file: " + filename);
@@ -525,7 +539,7 @@ public class GLStringUtilities {
 	}
 
 	private static List<LinkageDisequilibriumGenotypeList> parseGLStringFile(String filename,
-			BufferedReader reader)
+			BufferedReader reader, List<SkippedGenotype> skipped)
 			throws IOException, ParserConfigurationException, SAXException {
 		List<LinkageDisequilibriumGenotypeList> linkedGLStrings = new ArrayList<LinkageDisequilibriumGenotypeList>();
 
@@ -555,6 +569,7 @@ public class GLStringUtilities {
 		    	}
 		    	catch (AmbiguousGenotypeException e) {
 		    		LOGGER.warning("Skipping id: " + sampleId + " in " + filename + " -- " + e.getMessage());
+		    		skipped.add(new SkippedGenotype(sampleId, null, e.getMessage()));
 		    	}
 		    }
 		}
@@ -568,6 +583,10 @@ public class GLStringUtilities {
 			
 			while ((line = reader.readLine()) != null) {
 				lineNumber++;
+
+				if (line.trim().isEmpty()) {
+					continue;
+				}
 
 				parts = line.split(FILE_DELIMITER_REGEX);
 				
@@ -593,6 +612,7 @@ public class GLStringUtilities {
 				catch (AmbiguousGenotypeException e) {
 					LOGGER.warning("Skipping id: " + id + " at line " + (lineNumber - 1)
 							+ " in " + filename + " -- " + e.getMessage());
+					skipped.add(new SkippedGenotype(id, lineNumber, e.getMessage()));
 				}
 
 			}

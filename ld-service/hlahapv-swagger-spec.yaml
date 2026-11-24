@@ -261,8 +261,28 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/SampleData'
+      skipped:
+        type: array
+        description: genotypes read from the input but not analysed (too ambiguous), with the reason
+        items:
+          $ref: '#/definitions/SkippedData'
     xml:
       name: samples  
+  SkippedData:
+    type: object
+    required:
+    - id
+    - reason
+    properties:
+      id:
+        type: string
+      line:
+        type: integer
+        description: 1-based input line; absent for XML input
+      reason:
+        type: string
+    xml:
+      name: skipped
   SampleData:
     type: object
     required:
