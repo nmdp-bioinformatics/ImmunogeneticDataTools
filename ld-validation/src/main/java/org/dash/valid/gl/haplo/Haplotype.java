@@ -94,6 +94,12 @@ public abstract class Haplotype {
 	 *         specific allele the matched G-group(s) resolved to) — reported as
 	 *         {@code fullValue} in output XML. Distinct from {@link #getHaplotypeString()}
 	 *         since reference-data matching is G-group/ARS-based, not exact-allele-string.
+	 *         This is the allele list the analysis matched on, after pruning alleles with no
+	 *         reference frequency. Its spelling depends on the frequency set: with per-locus
+	 *         allele files (nmdp-2007, nmdp-2026) a kept allele is written as the list spells it
+	 *         (e.g. {@code HLA-B*08:01g}); with lists derived from the haplotype files
+	 *         (uploads, nmdp-2007-std, wiki) it is written as submitted. See
+	 *         {@link #getOriginalFullHaplotypeString()} for the list as submitted.
 	 */
 	@XmlAttribute(name="fullValue")
 	public abstract String getFullHaplotypeString();

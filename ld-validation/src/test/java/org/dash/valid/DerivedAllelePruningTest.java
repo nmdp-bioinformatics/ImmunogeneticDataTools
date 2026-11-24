@@ -81,6 +81,17 @@ public class DerivedAllelePruningTest {
 		}
 	}
 
+	// fullValue rule (issue 98): it is the allele list the analysis matched on. With per-locus files
+	// that is the list's own spelling (swapped in); with derived lists it is the submitted spelling.
+	// originalValue is always the list as submitted.
+	@Test
+	public void testPerLocusFilesSwapInTheListsSpelling() {
+		HLAFrequenciesLoader loader = namedSet("nmdp-2007");
+		String submitted = "HLA-B*08:01:01:01";
+		String swapped = loader.hasFrequency(Locus.HLA_B, submitted);
+		assertEquals("HLA-B*08:01g", swapped);
+	}
+
 	// nmdp-2007-std and wiki have no per-locus allele files; without derivation they never prune.
 	@Test
 	public void testStdAndWikiSetsDeriveTheirPruningLists() {
